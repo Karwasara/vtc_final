@@ -1,0 +1,94 @@
+{% extends 'common/base.html' %}
+{% load static %}
+{% block content %}
+
+<!-- ✅ DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+<div class="container mt-4">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'aso/sidebar.html' %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+      <h2 class="mb-4">Forwarded Trainings from VTC</h2>
+
+      {% include 'common/message.html' %}
+
+      {% if trainings %}
+      <div class="table-responsive">
+        <table id="trainingsTable" class="table table-bordered table-striped table-hover align-middle">
+          <thead class="table-primary">
+            <tr>
+              <th scope="col">S.No.</th>
+              <th scope="col">Worker</th>
+              <th scope="col">From Date</th>
+              <th scope="col">To Date</th>
+              <th scope="col">Nature of Training</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for training in trainings %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ training.worker.name }}</td>
+              <td>{{ training.from_date|date:"d M Y" }}</td>
+              <td>{{ training.to_date|date:"d M Y" }}</td>
+              <td>{{ training.nature_of_training }}</td>
+              <td>
+                <a href="{% url 'aso:training_detail' training.pk %}" class="btn btn-info btn-sm">
+                  Detail
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-warning text-center mt-4" role="alert">
+        No forwarded trainings.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+<!-- ✅ jQuery & DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+<!-- ✅ DataTables Initialization -->
+<script>
+  $(document).ready(function () {
+    $('#trainingsTable').DataTable({
+      responsive: true,
+      order: [], // no default ordering
+      pageLength: 10,
+      language: {
+        emptyTable: "No forwarded trainings found",
+        search: "🔍 Search:",
+        lengthMenu: "Show _MENU_ entries",
+        paginate: {
+          previous: "Prev",
+          next: "Next"
+        }
+      },
+      columnDefs: [
+        { orderable: false, targets: 5 } // Disable sorting on Actions column
+      ]
+    });
+  });
+</script>
+
+{% endblock %}

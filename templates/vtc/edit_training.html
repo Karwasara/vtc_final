@@ -1,0 +1,37 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  body { background-color: #f7fafd; }
+  .btn-create { margin-bottom: 20px; }
+</style>
+
+<div class="container mt-4">
+  <div class="row">
+    
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'vtc/sidebar.html' %}
+    </div>
+
+    <!-- Main Contractor List -->
+    <div class="col-md-9">
+<div class="container mt-4">
+  <h2>Edit Training Schedule</h2>
+  {% include 'common/message.html' %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="from_date" class="form-label">From Date</label>
+      <input type="date" name="from_date" id="from_date" class="form-control" value="{{ training.from_date|date:'Y-m-d' }}" required>
+    </div>
+    <div class="mb-3">
+      <label for="to_date" class="form-label">To Date</label>
+      <input type="date" name="to_date" id="to_date" class="form-control" value="{{ training.to_date|date:'Y-m-d' }}" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="{% url 'vtc:schedule_training' training.worker.id %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

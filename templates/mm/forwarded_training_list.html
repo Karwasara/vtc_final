@@ -1,0 +1,111 @@
+{% extends 'common/base.html' %}
+{% block content %}
+
+<!-- ✅ DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<div class="container mt-4">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'mm/sidebar.html' %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+      <h2>Workers Sent to Mine Manager for Approval</h2>
+      {% include 'common/message.html' %}
+
+      <table id="workersTable" class="table table-bordered table-striped table-hover mt-3 display">
+        <thead class="table-primary">
+          <tr>
+            <th scope="col">S.No.</th>
+            <th scope="col">Worker Name</th>
+            <th scope="col">Training From</th>
+            <th scope="col">Training To</th>
+            <th scope="col">Nature of Training</th>
+            <th style="display:none;">Status Level</th> <!-- Hidden sort column -->
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for training in trainings %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ training.worker.name }}</td>
+            <td>{{ training.from_date|date:"d M Y" }}</td>
+            <td>{{ training.to_date|date:"d M Y" }}</td>
+            <td>{{ training.nature_of_training }}</td>
+
+            <!-- Hidden column for sorting -->
+            <td style="display:none;">
+              {% if training.mm_status != 'approved' %}
+                1
+              {% elif training.mm_status == 'approved' and not training.certificate_serial_number %}
+                2
+              {% else %}
+                3
+              {% endif %}
+            </td>
+
+            <td>
+              <a href="{% url 'mm:approved_worker_detail' training.pk %}" class="btn btn-info btn-sm mb-1">View Details</a>
+              
+              {% if training.mm_status == 'approved' %}
+                {% if training.certificate_serial_number %}
+                  <a href="{% url 'mm:generate_form_a_pdf' training.pk %}" class="btn btn-success btn-sm" target="_blank">
+                    Download Certificate
+                  </a>
+                {% else %}
+                  <a href="{% url 'mm:generate_form_a_pdf' training.pk %}" class="btn btn-primary btn-sm" target="_blank">
+                    Generate Certificate
+                  </a>
+                {% endif %}
+              {% else %}
+                <span class="text-muted">Not Approved</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center">No workers forwarded to Mine Manager.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<!-- ✅ DataTable Init Script -->
+<script>
+$(document).ready(function() {
+  $('#workersTable').DataTable({
+    pageLength: 10,
+    order: [[7, 'asc']],  // Sort by 6th column (Status Level)
+    columnDefs: [
+      { targets: 5, visible: false },   // Hide Status Level column (6th col, zero-indexed)
+      { orderable: false, targets: 6 } // Disable sorting on Actions column
+    ],
+    language: {
+      search: "🔍 Search:",
+      lengthMenu: "Show _MENU_ entries",
+      emptyTable: "No workers forwarded to Mine Manager",
+      paginate: {
+        previous: "Prev",
+        next: "Next"
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}
+
+
+

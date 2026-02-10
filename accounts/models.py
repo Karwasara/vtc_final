@@ -1,0 +1,37 @@
+from django.db import models
+
+# Create your models here.
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.db import models
+
+class AreaMaster(models.Model):
+    area_code = models.CharField(max_length=10, unique=True)
+    area_name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return f"{self.area_name} ({self.area_code})"
+
+class CustomUser(AbstractUser):
+    phone = models.CharField(max_length=15, blank=True)
+    address = models.TextField(blank=True)
+
+    USER_TYPE_CHOICES = [
+        ('vtc', 'VTC'),
+        ('aso', 'ASO'),
+        ('mm', 'Mine Manager'),
+        ('admin', 'Admin'),
+    ]
+    
+
+    user_type = models.CharField(
+        max_length=20,
+        choices=USER_TYPE_CHOICES,
+        null = True,
+        blank=True
+    )
+
+    area = models.ForeignKey(AreaMaster, null=True, blank=True, on_delete=models.SET_NULL)
+    def __str__(self):
+        return self.username
+

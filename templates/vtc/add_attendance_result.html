@@ -1,0 +1,144 @@
+{% extends 'common/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'vtc/sidebar.html' %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-md-9">
+      <h2>Attendance & Final Result Entry for {{ training.worker.name }}</h2>
+      {% include 'common/message.html' %}
+
+      <!-- ✅ Attendance Table -->
+      <h5 class="mt-4">Daily Attendance</h5>
+      <table class="table table-bordered">
+        <thead class="table-primary">
+          <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for day in date_range %}
+          <tr>
+            <td>{{ day }}</td>
+            <td>
+              {% if existing_attendance|get_item:day %}
+                {{ existing_attendance|get_item:day }}
+              {% elif day > today %}
+                <span class="text-muted">Not Available (Future)</span>
+              {% else %}
+                <form method="post" class="d-flex">
+                  {% csrf_token %}
+                  <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
+                  <select name="status" class="form-select form-select-sm me-2" required>
+                    <option value="">Select</option>
+                    <option value="Present">Present</option>
+                    <option value="Absent">Absent</option>
+                    <option value="Holiday">Holiday</option>
+                  </select>
+                  <button type="submit" name="action" value="save_attendance" class="btn btn-success btn-sm">Save</button>
+                </form>
+              {% endif %}
+            </td>
+            <td>
+              {% if existing_attendance|get_item:day %}
+                <span class="badge bg-success">✔ Saved</span>
+              {% elif day > today %}
+                <span class="badge bg-secondary">⏳ Future</span>
+              {% else %}
+                <span class="badge bg-danger">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <!-- ✅ Final Result Section -->
+      {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
+      <hr>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- ✅ Upload Attendance File -->
+        {% if not training.attendance_field_file %}
+          <div class="mb-3">
+            <label for="attendance_field_file" class="form-label">Upload Attendance File</label>
+            <input type="file" name="attendance_field_file" id="attendance_field_file" class="form-control" required>
+          </div>
+        {% else %}
+          <div class="alert alert-success">
+            📎 Attendance file already uploaded:
+            <a href="{{ training.attendance_field_file.url }}" target="_blank">
+              {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+            </a>
+          </div>
+        {% endif %}
+
+        <h5 class="mt-4">Final Performance Appraisal</h5>
+        <div class="mb-3">
+          <label for="performance_appraisal" class="form-label">Appraisal</label>
+          <select name="performance_appraisal" id="performance_appraisal" class="form-select" required>
+            <option value="">Select</option>
+            <option value="Excellent" {% if result and result.performance_appraisal == 'Excellent' %}selected{% endif %}>Excellent</option>
+            <option value="Good" {% if result and result.performance_appraisal == 'Good' %}selected{% endif %}>Good</option>
+            <option value="Average" {% if result and result.performance_appraisal == 'Average' %}selected{% endif %}>Average</option>
+            <option value="Poor" {% if result and result.performance_appraisal == 'Poor' %}selected{% endif %}>Poor</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label for="remarks" class="form-label">Remarks (optional)</label>
+          <textarea name="remarks" id="remarks" class="form-control">{{ result.remarks }}</textarea>
+        </div>
+
+        <div class="d-flex justify-content-start">
+          <button type="submit" name="action" value="submit_final" class="btn btn-success me-2">✅ Forward for Approval</button>
+          <a href="{% url 'vtc:scheduled_training_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+      </form>
+
+      {% elif training.vtc_status == 'approved' %}
+      <hr>
+
+      <!-- 📎 Attendance File -->
+      {% if training.attendance_field_file %}
+        <div class="mb-3">
+          <label class="form-label fw-bold">Attendance File:</label><br>
+          <a href="{{ training.attendance_field_file.url }}" target="_blank">
+            {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+          </a>
+        </div>
+      {% endif %}
+
+      <!-- 📊 Final Result -->
+      {% if result %}
+        <div class="mb-3">
+          <label class="form-label fw-bold">Performance Appraisal:</label>
+          <div>{{ result.performance_appraisal }}</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Remarks:</label>
+          <div>{{ result.remarks|default:"—" }}</div>
+        </div>
+
+        
+      {% endif %}
+      <div class="alert alert-info mt-3">✅ Attendance and result are approved and locked for editing.</div>
+      <a href="{% url 'vtc:scheduled_training_list' %}" class="btn btn-secondary">Back to List</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+

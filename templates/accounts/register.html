@@ -1,0 +1,28 @@
+{% extends 'common/base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width:600px;">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white text-center">
+      <h4>Register</h4>
+    </div>
+    <div class="card-body">
+      {% include 'common/message.html' %}
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+      </form>
+      <p class="mt-3 text-center">
+        Already have an account?
+        <a href="{% url 'accounts:login' %}">Login here</a>.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

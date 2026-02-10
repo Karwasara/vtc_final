@@ -1,0 +1,19 @@
+<!-- templates/common/sidebar.html -->
+<!-- templates/department/sidebar.html -->
+<div class="sidebar p-3" style="background-color: #d9f1ff; height:900px;">
+    <h5 class="fw-bold">Menu</h5>
+    <ul class="nav flex-column">
+        <li class="nav-item mb-2">
+            <a class="nav-link text-nowrap" href="{% url 'aso:received_training_list' %}">Received From VTC</a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link text-nowrap" href="{% url 'aso:forwarded_training_list' %}">Forwarded to MM</a>
+        </li>
+        <li class="nav-item mb-2">
+            <a class="nav-link text-nowrap" href="{% url 'aso:certificate_detail' %}">Verify Certificate</a>
+        </li>
+    </ul>
+</div>
+
+  
+  

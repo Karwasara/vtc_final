@@ -1,0 +1,30 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  body { background-color: #f7fafd; }
+  .btn-create { margin-bottom: 20px; }
+</style>
+
+<div class="container mt-4">
+  <div class="row">
+    
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'aso/sidebar.html' %}
+    </div>
+
+    <!-- Main Contractor List -->
+    <div class="col-md-9">
+    <!-- ✅ Main Content -->
+    <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+      <h1 class="text-center mb-4">Dashboard Overview</h1>
+      <p>Welcome to your dashboard. Use the sidebar to navigate.</p>
+    </main>
+
+  </div>
+</div>
+</div>
+
+{% endblock %}

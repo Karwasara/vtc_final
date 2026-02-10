@@ -1,0 +1,11 @@
+{% extends 'common/base.html' %}
+{% block content %}
+<div class="container mt-4">
+  <h4>Are you sure you want to delete "{{ object.name }}"?</h4>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    <a href="{% url 'vtc:worker_list' %}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+{% endblock %}

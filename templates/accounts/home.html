@@ -1,0 +1,80 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .hero-section {
+    background: linear-gradient(to right, #0056b3, #66ccff);
+    color: white;
+    padding: 50px 50px;
+    text-align: center;
+  }
+
+  .hero-section h1 {
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .feature-card {
+    transition: transform 0.2s;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .mission-section {
+   /* background-color: #f8f9fa;
+    padding: 40px 20px;
+    text-align: center;*/
+
+    background: linear-gradient(to right, #0056b3, #66ccff);
+    color: white;
+    padding: 50px 50px;
+    text-align: center;
+  }
+</style>
+
+<div class="hero-section">
+  <h1>Vocational Training Centre Portal</h1>
+  <p class="lead">Comprehensive, end-to-end digital platform for Vocational Training Management.</p>
+  <a href="{% url 'accounts:login' %}" class="btn btn-light btn-lg mt-3">Login to Continue</a>
+</div>
+<!--
+<div class="container mt-5">
+  <div class="row text-center">
+    <div class="col-md-4 mb-4">
+      <div class="card feature-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Contractor Management</h5>
+          <p class="card-text">Register and manage contractor details efficiently in a centralized database.</p>
+          <a href="{% url 'accounts:login' %}" class="btn btn-primary">View Contractors</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div class="card feature-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Worker Training</h5>
+          <p class="card-text">Schedule, track, and approve training sessions to ensure safety and compliance.</p>
+          <a href="{% url 'accounts:login' %}" class="btn btn-primary">View Trainings</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-4">
+      <div class="card feature-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Certificate Management</h5>
+          <p class="card-text">verify training certificates.</p>
+          <a href="{% url 'accounts:login' %}" class="btn btn-primary">View Certificates</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+<div class="mission-section">
+  <!--<h3>Our Mission</h3>
+  <p>To bridge the gap between employment and skill development, ensuring every worker is equipped with the knowledge and certifications to work safely and effectively in mining and allied industries.</p>-->
+</div>
+{% endblock %}

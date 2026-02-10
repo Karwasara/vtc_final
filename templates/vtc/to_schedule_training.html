@@ -1,0 +1,138 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- ✅ DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<style>
+  body {
+    background-color: #f7fafd;
+    font-family: "Segoe UI", sans-serif;
+  }
+
+  h2 {
+    color: #0d6efd;
+    font-weight: 600;
+    margin-bottom: 25px;
+  }
+
+  .main-card {
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+    padding: 25px;
+    transition: all 0.2s ease;
+  }
+
+  .main-card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.12);
+  }
+
+  table.dataTable {
+    border-radius: 10px !important;
+    overflow: hidden;
+  }
+
+  table.dataTable thead th {
+    background-color: #0d6efd !important;
+    color: white;
+    text-align: center;
+  }
+
+  table.dataTable tbody tr:hover {
+    background-color: #f1f7ff;
+  }
+
+  .btn-warning {
+    border-radius: 6px;
+    color: #000;
+    background-color: #ffc107;
+    border: none;
+    transition: 0.2s;
+  }
+
+  .btn-warning:hover {
+    background-color: #ffca2c;
+  }
+
+  .sidebar {
+    background-color: #d9f1ff;
+    border-radius: 15px;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="row">
+    
+    <!-- ✅ Sidebar -->
+    <div class="col-md-3">
+      {% include 'vtc/sidebar.html' %}
+    </div>
+
+    <!-- ✅ Main Content -->
+    <div class="col-md-9">
+      <div class="main-card mt-3">
+        <h2>Workers Available for Training</h2>
+
+        {% if workers %}
+        <table id="workersTable" class="table table-bordered table-striped align-middle">
+          <thead>
+            <tr>
+              <th>S.No.</th>
+              <th>Worker Name</th>
+              <th>Aadhaar</th>
+              <th>Date of Birth</th>
+              <th>Mobile</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for worker in workers %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>{{ worker.name }}</td>
+              <td>{{ worker.aadhar_number }}</td>
+              <td>{{ worker.dob }}</td>
+              <td>{{ worker.mobile }}</td>
+              <td>
+                <a href="{% url 'vtc:schedule_training' worker.pk %}" class="btn btn-sm btn-warning">
+                  Schedule
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+          <div class="alert alert-warning text-center" role="alert">
+            No workers available for training.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ jQuery + DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<!-- ✅ Initialize DataTable -->
+<script>
+$(document).ready(function() {
+  $('#workersTable').DataTable({
+    "pageLength": 10,
+    "order": [],
+    "columnDefs": [
+      { "orderable": false, "targets": 5 } // Disable sort on Action
+    ]
+  });
+});
+</script>
+{% endblock %}
+

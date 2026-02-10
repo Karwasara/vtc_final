@@ -1,0 +1,164 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Local Bootstrap -->
+<link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
+
+<div class="container mt-4">
+  <div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'mm/sidebar.html' %}
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="col-md-9">
+      <h1 class="dashboard-heading text-center mb-4">
+        Contractual Worker Training Dashboard
+      </h1>
+
+      <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-3">
+          <div class="card text-center bg-primary text-white dashboard-tile active-tile" data-type="trained">
+            <div class="card-body">
+              <h2>{{ total_trained }}</h2>
+              <p>Workers Trained</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card text-center bg-success text-white dashboard-tile" data-type="under_training">
+            <div class="card-body">
+              <h2>{{ total_under_training }}</h2>
+              <p>Workers Under Training</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card text-center bg-warning text-dark dashboard-tile" data-type="total_trainings">
+            <div class="card-body">
+              <h2>{{ total_trainings }}</h2>
+              <p>Total Trainings Scheduled</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+          <div class="card text-center bg-info text-white dashboard-tile" data-type="total_workers">
+            <div class="card-body">
+              <h2>{{ total_workers }}</h2>
+              <p>Total Registered Workers</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <canvas id="areaChart" height="100"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Local Chart.js -->
+<script src="{% static 'chart.umd.js' %}"></script>
+<!-- Local Bootstrap JS -->
+<script src="{% static 'bootstrap.bundle.min.js' %}"></script>
+
+<script>
+  const areaLabels = JSON.parse("{{ area_labels|escapejs }}");
+  const trainedCounts = JSON.parse("{{ trained_counts|escapejs }}");
+  const underTrainingCounts = JSON.parse("{{ under_training_counts|escapejs }}");
+  const totalTrainingsCounts = JSON.parse("{{ total_trainings_counts|escapejs }}");
+  const totalWorkersCounts = JSON.parse("{{ total_workers_counts|escapejs }}");
+
+  let chart = null;
+
+  function renderChart(type) {
+    const datasetsMap = {
+      'trained': trainedCounts,
+      'under_training': underTrainingCounts,
+      'total_trainings': totalTrainingsCounts,
+      'total_workers': totalWorkersCounts
+    };
+
+    const colorsMap = {
+      'trained': 'rgba(0, 123, 255, 0.7)',
+      'under_training': 'rgba(40, 167, 69, 0.7)',
+      'total_trainings': 'rgba(255, 193, 7, 0.7)',
+      'total_workers': 'rgba(23, 162, 184, 0.7)'
+    };
+
+    const dataArray = datasetsMap[type].slice();
+    const total = dataArray.reduce((a,b)=>a+b,0);
+    dataArray.push(total);
+
+    const labelsArray = areaLabels.slice();
+    labelsArray.push("Total");
+
+    if (chart) chart.destroy();
+
+    const ctx = document.getElementById('areaChart').getContext('2d');
+    chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labelsArray,
+        datasets: [{
+          label: type.replace('_', ' ').toUpperCase(),
+          data: dataArray,
+          backgroundColor: colorsMap[type]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: type.replace('_', ' ').toUpperCase() + " AREA WISE" }
+        },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    document.querySelectorAll('.dashboard-tile').forEach(tile =>
+      tile.classList.remove('active-tile')
+    );
+
+    document.querySelector(`.dashboard-tile[data-type="${type}"]`).classList.add('active-tile');
+  }
+
+  renderChart('trained');
+
+  document.querySelectorAll('.dashboard-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const type = tile.getAttribute('data-type');
+      renderChart(type);
+    });
+  });
+</script>
+
+<style>
+.dashboard-heading {
+  font-size: 2.8rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, #007bff, #00c6ff, #00ff99);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+  letter-spacing: 1px;
+  transition: transform 0.3s;
+}
+.dashboard-heading:hover { transform: scale(1.05); }
+.dashboard-tile { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+.dashboard-tile:hover { transform: scale(1.05); }
+.dashboard-tile.active-tile {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+  border: 2px solid #000;
+}
+</style>
+
+{% endblock %}

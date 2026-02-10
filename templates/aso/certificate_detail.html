@@ -1,0 +1,100 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="row">
+
+    <!-- Sidebar -->
+    <div class="col-md-3">
+      {% include 'aso/sidebar.html' %}
+    </div>
+
+    <!-- Main content -->
+    <div class="col-md-9">
+      <h2 class="text-center mb-4">Certificate Verification</h2>
+
+      <!-- Search Form -->
+      <form method="get" class="mb-4">
+        <div class="row">
+          <div class="col-md-6">
+            <input type="text" name="serial_number" placeholder="Enter Certificate Serial Number" class="form-control" value="{{ request.GET.serial_number }}">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+      </form>
+
+      {% if training %}
+      <div class="border p-4 bg-light certificate-container">
+
+        <div class="text-center">
+          <h3>NORTHERN COALFIELDS LIMITED</h3>
+          <h5>{{ area_name }} MINE</h5>
+          <h4 class="mt-3">Certificate of Vocational Training</h4>
+          <hr>
+          <p><strong>{{ form_type }}</strong></p>
+        </div>
+
+        <div class="mt-4 row">
+          <div class="col-md-6">
+              <p><strong>Certificate No:</strong> {{ serial_number }}</p>
+          </div>
+          <div class="col-md-6 text-end">
+              <p><strong>Issue Date:</strong> {{ issue_date }}</p>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <p>
+            This is to certify that <strong>{{ worker.name }}</strong>, S/o/D/o/W/o <strong>{{ worker.father_or_spouse_name }}</strong>,
+            of Village <strong>{{ worker.village }}</strong>, Thana <strong>{{ worker.thana }}</strong>, PO <strong>{{ worker.po }}</strong>,
+            District <strong>{{ worker.district }}</strong>, State <strong>{{ worker.state }}</strong>, 
+            has between <strong>{{ from_date }}</strong> to <strong>{{ to_date }}</strong> duly undergone the  {{ training.type_of_training }} training
+            required under <strong>{{ chapter }}</strong> of the Mine Vocational Training Rules, 1966, for the employment in a mine on surface and in opencast workings.
+          </p>
+        </div>
+
+        <div class="mt-4">
+          <p><strong>Type of Training:</strong> {{ training.type_of_training }} Training</p>
+          <p><strong>Nature of Training:</strong> {{ training.nature_of_training }}</p>
+        </div>
+
+        <div class="mt-4">
+          <p><strong>Period of Training:</strong> {{ from_date }} to {{ to_date }} (Days Present: {{ present_days }})</p>
+          <p><strong>Vocational Training Centre:</strong> {{ area_name |default:"N/A" }}</p>
+          <p><strong>Registration No. of the Training Centre:</strong> — (if applicable)</p>
+        </div>
+
+        <div class="row mt-5">
+          <!-- Photo -->
+          <div class="col-md-4 text-center">
+            {% if worker.photo %}
+              <img src="{{ worker.photo.url }}" alt="Photo" class="img-fluid border" style="max-height: 200px;">
+            {% else %}
+              <div class="border py-5">
+                <span>No Photo</span>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Footer Notes with line above -->
+          <div class="col-md-8">
+            <hr class="my-4">
+            
+            <p><em>* This certificate will have no claim for employment in NCL.</em></p>
+            <p><em>* This certificate is valid for {{ validity_years }} years from the issue date.</em></p>
+          </div>
+        </div>
+
+      </div>
+      {% elif searched %}
+        <div class="alert alert-danger mt-4">No certificate found with the entered details.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
