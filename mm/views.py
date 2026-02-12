@@ -215,8 +215,14 @@ def generate_form_a_pdf(request, training_id):
     line_gap = 16
 
     # Header
+    # Header
+    subsidiary_name = (
+    request.user.area.subsidiary.subsidiary_name
+    if request.user.area and request.user.area.subsidiary
+    else "Unknown"
+    )
     c.setFont("Helvetica-Bold", 15)
-    c.drawCentredString(width / 2, y, "NORTHERN COALIFIELDS LIMITED")
+    c.drawCentredString(width / 2, y, f"{subsidiary_name}")
     y -= 20
     c.setFont("Helvetica-Bold", 12)
     
@@ -548,4 +554,5 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
