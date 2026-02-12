@@ -42,7 +42,7 @@ class IndependentWorker(models.Model):
     dob = models.DateField("Date of Birth", null=True,validators=[validate_age])
     blood_group = models.CharField(max_length=3, choices=BLOOD_GROUP_CHOICES, null=True)
     aadhar_number = models.CharField(max_length=12, unique=True)
-    aadhar_file = models.FileField(upload_to='worker_documents/aadhar/', null=True)
+    aadhar_file = models.FileField(upload_to='aadhar/', null=True)
 
     # ✅ New address fields replacing single 'address'
     village = models.CharField("Village", max_length=100, null=True)
