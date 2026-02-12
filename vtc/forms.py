@@ -4,12 +4,31 @@ from .models import IndependentWorker
 class IndependentWorkerForm(forms.ModelForm):
     class Meta:
         model = IndependentWorker
-        fields = '__all__'
+        exclude = ['created_by','delete_flag','form_o','ID_Card_number','do_form']
+
         widgets = {
-            'dob': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            
+            'dob': forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            'aadhar_file': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'application/pdf'   # ✅ Browser shows PDF only
+            }),
         }
-        exclude = ['created_by','delete_flag','form_o','ID_Card_number','do_form']  
+
+    # ✅ Server-side validation (IMPORTANT)
+    def clean_aadhar_file(self):
+        file = self.cleaned_data.get('aadhar_file')
+
+        if file:
+            if not file.name.endswith('.pdf'):
+                raise ValidationError("Only PDF files are allowed for Aadhar upload.")
+
+            if file.content_type != 'application/pdf':
+                raise ValidationError("File must be a valid PDF.")
+
+        return file 
 
 
 #for training schedule and result
@@ -59,3 +78,4 @@ class TrainingAttendanceForm(forms.ModelForm):
     class Meta:
         model = TrainingAttendance
         fields = ['date', 'present']
+
