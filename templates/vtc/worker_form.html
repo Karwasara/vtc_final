@@ -35,7 +35,19 @@
 
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
+            {% for field in form %}
+              <p>
+                {{ field.label_tag }}
+
+                {% if field.field.widget.input_type == "file" and field.value %}
+                    <a href="{{ field.value.url }}" target="_blank" rel="noopener noreferrer">
+                        View {{ field.label }}
+                    </a>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+              </p>
+            {% endfor %}
 
             {% if not read_only %}
               <button type="submit" class="btn btn-primary">Save</button>
@@ -49,3 +61,4 @@
   </div>
 </div>
 {% endblock %}
+
