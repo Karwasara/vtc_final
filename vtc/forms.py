@@ -66,29 +66,30 @@ class TrainingScheduleForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-
+    
         if user:
             user_areas = user.areas.all()
-
+    
             # One area → auto-fill & hide
             if user_areas.count() == 1:
                 self.fields['area_name'].initial = user_areas.first().area_name
                 self.fields['area_name'].widget = forms.HiddenInput()
-
+    
             # Multiple areas → dropdown
             elif user_areas.count() > 1:
-                self.fields['area_name'] = forms.ChoiceField(
-                    choices=[(a.area_name, a.area_name) for a in user_areas],
-                    required=True,
-                    widget=forms.Select(attrs={'class': 'form-select'})
+                self.fields['area_name'].widget = forms.Select(
+                    attrs={'class': 'form-select'}
                 )
-
+                self.fields['area_name'].choices = [
+                    (a.area_name, a.area_name) for a in user_areas
+                ]
+    
             # No areas → manual input
             else:
-                self.fields['area_name'] = forms.CharField(
-                    required=True,
-                    widget=forms.TextInput(attrs={'class': 'form-control'})
+                self.fields['area_name'].widget = forms.TextInput(
+                    attrs={'class': 'form-control'}
                 )
+
 
     def clean(self):
         cleaned_data = super().clean()
@@ -121,5 +122,6 @@ class TrainingAttendanceForm(forms.ModelForm):
     class Meta:
         model = TrainingAttendance
         fields = ['date', 'present']
+
 
 
