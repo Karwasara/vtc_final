@@ -89,13 +89,15 @@ from vtc.models import TrainingSchedule
 #     # workers = WorkerID.objects.filter(approval_status='pending')
 #     workers = IndependentWorker.objects.filter(mm_approval_status='approved')
 #     return render(request, 'vtc/hod_approved_workers.html', {'workers': workers})
-
-from datetime import datetime, date  # ensure 'date' is imported
+from datetime import datetime, date
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 def schedule_training(request, pk):
     worker = get_object_or_404(IndependentWorker, pk=pk)
+
+    # Get user's mapped areas
+    user_areas = request.user.areas.all()
 
     if request.method == 'POST':
         from_date_str = request.POST.get('from_date')
@@ -103,6 +105,12 @@ def schedule_training(request, pk):
         type_of_training = request.POST.get('type_of_training')
         nature_of_training = request.POST.get('nature_of_training')
         contractor_name = request.POST.get('contractor_name')
+
+        # AREA HANDLING
+        if user_areas.count() == 1:
+            area_name = user_areas.first().area_name
+        else:
+            area_name = request.POST.get('area_name')
 
         # Convert to date objects
         try:
@@ -112,14 +120,16 @@ def schedule_training(request, pk):
             messages.error(request, 'Invalid date format.')
             return render(request, 'vtc/schedule_training.html', {'worker': worker})
 
-        # ✅ Rule 1: From Date must be today or later
+        # Rule 1
         if from_date < date.today():
             messages.error(request, 'Training can only be scheduled from today or a future date.')
-        # ✅ Rule 2: From Date must not be after To Date
+
+        # Rule 2
         elif from_date > to_date:
             messages.error(request, 'From Date cannot be after To Date.')
+
         else:
-            # ✅ Rule 3: Check for overlapping dates
+            # Rule 3
             overlapping = TrainingSchedule.objects.filter(
                 worker=worker,
                 from_date__lte=to_date,
@@ -128,8 +138,9 @@ def schedule_training(request, pk):
 
             if overlapping:
                 messages.error(request, 'This training period overlaps with an existing training for this worker.')
+
             else:
-                # ✅ Save only if all validations pass
+                # SAVE WITH AREA
                 TrainingSchedule.objects.create(
                     worker=worker,
                     from_date=from_date,
@@ -137,13 +148,19 @@ def schedule_training(request, pk):
                     type_of_training=type_of_training,
                     nature_of_training=nature_of_training,
                     contractor_name=contractor_name,
+                    area_name=area_name,            # 👈 saved here
                     created_by=request.user,
                     modified_by=request.user
                 )
+
                 messages.success(request, 'Training scheduled successfully.')
                 return redirect('vtc:to_schedule_training')
 
-    return render(request, 'vtc/schedule_training.html', {'worker': worker})
+    return render(request, 'vtc/schedule_training.html', {
+        'worker': worker,
+        'user_areas': user_areas   # for dropdown rendering
+    })
+
 
 
 
@@ -416,5 +433,6 @@ def certificate_detail(request):
             "worker": None,
             "searched": searched,
         }
+
 
     return render(request, 'vtc/certificate_detail.html', context)
