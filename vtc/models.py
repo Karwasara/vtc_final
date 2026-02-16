@@ -101,6 +101,7 @@ class TrainingSchedule(models.Model):
         related_name="vtc_approvals"
     )
     vtc_approved_at = models.DateTimeField(null=True, blank=True)
+    area_name = models.CharField(max_length=255, blank=True, null=True)
     
     aso_approved_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -171,3 +172,4 @@ class TrainingResult(models.Model):
     
     
     
+
