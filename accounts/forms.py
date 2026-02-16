@@ -18,7 +18,7 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = [
-            'username', 'email', 'phone', 'address', 'user_type', 'area',
+            'username', 'email', 'phone', 'address', 'user_type', 'areas',
             'password1', 'password2'
         ]
 
@@ -26,5 +26,5 @@ class CustomUserCreationForm(UserCreationForm):
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'user_type': forms.Select(attrs={'class': 'form-select'}),
-            'area': forms.Select(attrs={'class': 'form-select'}),
+            'areas': forms.Select(attrs={'class': 'form-select'}),
         }

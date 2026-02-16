@@ -52,11 +52,10 @@ class CustomUser(AbstractUser):
         on_delete=models.SET_NULL
     )
 
-    area = models.ForeignKey(
+    areas = models.ManyToManyField(
         AreaMaster,
-        null=True,
         blank=True,
-        on_delete=models.SET_NULL
+        related_name="vtc_users"
     )
 
     def __str__(self):
