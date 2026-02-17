@@ -13,19 +13,19 @@ def dashboard(request):
 
 
 def vtc_forwarded_training_list(request):
-    user_area = request.user.area 
+    user_areas = request.user.areas.all()
     
     trainings = TrainingSchedule.objects.filter(
         vtc_status='approved',
         aso_status__iexact='pending',
-        vtc_approved_by__area=user_area  # <--- this line filters by related user’s area
+        area_name__in=[a.area_name for a in user_areas]
     ).order_by('-vtc_approved_at')
     return render(request, 'aso/received_training_list.html', {'trainings': trainings})
 def aso_forwarded_training_list(request):
-    user_area = request.user.area 
+    user_areas = request.user.areas.all() 
     trainings = TrainingSchedule.objects.filter(
         aso_status__iexact='approved',
-        vtc_approved_by__area=user_area
+        area_name__in=[a.area_name for a in user_areas]
     ).order_by('-aso_approved_at')
     return render(request, 'aso/forwarded_training_list.html', {'trainings': trainings})
 

@@ -21,51 +21,43 @@ from django.db.models import Q
 import json
 #from .models import TrainingSchedule, IndependentWorker
 
-def dashboard(request):
-    """
-    Dashboard view showing area-wise and unit-wise summary of trainings.
-    Clicking on each tile will show area-wise details in charts.
-    """
-    areas = AreaMaster.objects.all().order_by('area_name')
+from django.db.models import Q
+import json
 
+def dashboard(request):
+    areas = AreaMaster.objects.all().order_by('area_name')
     area_data = []
 
-
     for area in areas:
+        area_name = area.area_name
+
         trained_count = TrainingSchedule.objects.filter(
             mm_status='approved',
-            aso_approved_by__area=area
+            area_name=area_name
         ).count()
 
         under_training_count = TrainingSchedule.objects.filter(
             Q(mm_status__isnull=True) | Q(mm_status='Pending'),
-            created_by_id__area=area
+            area_name=area_name
         ).count()
 
         total_trainings_count = TrainingSchedule.objects.filter(
-            created_by_id__area=area
+            area_name=area_name
         ).count()
 
-        total_workers_count = IndependentWorker.objects.filter(
-            created_by_id__area=area
-        ).count()
+#        total_workers_count = IndependentWorker.objects.filter(
+ #           area_name=area_name
+  #      ).count()
 
         area_data.append({
-            "name": area.area_name,
+            "name": area_name,
             "trained": trained_count,
             "under_training": under_training_count,
             "total_trainings": total_trainings_count,
-            "total_workers": total_workers_count,
+            "total_workers": 0,
         })
 
-    # Sort descending by trained workers
     area_data = sorted(area_data, key=lambda x: x['trained'], reverse=True)
-
-    # Totals for dashboard tiles
-    total_trained = sum([a['trained'] for a in area_data])
-    total_under_training = sum([a['under_training'] for a in area_data])
-    total_trainings = sum([a['total_trainings'] for a in area_data])
-    total_workers = sum([a['total_workers'] for a in area_data])
 
     context = {
         "area_data": area_data,
@@ -73,13 +65,11 @@ def dashboard(request):
         "trained_counts": json.dumps([a["trained"] for a in area_data]),
         "under_training_counts": json.dumps([a["under_training"] for a in area_data]),
         "total_trainings_counts": json.dumps([a["total_trainings"] for a in area_data]),
-        "total_workers_counts": json.dumps([a["total_workers"] for a in area_data]),
-
-        # Totals for tiles
-        "total_trained": total_trained,
-        "total_under_training": total_under_training,
-        "total_trainings": total_trainings,
-        "total_workers": total_workers,
+#        "total_workers_counts": json.dumps([a["total_workers"] for a in area_data]),
+        "total_trained": sum(a['trained'] for a in area_data),
+        "total_under_training": sum(a['under_training'] for a in area_data),
+        "total_trainings": sum(a['total_trainings'] for a in area_data),
+#        "total_workers": sum(a['total_workers'] for a in area_data),
     }
 
     return render(request, "mm/dashboard.html", context)
@@ -111,10 +101,10 @@ def dashboard(request):
 
 
 def aso_forwarded_training_list(request):
-    user_area = request.user.area
+    user_areas = request.user.areas.all()
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
-        aso_approved_by__area=user_area
+        area_name__in=[a.area_name for a in request.user.areas.all()]
         )
     return render(request, 'mm/forwarded_training_list.html', {'trainings': trainings})
 
@@ -185,7 +175,12 @@ def generate_form_a_pdf(request, training_id):
         last_number = TrainingSchedule.objects.filter(certificate_serial_number__isnull=False).order_by('-certificate_serial_number').first()
         new_serial = (last_number.certificate_serial_number + 1) if last_number else 10000000
         training.certificate_serial_number = new_serial
-        area_code = request.user.area.area_code if request.user.area else "UNKNOWN"
+        area_code = (
+    	request.user.areas.first().area_code
+    	if request.user.areas.exists()
+    	else "Unknown"
+	)
+
         training.certificate_serial_number_final = "VTC" + area_code + str(new_serial)
         training.certificate_created_date= timezone.now()
         training.save()
@@ -217,10 +212,10 @@ def generate_form_a_pdf(request, training_id):
     # Header
     # Header
     subsidiary_name = (
-    request.user.area.subsidiary.subsidiary_name
-    if request.user.area and request.user.area.subsidiary
+    request.user.areas.first().subsidiary.subsidiary_name
+    if request.user.areas.exists() and request.user.areas.first().subsidiary
     else "Unknown"
-    )
+	)
     c.setFont("Helvetica-Bold", 15)
     c.drawCentredString(width / 2, y, f"{subsidiary_name}")
     y -= 20
@@ -230,7 +225,11 @@ def generate_form_a_pdf(request, training_id):
 # Get the location name or fallback to original if not mapped
    
 # Draw centered string
-    area_name = request.user.area.area_name if request.user.area else "Unknown"
+    area_name = (
+    request.user.areas.first().area_name
+    if request.user.areas.exists()
+    else "Unknown"
+	)
     c.drawCentredString(width / 2, y, f"{area_name} MINE")
 
 
@@ -264,7 +263,11 @@ def generate_form_a_pdf(request, training_id):
     y -= 20
     c.setFont("Helvetica", 10)
     date_only = training.certificate_created_date.strftime('%d/%m/%Y')
-    area_code = request.user.area.area_code if request.user.area else "Unknown"
+    area_code = (
+    request.user.areas.first().area_code
+    if request.user.areas.exists()
+    else "Unknown"
+	)
     c.drawString(50, y, f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}")
     
     y -= 50
