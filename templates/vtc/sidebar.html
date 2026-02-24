@@ -1,32 +1,45 @@
 <!-- templates/vtc/sidebar.html -->
 
-<div class="sidebar p-3">
-  <h5 class="fw-bold text-center mb-4 text-primary">Menu</h5>
+<!-- ===============================
+     BOOTSTRAP ICONS
+================================ -->
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+/>
 
-  <ul class="nav flex-column">
+<div class="sidebar">
 
-    <li class="nav-item mb-2">
+  <!-- Sidebar Header -->
+  <div class="sidebar-header text-center">
+    <h5 class="fw-bold text-primary mb-0">Menu</h5>
+  </div>
+
+  <!-- Menu Items -->
+  <ul class="nav flex-column mt-3">
+
+    <li class="nav-item">
       <a class="nav-link" href="{% url 'vtc:worker_list' %}">
         <i class="bi bi-people-fill me-2 text-primary"></i>
         Worker List
       </a>
     </li>
 
-    <li class="nav-item mb-2">
+    <li class="nav-item">
       <a class="nav-link" href="{% url 'vtc:to_schedule_training' %}">
         <i class="bi bi-calendar-event-fill me-2 text-success"></i>
         Schedule Training
       </a>
     </li>
 
-    <li class="nav-item mb-2">
+    <li class="nav-item">
       <a class="nav-link" href="{% url 'vtc:scheduled_training_list' %}">
         <i class="bi bi-clipboard-check-fill me-2 text-warning"></i>
         Add Attendance & Result
       </a>
     </li>
 
-    <li class="nav-item mb-2">
+    <li class="nav-item">
       <a class="nav-link" href="{% url 'vtc:certificate_detail' %}">
         <i class="bi bi-patch-check-fill me-2 text-info"></i>
         Verify Certificate
@@ -34,4 +47,66 @@
     </li>
 
   </ul>
+
 </div>
+
+<!-- ===============================
+     SIDEBAR STYLES
+================================ -->
+<style>
+/* Main Sidebar Card */
+.sidebar {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px;
+  min-height: 600px;
+  border: 1px solid #e6e9ef;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Header */
+.sidebar-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Navigation */
+.sidebar .nav-item {
+  margin-bottom: 8px;
+}
+
+/* Links */
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  color: #333;
+  font-weight: 500;
+  padding: 10px 14px;
+  border-radius: 12px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Hover (Stable – No movement) */
+.sidebar .nav-link:hover {
+  background-color: #f4f7fb;
+  color: #0d6efd;
+}
+
+/* Active Link */
+.sidebar .nav-link.active {
+  background-color: #0d6efd;
+  color: #ffffff;
+}
+
+/* Remove any unwanted movement */
+.sidebar .nav-link:focus,
+.sidebar .nav-link:active {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Icon alignment */
+.sidebar i {
+  font-size: 1.1rem;
+}
+</style>
