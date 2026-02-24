@@ -11,12 +11,21 @@
   <div class="card shadow-lg border-0 rounded-5 p-5" style="max-width: 400px; width: 100%;">
     
     <!-- Logo & Title -->
-    <div class="text-center mb-4">
-      <img src="{% static 'cil_new_logo.png' %}" alt="Logo" class="mb-3" height="80">
-      <h3 class="fw-bold text-primary">
+    <div class="text-center mb-4 p-4 border rounded-3 shadow-sm bg-white">
+
+    <img src="{% static 'cil_new_logo.png' %}"
+         alt="Logo"
+         class="mb-3"
+         height="80">
+
+    <h3 class="fw-bold text-primary">
         <i class="bi bi-box-arrow-in-right me-2"></i>Login
-      </h3>
-      <p class="text-muted mb-0">Access your account securely</p>
+    </h3>
+
+    <p class="text-muted mb-0">
+        Access your account securely
+    </p>
+
     </div>
 
     <!-- Form -->
@@ -110,4 +119,5 @@ label {
 }
 </style>
 {% endblock %}
+
 
