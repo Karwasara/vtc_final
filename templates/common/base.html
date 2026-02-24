@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <title>{% block title %}My Project{% endblock %}</title>
@@ -15,74 +16,52 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background-color: #f4f6f9;   /* Light admin background */
+            font-family: "Segoe UI", sans-serif;
+
+            /* Background Gradient */
+            background: linear-gradient(
+                135deg,
+                rgba(232, 180, 161, 0.8),
+                rgba(255, 215, 186, 0.8),
+                rgba(180, 200, 195, 0.8)
+            );
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: cover;
+
             display: flex;
             flex-direction: column;
         }
 
         main {
             flex: 1;
-            padding-top: 20px;
-        }
-
-        /* ===== Top Logo Header ===== */
-        .top-header {
-            background-color: #ffffff;
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .top-header img {
-            height: 70px;   /* Reduced for cleaner look */
-        }
-
-        /* ===== Navbar (Dark Corporate) ===== */
-        .navbar {
-            background-color: #1f2d3d !important;
-            padding: 10px 0;
-        }
-
-        .navbar-brand {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #ffffff !important;
-        }
-
-        .navbar-nav .nav-link {
-            color: #ffffff !important;
-            font-weight: 500;
-            font-size: 0.9rem;
-            margin-left: 10px;
-        }
-
-        .navbar-nav .nav-link:hover {
-            color: #cfd8dc !important;
-        }
-
-        /* ===== Content Wrapper ===== */
-        .content-wrapper {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-
-        /* ===== Footer ===== */
-        footer {
-            background-color: #1f2d3d;
-            color: #ffffff;
-            font-size: 0.85rem;
         }
 
         footer a {
-            color: #ffffff;
+            color: #f8f9fa;
             text-decoration: none;
-            margin-right: 15px;
         }
 
         footer a:hover {
             text-decoration: underline;
+        }
+
+        .footer-light-blue {
+            background-color: #add8e6;
+            color: #000;
+        }
+
+        .footer-light-blue a {
+            color: #000;
+        }
+
+        .bg-light {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .navbar {
+            background: rgba(0, 91, 150, 0.9) !important;
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
@@ -90,42 +69,55 @@
 <body>
 
     <!-- ===== Top Logo Header ===== -->
-    <div class="top-header">
-        <div class="container d-flex align-items-center justify-content-between">
+    <div class="bg-light py-3 border-bottom">
+        <div class="container d-flex align-items-center">
 
             <!-- Left Logo -->
-            <img src="{% static 'cil_new_logo.png' %}" alt="Coal India Logo" />
+            <img src="{% static 'cil_new_logo.png' %}"
+                 alt="Coal India Logo"
+                 height="100"
+                 class="ms-5" />
 
             <!-- Center Text -->
-            <div class="text-center flex-grow-1">
-                <h6 class="mb-0 fw-bold text-dark">
-                    Empowering Contractors' Employees Through Vocational Training
-                </h6>
+            <div class="flex-grow-1 text-center">
+                <p class="mb-1 fst-italic" style="font-size: 1rem;"></p>
+                <p class="text-muted fst-italic"
+                   style="font-size: 0.9rem; font-weight: 600;">
+                </p>
             </div>
 
             <!-- Right Logo -->
-            <img src="{% static 'cil_new_logo.png' %}" alt="Coal India Logo" />
+            <img src="{% static 'cil_new_logo.png' %}"
+                 alt="Coal India Logo"
+                 height="100"
+                 class="ms-5" />
         </div>
     </div>
 
     <!-- ===== Navigation Bar ===== -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
 
             <a class="navbar-brand" href="#">
-                VTC Portal - Coal India Limited
+                <strong>
+                    Empowering Contractors' Employees Through Vocational Training
+                </strong>
             </a>
 
             <button class="navbar-toggler"
                     type="button"
                     data-bs-toggle="collapse"
-                    data-bs-target="#navbarNav">
+                    data-bs-target="#navbarNav"
+                    aria-controls="navbarNav"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
 
+                    <!-- Home Link -->
                     <li class="nav-item">
                         {% if user.is_authenticated %}
                             {% with user.username|lower as uname %}
@@ -142,28 +134,39 @@
                         {% endif %}
                     </li>
 
+                    <!-- About -->
                     <li class="nav-item">
                         <a class="nav-link" href="#">About</a>
                     </li>
 
                     {% if user.is_authenticated %}
+
+                        <!-- Change Password -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:password_change' %}">
+                            <a class="nav-link"
+                               href="{% url 'accounts:password_change' %}">
                                 Change Password
                             </a>
                         </li>
 
+                        <!-- Logout -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:logout' %}">
+                            <a class="nav-link"
+                               href="{% url 'accounts:logout' %}">
                                 Logout ({{ user.username|split_and_capitalize }})
                             </a>
                         </li>
+
                     {% else %}
+
+                        <!-- Login -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">
+                            <a class="nav-link"
+                               href="{% url 'accounts:login' %}">
                                 Login
                             </a>
                         </li>
+
                     {% endif %}
 
                 </ul>
@@ -172,26 +175,27 @@
     </nav>
 
     <!-- ===== Main Content ===== -->
-    <main class="container mt-4">
-        <div class="content-wrapper">
-            {% block content %}
-            {% endblock %}
-        </div>
+    <main class="container mt-0">
+        {% block content %}
+        {% endblock %}
     </main>
 
     <!-- ===== Footer ===== -->
-    <footer class="text-center py-3 mt-auto">
+    <footer class="footer-light-blue text-center py-3 mt-auto">
         <div class="container">
+
             <div class="mb-2">
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms</a>
+                <a href="#" class="me-3">Privacy Policy</a>
+                <a href="#" class="me-3">Terms</a>
                 <a href="#">Contact</a>
             </div>
+
             <small>
                 © {{ year|default:2025 }}
                 <strong>VTC Portal of CIL</strong> |
                 All Rights Reserved
             </small>
+
         </div>
     </footer>
 
@@ -199,4 +203,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>
