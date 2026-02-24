@@ -2,95 +2,153 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>{% block title %}My Project{% endblock %}</title>
-  <!-- Bootstrap 5 CSS -->
+  <title>{% block title %}VTC Portal{% endblock %}</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
   {% load static %}
   {% load custom_filters %}
+
   <style>
-    html, body {
-      height: 100%;
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f5f7fa;
+      color: #202124;
       margin: 0;
-      padding: 0;
-      font-family: "Segoe UI", sans-serif;
-      /* 🎨 Background inspired by your image */
-      background: radial-gradient(circle at top left, #d9a7c7 0%, #fffcdc 100%);
-      background: linear-gradient(135deg, rgba(232,180,161,0.8), rgba(255,215,186,0.8), rgba(180,200,195,0.8));
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      background-size: cover;
       display: flex;
       flex-direction: column;
+      min-height: 100vh;
     }
 
     main {
       flex: 1;
+      padding: 40px 0;
+    }
+
+    /* ===== Minimal Header ===== */
+    .minimal-header {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid #eaeaea;
+      padding: 6px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .logo-sm {
+      height: 36px;
+      width: auto;
+    }
+
+    .brand-text {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #1a73e8;
+      letter-spacing: 0.5px;
+    }
+
+    /* ===== Navbar ===== */
+    .navbar {
+      background: #ffffff !important;
+      border-bottom: 1px solid #eaeaea;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    .navbar-brand {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #202124 !important;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: #5f6368 !important;
+      margin-left: 15px;
+      font-size: 0.9rem;
+      transition: 0.2s ease-in-out;
+    }
+
+    .nav-link:hover {
+      color: #1a73e8 !important;
+    }
+
+    .btn-primary {
+      background-color: #1a73e8;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+    }
+
+    .btn-primary:hover {
+      background-color: #1669c1;
+    }
+
+    /* ===== Cards ===== */
+    .card {
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      background-color: #ffffff;
+      border-top: 1px solid #eaeaea;
+      padding: 15px 0;
+      font-size: 0.85rem;
+      color: #5f6368;
+      text-align: center;
     }
 
     footer a {
-      color: #f8f9fa;
+      color: #5f6368;
       text-decoration: none;
+      margin: 0 10px;
     }
+
     footer a:hover {
-      text-decoration: underline;
+      color: #1a73e8;
     }
 
-    .footer-light-blue {
-      background-color: #add8e6; /* Light blue */
-      color: #000; /* Black text for contrast */
-    }
-    .footer-light-blue a {
-      color: #000;
-      text-decoration: none;
-    }
-    .footer-light-blue a:hover {
-      text-decoration: underline;
-    }
-
-    /* Optional: add slight transparency for nav and header to blend better with background */
-    .bg-light {
-      background-color: rgba(255,255,255,0.9) !important;
-    }
-    .navbar {
-      background: rgba(0, 91, 150, 0.9) !important;
-      backdrop-filter: blur(4px);
-    }
   </style>
 </head>
+
 <body>
 
-<!-- ✅ Top Logo & Project Name Header with Banner -->
-<div class="bg-light py-3 border-bottom">
-  <div class="container d-flex align-items-center">
-    <img src="{% static 'ncl_logo.jpeg' %}" alt="NCL Logo" height="200px" width="200px" />
+<!-- ===== Minimal Corporate Header ===== -->
+<div class="minimal-header">
+  <div class="container d-flex justify-content-between align-items-center">
 
-    <div class="flex-grow-1 text-center">
-      <p class="mb-1 fst-italic" style="font-size: 1rem;"></p>
-      <p class="text-muted fst-italic" style="font-size: 0.9rem; font-weight: 600;"></p>
+    <div class="d-flex align-items-center">
+      <img src="{% static 'ncl_logo.jpeg' %}" alt="NCL Logo" class="logo-sm me-2">
+      <span class="brand-text">VTC Portal</span>
     </div>
 
-    <img src="{% static 'cil_new_logo.png' %}" alt="Coal India Logo" height="100" class="ms-5" />
+    <img src="{% static 'cil_new_logo.png' %}" alt="CIL Logo" class="logo-sm">
+
   </div>
 </div>
 
-<!-- ✅ Navigation Bar -->
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+<!-- ===== Navigation Bar ===== -->
+<nav class="navbar navbar-expand-lg">
   <div class="container">
-    <a class="navbar-brand" href="#"><strong>Empowering Contractors' Employees Through Vocational Training</strong></a>
-    <button
-      class="navbar-toggler"
-      type="button"
+
+    <button class="navbar-toggler" type="button"
       data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
-      aria-controls="navbarNav"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
+      data-bs-target="#navbarNav">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav align-items-center">
+
         <li class="nav-item">
           {% if user.is_authenticated %}
             {% with user.username|lower as uname %}
@@ -100,58 +158,64 @@
                 <a class="nav-link" href="{% url 'aso:dashboard' %}">Home</a>
               {% elif uname|slice:":2" == "mm" %}
                 <a class="nav-link" href="{% url 'mm:dashboard' %}">Home</a>
-              {% comment %} {% else %}
-                <a class="nav-link" href="{% url 'accounts:dashboard' %}">Home</a> {% endcomment %}
-              {% endif %} 
+              {% endif %}
             {% endwith %}
           {% else %}
             <a class="nav-link" href="{% url 'accounts:home' %}">Home</a>
           {% endif %}
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="#">About</a>
-        </li>
         {% if user.is_authenticated %}
+
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:password_change' %}">Change Password</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:logout' %}">
-              Logout ({{ user.username | split_and_capitalize }})
+            <a class="nav-link" href="{% url 'accounts:password_change' %}">
+              Change Password
             </a>
           </li>
-        {% else %}
+
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
+            <a class="btn btn-primary ms-3"
+               href="{% url 'accounts:logout' %}">
+              Logout ({{ user.username|split_and_capitalize }})
+            </a>
           </li>
+
+        {% else %}
+
+          <li class="nav-item">
+            <a class="btn btn-primary ms-3"
+               href="{% url 'accounts:login' %}">
+              Login
+            </a>
+          </li>
+
         {% endif %}
+
       </ul>
     </div>
   </div>
 </nav>
 
-<!-- ✅ Main Content Block -->
-<main class="container mt-0">
+<!-- ===== Main Content ===== -->
+<main class="container">
   {% block content %}
   {% endblock %}
 </main>
 
-<!-- ✅ Sticky Footer with Links -->
-<footer class="footer-light-blue text-center py-3 mt-auto">
+<!-- ===== Footer ===== -->
+<footer>
   <div class="container">
     <div class="mb-2">
-      <a href="#" class="me-3">Privacy Policy</a>
-      <a href="#" class="me-3">Terms</a>
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
       <a href="#">Contact</a>
     </div>
-    <small>
-      © {{ year|default:2025 }} <strong>VTC Portal of NCL</strong> | All Rights Reserved
-    </small>
+    <div>
+      © {{ year|default:2026 }} <strong>NCL VTC Portal</strong>. All rights reserved.
+    </div>
   </div>
 </footer>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
