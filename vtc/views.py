@@ -43,16 +43,27 @@ def view_worker(request, pk):
     worker = get_object_or_404(IndependentWorker, pk=pk)
     form = IndependentWorkerForm(instance=worker)
 
-    # Make all fields readonly or disabled
+    # Make all fields readonly / disabled
     for field in form.fields.values():
-        field.widget.attrs['readonly'] = True  # For text fields
-        field.widget.attrs['disabled'] = True  # For dropdowns, files, etc.
+        field.widget.attrs['readonly'] = True
+        field.widget.attrs['disabled'] = True
+
+    # Get all trainings where certificate is generated
+    certificates = TrainingSchedule.objects.filter(
+        worker=worker,
+        certificate_serial_number_final__isnull=False
+    ).exclude(
+        certificate_serial_number_final=''
+    ).order_by('-certificate_created_date')
 
     return render(request, 'vtc/worker_form.html', {
         'form': form,
+        'worker': worker,
+        'certificates': certificates,
         'is_edit': False,
         'read_only': True
     })
+
 
 # Edit worker
 def edit_worker(request, pk):
@@ -436,3 +447,4 @@ def certificate_detail(request):
 
 
     return render(request, 'vtc/certificate_detail.html', context)
+
