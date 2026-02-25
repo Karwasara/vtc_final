@@ -398,24 +398,15 @@ def certificate_detail(request):
         from accounts.models import AreaMaster
         from accounts.models import SubsidiaryMaster
         # Fetch Area with subsidiary in single query
-        area = AreaMaster.objects.select_related('subsidiary').filter(
-            area_code=area_code
-        ).first()
+        area = AreaMaster.objects.filter(area_code=area_code).first()
 
-        if area:
-            area_name = area.area_name
-            subsidiary_name = (
-                area.subsidiary.subsidiary_name
-                if area.subsidiary else "Unknown"
-            )
+        if area: area_name = area.area_name
         else:
             area_name = "Unknown"
             subsidiary_name = "Unknown"
 
-    except TrainingSchedule.DoesNotExist:
+    except TrainingSchedule.DoesNotExist: 
         training = None
-        area_name = ""
-        subsidiary_name = ""
 
 
 
@@ -468,6 +459,7 @@ def certificate_detail(request):
 
 
     return render(request, 'vtc/certificate_detail.html', context)
+
 
 
 
