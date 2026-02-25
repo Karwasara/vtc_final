@@ -384,20 +384,40 @@ def certificate_detail(request):
     searched = False
     area_name = "Unknown"
 
-    if serial_number:
-        searched = True
-        try:
-            training = TrainingSchedule.objects.select_related('worker').get(certificate_serial_number_final=serial_number)
-            # Extract area code from 4th to 6th char (0-based index: 3 to 6 exclusive)
-            area_code = serial_number[3:6]
+   if serial_number:
+    searched = True
+    try:
+        training = TrainingSchedule.objects.select_related('worker').get(
+            certificate_serial_number_final=serial_number
+        )
 
-            # Lookup area name by area code
-            from accounts.models import AreaMaster  # replace with your actual app/model
-            area = AreaMaster.objects.filter(area_code=area_code).first()
-            if area:
-                area_name = area.area_name
-        except TrainingSchedule.DoesNotExist:
-            training = None
+        # ✅ Extract area code from serial number
+        area_code = serial_number[3:6]
+
+        from accounts.models import AreaMaster
+
+        # ✅ Get area based on extracted code
+        area = AreaMaster.objects.select_related('subsidiary').filter(
+            area_code=area_code
+        ).first()
+
+        if area:
+            area_name = area.area_name
+
+            # ✅ Get subsidiary from area
+            if area.subsidiary:
+                subsidiary_name = area.subsidiary.subsidiary_name
+            else:
+                subsidiary_name = "Unknown"
+        else:
+            area_name = "Unknown"
+            subsidiary_name = "Unknown"
+
+    except TrainingSchedule.DoesNotExist:
+        training = None
+        area_name = "Unknown"
+        subsidiary_name = "Unknown"
+
 
     # Prepare context if training is found
     if training:
@@ -431,6 +451,7 @@ def certificate_detail(request):
             "to_date": to_date_str,
             "present_days": present_days,
             "area_name": area_name,
+            "subsidiary_name": subsidiary_name,
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
@@ -447,4 +468,5 @@ def certificate_detail(request):
 
 
     return render(request, 'vtc/certificate_detail.html', context)
+
 
