@@ -377,7 +377,7 @@ from vtc.models import TrainingSchedule
 
 from django.shortcuts import render
 from vtc.models import TrainingSchedule
-from accounts.models import AreaMaster
+from accounts.models import AreaMaster , SubsidiaryMaster
 def certificate_detail(request):
     serial_number = request.GET.get('serial_number')
     training = None
@@ -454,6 +454,7 @@ def certificate_detail(request):
             "searched": searched,
         }
     return render(request, 'vtc/certificate_detail.html', context)
+
 
 
 
