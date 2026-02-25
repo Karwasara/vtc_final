@@ -378,7 +378,6 @@ from vtc.models import TrainingSchedule
 from django.shortcuts import render
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
-from accounts.models import SubsidiaryMaster
 def certificate_detail(request):
     serial_number = request.GET.get('serial_number')
     training = None
@@ -396,14 +395,12 @@ def certificate_detail(request):
         area_code = serial_number[3:6]
 
         from accounts.models import AreaMaster
-        from accounts.models import SubsidiaryMaster
+        
         # Fetch Area with subsidiary in single query
         area = AreaMaster.objects.filter(area_code=area_code).first()
 
-        if area: area_name = area.area_name
-        else:
-            area_name = "Unknown"
-            subsidiary_name = "Unknown"
+        if area: 
+            area_name = area.area_name
 
     except TrainingSchedule.DoesNotExist: 
         training = None
@@ -459,6 +456,7 @@ def certificate_detail(request):
 
 
     return render(request, 'vtc/certificate_detail.html', context)
+
 
 
 
