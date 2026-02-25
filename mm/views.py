@@ -507,6 +507,8 @@ def certificate_detail(request):
             area = AreaMaster.objects.filter(area_code=area_code).first()
             if area:
                 area_name = area.area_name
+				if area.subsidiary:
+                    subsidiary_name = area.subsidiary.subsidiary_name
         except TrainingSchedule.DoesNotExist:
             training = None
 
@@ -542,6 +544,7 @@ def certificate_detail(request):
             "to_date": to_date_str,
             "present_days": present_days,
             "area_name": area_name,
+			"subsidiary_name": subsidiary_name,
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
@@ -557,5 +560,6 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
