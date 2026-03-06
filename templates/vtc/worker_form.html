@@ -9,6 +9,23 @@ body{
   background-color:#f4f7fb;
 }
 
+/* Page Layout */
+.page-wrapper{
+  display:flex;
+  gap:20px;
+}
+
+/* Sidebar */
+.sidebar-wrapper{
+  width:25%;
+  min-width:250px;
+}
+
+/* Main Content */
+.content-wrapper{
+  width:75%;
+}
+
 /* Main Card */
 .form-card{
   background:#ffffff;
@@ -78,51 +95,21 @@ body{
   font-weight:500;
 }
 
-.btn-primary{
-  background:#0d6efd;
-  border:none;
-}
-
-.btn-primary:hover{
-  background:#0b5ed7;
-}
-
-.btn-secondary{
-  background:#6c757d;
-  border:none;
-}
-
-.btn-secondary:hover{
-  background:#5c636a;
-}
-
-.btn-outline-primary{
-  border-color:#0d6efd;
-  color:#0d6efd;
-}
-
-.btn-outline-primary:hover{
-  background:#0d6efd;
-  color:white;
-}
-
 </style>
 
 
 <div class="container-fluid mt-4">
 
-  <div class="row">
+  <div class="page-wrapper">
 
-    <!-- Sidebar (25%) -->
-    <div class="col-md-3">
+    <!-- Sidebar -->
+    <div class="sidebar-wrapper">
       {% include 'vtc/sidebar.html' %}
     </div>
 
+    <!-- Main Content -->
+    <div class="content-wrapper">
 
-    <!-- Main Content (75%) -->
-    <div class="col-md-9">
-
-      <!-- Worker Details -->
       <div class="form-card">
 
         <h3>
@@ -159,22 +146,21 @@ body{
 
           {% endfor %}
 
-
           {% if not read_only %}
 
-            <button type="submit" class="btn btn-primary btn-pill">
-              Save
-            </button>
+          <button type="submit" class="btn btn-primary btn-pill">
+            Save
+          </button>
 
-            <a href="{% url 'vtc:worker_list' %}" class="btn btn-secondary btn-pill">
-              Cancel
-            </a>
+          <a href="{% url 'vtc:worker_list' %}" class="btn btn-secondary btn-pill">
+            Cancel
+          </a>
 
           {% else %}
 
-            <a href="{% url 'vtc:worker_list' %}" class="btn btn-outline-primary btn-pill">
-              Back to List
-            </a>
+          <a href="{% url 'vtc:worker_list' %}" class="btn btn-outline-primary btn-pill">
+            Back to List
+          </a>
 
           {% endif %}
 
@@ -201,7 +187,6 @@ body{
             <table class="table table-hover align-middle">
 
               <thead class="table-light">
-
                 <tr>
                   <th>Serial Number</th>
                   <th>Training Type</th>
@@ -209,7 +194,6 @@ body{
                   <th>Issue Date</th>
                   <th class="text-center">Action</th>
                 </tr>
-
               </thead>
 
               <tbody>
