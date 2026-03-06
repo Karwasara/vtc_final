@@ -3,6 +3,8 @@
 
 {% block content %}
 
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
 <style>
 
 body{
@@ -10,65 +12,55 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Card */
-.detail-card{
-    background:white;
-    border-radius:12px;
-    padding:25px;
-    box-shadow:0 2px 10px rgba(0,0,0,0.08);
-}
-
-/* Title */
-.page-title{
-    color:#004B87;
-    font-weight:600;
-}
-
-/* Table header */
-.table thead{
-    background:#004B87;
+/* DataTable Header */
+table.dataTable thead th{
+    background:#004B87 !important;
     color:white;
+}
+
+/* Hover */
+table.dataTable tbody tr:hover{
+    background:#f1f7ff;
 }
 
 /* Buttons */
 
-.btn-primary-round{
+.btn-blue{
     background:#2563eb;
     color:white;
     border:none;
-    padding:8px 18px;
-    border-radius:50px;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
 }
 
-.btn-primary-round:hover{
+.btn-blue:hover{
     background:#1d4ed8;
 }
 
-.btn-danger-round{
+.btn-red{
     background:#dc3545;
     color:white;
-    border:none;
-    padding:8px 18px;
-    border-radius:50px;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
 }
 
-.btn-secondary-round{
+.btn-grey{
     background:#64748b;
     color:white;
-    border:none;
-    padding:8px 18px;
-    border-radius:50px;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
 }
 
 </style>
 
 
-<div class="container-fluid mt-4">
-
-<div class="row">
+<div class="grid grid-cols-12 gap-6 mt-4">
 
     <!-- Sidebar -->
-    <div class="col-md-3">
+    <div class="col-span-12 md:col-span-3">
 
         {% include 'aso/sidebar.html' %}
 
@@ -76,11 +68,11 @@ body{
 
 
     <!-- Main Content -->
-    <div class="col-md-9">
+    <div class="col-span-12 md:col-span-9">
 
-        <div class="detail-card">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 
-            <h2 class="mb-4 page-title">
+            <h2 class="text-xl font-semibold text-brand-blue mb-4">
                 Training Details for {{ training.worker.name }}
             </h2>
 
@@ -89,40 +81,37 @@ body{
 
             <!-- Attendance Table -->
 
-            <h4 class="mb-3">Attendance</h4>
+            <h4 class="mb-3 font-semibold">Attendance</h4>
 
-            <div class="table-responsive">
+            <table id="attendanceTable" class="display w-full text-sm">
 
-                <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Present</th>
+                    </tr>
+                </thead>
 
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Present</th>
-                        </tr>
-                    </thead>
+                <tbody>
 
-                    <tbody>
+                {% for att in attendances %}
 
-                        {% for att in attendances %}
+                    <tr>
+                        <td>{{ att.date }}</td>
+                        <td>{{ att.present }}</td>
+                    </tr>
 
-                        <tr>
-                            <td>{{ att.date }}</td>
-                            <td>{{ att.present }}</td>
-                        </tr>
+                {% endfor %}
 
-                        {% endfor %}
+                </tbody>
 
-                    </tbody>
+            </table>
 
-                </table>
-
-            </div>
 
 
             <!-- Final Result -->
 
-            <h4 class="mt-4">Final Result</h4>
+            <h4 class="mt-6 font-semibold">Final Result</h4>
 
             {% if result %}
 
@@ -139,14 +128,14 @@ body{
 
             <!-- Action Buttons -->
 
-            <form method="post" class="mt-4">
+            <form method="post" class="flex gap-3 mt-6">
 
                 {% csrf_token %}
 
                 <button type="submit"
                         name="action"
                         value="forward_to_mm"
-                        class="btn-primary-round">
+                        class="btn-blue">
 
                     Forward to Mine Manager
 
@@ -155,16 +144,16 @@ body{
                 <button type="submit"
                         name="action"
                         value="reject"
-                        class="btn-danger-round">
+                        class="btn-red">
 
                     Reject
 
                 </button>
 
                 <a href="{% url 'aso:forwarded_training_list' %}"
-                   class="btn-secondary-round">
+                   class="btn-grey">
 
-                   Back to List
+                    Back to List
 
                 </a>
 
@@ -176,6 +165,22 @@ body{
 
 </div>
 
-</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+
+$(document).ready(function(){
+
+    $('#attendanceTable').DataTable({
+        pageLength:10,
+        order:[]
+    });
+
+});
+
+</script>
 
 {% endblock %}
