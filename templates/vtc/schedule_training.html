@@ -6,7 +6,7 @@
 <style>
 
 body{
-    background:#f7fafd;
+    background:#f4f8fc;
     font-family:"Segoe UI",sans-serif;
 }
 
@@ -26,9 +26,9 @@ body{
     width:75%;
 }
 
-/* Card */
+/* Form Card */
 .form-card{
-    background:white;
+    background:#eef5ff;
     padding:30px;
     border-radius:12px;
     box-shadow:0 5px 15px rgba(0,0,0,0.08);
@@ -41,16 +41,18 @@ body{
     margin-bottom:25px;
 }
 
-/* Labels */
+/* Label */
 .form-label{
-    font-weight:500;
+    font-weight:600;
+    margin-bottom:6px;
 }
 
-/* Inputs */
-.form-control, .form-select{
+/* Input fields */
+.form-control,
+.form-select{
     border-radius:8px;
     padding:10px;
-    height:42px;
+    height:40px;
 }
 
 /* Submit Button */
@@ -67,27 +69,32 @@ body{
     background:#0b5ed7;
 }
 
-/* Training Cards */
+/* Training Card */
 .training-card{
     background:white;
     border-radius:10px;
-    padding:15px;
+    padding:14px 18px;
     margin-bottom:12px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.06);
+    box-shadow:0 3px 10px rgba(0,0,0,0.05);
 }
 
-/* Stylish Edit Button */
+/* Editable button */
 .btn-edit{
     background:#ffc107;
+    color:black;
     border:none;
-    color:#000;
-    padding:6px 15px;
+    padding:6px 16px;
     border-radius:6px;
     font-weight:500;
 }
 
-.btn-edit:hover{
-    background:#ffca2c;
+/* Disabled button */
+.btn-disabled{
+    background:#d3d3d3;
+    color:#666;
+    border:none;
+    padding:6px 16px;
+    border-radius:6px;
 }
 
 </style>
@@ -99,34 +106,42 @@ body{
 
 <!-- Sidebar -->
 <div class="sidebar-container">
-    {% include 'vtc/sidebar.html' %}
+{% include 'vtc/sidebar.html' %}
 </div>
 
 
-<!-- Content -->
+<!-- Main Content -->
 <div class="content-container">
 
 <div class="form-card">
 
-<h2 class="page-title">Schedule Training for {{ worker.name }}</h2>
+<h2 class="page-title">
+Schedule Training for {{ worker.name }}
+</h2>
 
 {% include 'common/message.html' %}
 
 <form method="post">
 {% csrf_token %}
 
+<!-- From Date -->
 <div class="mb-3">
 <label class="form-label">From Date</label>
+<br>
 <input type="date" name="from_date" class="form-control" required>
 </div>
 
+<!-- To Date -->
 <div class="mb-3">
 <label class="form-label">To Date</label>
+<br>
 <input type="date" name="to_date" class="form-control" required>
 </div>
 
+<!-- Training Type -->
 <div class="mb-3">
 <label class="form-label">Type of Training</label>
+<br>
 <select name="type_of_training" class="form-select" required>
 <option value="">Select</option>
 <option value="Basic">Basic</option>
@@ -135,34 +150,45 @@ body{
 </select>
 </div>
 
+<!-- Nature -->
 <div class="mb-3">
 <label class="form-label">Nature of Training</label>
+<br>
 <input type="text" name="nature_of_training" class="form-control" required>
 </div>
 
+<!-- Contractor -->
 <div class="mb-3">
-<label class="form-label">Contractor Name</label>
+<label class="form-label">Name of Contractor</label>
+<br>
 <input type="text" name="contractor_name" class="form-control" required>
 </div>
+
+<!-- AREA LOGIC -->
 
 {% if user_areas.count > 1 %}
 
 <div class="mb-3">
 <label class="form-label">Area</label>
+<br>
 <select name="area_name" class="form-select" required>
 <option value="">Select Area</option>
 {% for area in user_areas %}
-<option value="{{ area.area_name }}">{{ area.area_name }}</option>
+<option value="{{ area.area_name }}">
+{{ area.area_name }}
+</option>
 {% endfor %}
 </select>
 </div>
 
 {% elif user_areas.count == 1 %}
 
-<input type="hidden" name="area_name" value="{{ user_areas.first.area_name }}">
+<input type="hidden" name="area_name"
+value="{{ user_areas.first.area_name }}">
 
 <div class="mb-3">
 <label class="form-label">Area</label>
+<br>
 <input type="text" class="form-control"
 value="{{ user_areas.first.area_name }}" disabled>
 </div>
@@ -171,12 +197,14 @@ value="{{ user_areas.first.area_name }}" disabled>
 
 <div class="mb-3">
 <label class="form-label">Area</label>
-<input type="text" name="area_name" class="form-control" required>
+<br>
+<input type="text" name="area_name"
+class="form-control" required>
 </div>
 
 {% endif %}
 
-<button type="submit" class="btn-submit mt-2">
+<button type="submit" class="btn-submit mt-3">
 Submit Training
 </button>
 
@@ -184,7 +212,9 @@ Submit Training
 
 <hr class="mt-4 mb-4">
 
-<h4 class="page-title">Previous Training Schedules</h4>
+<h4 class="page-title">
+Previous Training Schedules
+</h4>
 
 {% if worker.trainings.all %}
 
@@ -209,7 +239,7 @@ Edit
 
 {% else %}
 
-<button class="btn-edit" disabled>
+<button class="btn-disabled" disabled>
 Edit
 </button>
 
