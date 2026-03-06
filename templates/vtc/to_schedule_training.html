@@ -3,8 +3,9 @@
 
 {% block content %}
 
+<!-- DataTables CSS -->
 <link rel="stylesheet"
-href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <style>
 
@@ -13,202 +14,142 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* FLEX PAGE LAYOUT */
-.page-layout{
-    display:flex;
-    gap:20px;
-    align-items:flex-start;
+/* Table Header */
+table.dataTable thead th{
+    background-color:#004B87 !important;
+    color:white;
 }
 
-/* SIDEBAR */
-.sidebar-container{
-    width:260px;
-    flex-shrink:0;
+/* Hover effect */
+table.dataTable tbody tr:hover{
+    background-color:#f1f7ff;
 }
 
-/* IMPORTANT: DO NOT CHANGE SIDEBAR COLOR */
-.sidebar-container .sidebar-box{
-    padding:10px;
-}
-
-/* CONTENT AREA */
-.content-container{
-    flex:1;
-    width:100%;
-}
-
-/* CARD */
-.main-card{
-    background:#ffffff;
+/* Card styling */
+.worker-card{
+    background:white;
     border-radius:12px;
     box-shadow:0 2px 10px rgba(0,0,0,0.08);
     padding:25px;
 }
 
-h2{
-    color:#0d6efd;
-    font-weight:600;
-    margin-bottom:25px;
-}
-
-/* DATATABLE FIX */
-table.dataTable{
-    width:100% !important;
-}
-
-.dataTables_wrapper{
-    width:100%;
-}
-
-.dataTables_filter{
-    float:right;
-}
-
-.dataTables_paginate{
-    float:right;
-}
-
-/* TABLE HEADER */
-table.dataTable thead th{
-    background-color:#0d6efd !important;
-    color:white;
-    text-align:center;
-}
-
-/* HOVER */
-table.dataTable tbody tr:hover{
-    background:#f1f7ff;
-}
-
-/* BUTTON */
-.btn-warning{
-    border-radius:6px;
-    color:#000;
+/* Button */
+.btn-schedule{
     background:#ffc107;
-    border:none;
+    color:black;
+    padding:5px 10px;
+    border-radius:6px;
+    text-decoration:none;
+    font-size:13px;
 }
 
-.btn-warning:hover{
+.btn-schedule:hover{
     background:#ffca2c;
 }
 
 </style>
 
 
-<div class="container-fluid mt-4">
+<div class="grid grid-cols-12 gap-6">
 
-<div class="page-layout">
+    <!-- SIDEBAR -->
+    <div class="col-span-12 md:col-span-3">
 
-<!-- SIDEBAR -->
-<div class="sidebar-container">
+        {% include 'vtc/sidebar.html' %}
 
-<div class="sidebar-box">
-{% include 'vtc/sidebar.html' %}
-</div>
-
-</div>
+    </div>
 
 
-<!-- WORKER LIST -->
-<div class="content-container">
+    <!-- MAIN CONTENT -->
+    <div class="col-span-12 md:col-span-9">
 
-<div class="main-card">
+        <div class="worker-card">
 
-<h2>Workers Available for Training</h2>
+            <div class="flex justify-between items-center mb-6">
 
-{% if workers %}
+                <h2 class="text-xl font-semibold text-brand-blue">
+                    Workers Available for Training
+                </h2>
 
-<table id="workersTable"
-class="table table-bordered table-striped align-middle">
+            </div>
 
-<thead>
-<tr>
-<th>S.No.</th>
-<th>Worker Name</th>
-<th>Aadhaar</th>
-<th>Date of Birth</th>
-<th>Mobile</th>
-<th>Action</th>
-</tr>
-</thead>
+            {% if workers %}
 
-<tbody>
+            <table id="workersTable" class="display w-full text-sm">
 
-{% for worker in workers %}
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Worker Name</th>
+                        <th>Aadhaar</th>
+                        <th>Date of Birth</th>
+                        <th>Mobile</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
 
-<tr>
+                <tbody>
 
-<td>{{ forloop.counter }}</td>
+                    {% for worker in workers %}
 
-<td>{{ worker.name }}</td>
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ worker.name }}</td>
+                        <td>{{ worker.aadhar_number }}</td>
+                        <td>{{ worker.dob }}</td>
+                        <td>{{ worker.mobile }}</td>
 
-<td>{{ worker.aadhar_number }}</td>
+                        <td>
 
-<td>{{ worker.dob }}</td>
+                            <a href="{% url 'vtc:schedule_training' worker.pk %}"
+                               class="btn-schedule">
 
-<td>{{ worker.mobile }}</td>
+                               Schedule
 
-<td class="text-center">
+                            </a>
 
-<a href="{% url 'vtc:schedule_training' worker.pk %}"
-class="btn btn-sm btn-warning">
+                        </td>
 
-Schedule
+                    </tr>
 
-</a>
+                    {% endfor %}
 
-</td>
+                </tbody>
 
-</tr>
+            </table>
 
-{% endfor %}
+            {% else %}
 
-</tbody>
+            <div class="text-center text-red-600 p-4">
+                No workers available for training.
+            </div>
 
-</table>
+            {% endif %}
 
-{% else %}
+        </div>
 
-<div class="alert alert-warning text-center">
-No workers available for training.
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-</div>
+    </div>
 
 </div>
 
 
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
 
 $(document).ready(function(){
 
-$('#workersTable').DataTable({
+    $('#workersTable').DataTable({
 
-pageLength:10,
-responsive:true,
-autoWidth:false,
-order:[],
+        pageLength:10,
+        order:[],
+        responsive:true
 
-columnDefs:[
-{
-orderable:false,
-targets:5
-}
-]
-
-});
+    });
 
 });
 
