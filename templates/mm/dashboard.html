@@ -12,22 +12,36 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Dashboard Card */
-.dashboard-card{
-    background:white;
-    border-radius:12px;
-    border:1px solid #e2e8f0;
-    box-shadow:0 2px 10px rgba(0,0,0,0.08);
-    padding:30px;
+/* SAME STRUCTURE AS TABLE PAGE */
+.dashboard-layout{
+    display:flex;
+    gap:20px;
 }
 
-/* Heading */
-.dashboard-heading{
-  font-size:2.3rem;
-  font-weight:800;
-  background:linear-gradient(90deg,#007bff,#00c6ff,#00ff99);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
+/* SIDEBAR */
+.sidebar-area{
+    flex:0 0 25%;
+    max-width:25%;
+}
+
+/* CONTENT */
+.content-area{
+    flex:0 0 75%;
+    max-width:75%;
+}
+
+/* CARD STYLE SAME AS TABLE PAGE */
+.training-card{
+    background:white;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Title */
+.page-title{
+    color:#004B87;
+    font-weight:600;
 }
 
 /* Tiles Row */
@@ -46,14 +60,14 @@ body{
 
 /* Hover */
 .dashboard-tile:hover{
-  transform:scale(1.05);
+    transform:scale(1.05);
 }
 
-/* Active tile */
+/* Active */
 .dashboard-tile.active-tile{
-  transform:scale(1.05);
-  box-shadow:0 0 15px rgba(0,0,0,0.3);
-  border:2px solid black;
+    transform:scale(1.05);
+    box-shadow:0 0 15px rgba(0,0,0,0.3);
+    border:2px solid black;
 }
 
 </style>
@@ -61,22 +75,24 @@ body{
 
 <div class="container-fluid mt-4">
 
-<div class="row">
+<div class="dashboard-layout">
 
-<!-- SIDEBAR 25% -->
-<div class="col-md-3">
+<!-- SIDEBAR -->
+<div class="sidebar-area">
+
     {% include 'mm/sidebar.html' %}
+
 </div>
 
 
-<!-- DASHBOARD 75% -->
-<div class="col-md-9">
+<!-- CONTENT -->
+<div class="content-area">
 
-<div class="dashboard-card">
+<div class="training-card">
 
-<h1 class="dashboard-heading text-center mb-4">
+<h2 class="mb-4 page-title text-center">
 Contractual Worker Training Dashboard
-</h1>
+</h2>
 
 
 <!-- DASHBOARD TILES -->
@@ -127,7 +143,6 @@ Contractual Worker Training Dashboard
 </div>
 
 
-<!-- Chart.js -->
 <script src="{% static 'chart.umd.js' %}"></script>
 
 <script>
