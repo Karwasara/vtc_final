@@ -46,6 +46,9 @@ table.dataTable tbody tr:hover{
 .btn-schedule:hover{
     background:#ffca2c;
 }
+#workersTable{
+    visibility:hidden;
+}
 
 </style>
 
@@ -150,9 +153,11 @@ $(document).ready(function(){
         responsive:true
 
     });
+      $('#workersTable').show();
 
 });
 
 </script>
 
 {% endblock %}
+
