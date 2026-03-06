@@ -12,24 +12,6 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* FLEX LAYOUT (same as table page) */
-.dashboard-layout{
-    display:flex;
-    gap:20px;
-}
-
-/* Sidebar (25%) */
-.sidebar-area{
-    flex:0 0 25%;
-    max-width:25%;
-}
-
-/* Content (75%) */
-.content-area{
-    flex:0 0 75%;
-    max-width:75%;
-}
-
 /* Dashboard Card */
 .dashboard-card{
     background:white;
@@ -79,16 +61,16 @@ body{
 
 <div class="container-fluid mt-4">
 
-<div class="dashboard-layout">
+<div class="row">
 
-<!-- SIDEBAR -->
-<div class="sidebar-area">
+<!-- SIDEBAR 25% -->
+<div class="col-md-3">
     {% include 'mm/sidebar.html' %}
 </div>
 
 
-<!-- MAIN CONTENT -->
-<div class="content-area">
+<!-- DASHBOARD 75% -->
+<div class="col-md-9">
 
 <div class="dashboard-card">
 
