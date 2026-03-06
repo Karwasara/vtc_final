@@ -1,54 +1,202 @@
 {% extends 'common/base.html' %}
+{% load static %}
+
 {% block content %}
 
-<div class="container mt-4">
-  <div class="row">
+<style>
 
-    <!-- Sidebar -->
-    <div class="col-md-3">
-      {% include 'aso/sidebar.html' %}
+body{
+    background:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
+}
+
+/* Dashboard Layout */
+.dashboard-layout{
+    display:flex;
+    gap:20px;
+}
+
+/* Sidebar (25%) */
+.sidebar-area{
+    flex:0 0 25%;
+    max-width:25%;
+}
+
+/* Content (75%) */
+.content-area{
+    flex:0 0 75%;
+    max-width:75%;
+}
+
+/* Card */
+.detail-card{
+    background:white;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Title */
+.page-title{
+    color:#004B87;
+    font-weight:600;
+}
+
+/* Table header */
+.table thead{
+    background:#004B87;
+    color:white;
+}
+
+/* Buttons */
+.btn-primary-round{
+    background:#0d6efd;
+    color:white;
+    border:none;
+    padding:8px 18px;
+    border-radius:50px;
+}
+
+.btn-primary-round:hover{
+    background:#0b5ed7;
+}
+
+.btn-danger-round{
+    background:#dc3545;
+    color:white;
+    border:none;
+    padding:8px 18px;
+    border-radius:50px;
+}
+
+.btn-secondary-round{
+    background:#6c757d;
+    color:white;
+    border:none;
+    padding:8px 18px;
+    border-radius:50px;
+}
+
+</style>
+
+<div class="container-fluid mt-4">
+
+<div class="dashboard-layout">
+
+```
+<!-- Sidebar -->
+<div class="sidebar-area">
+
+    {% include 'aso/sidebar.html' %}
+
+</div>
+
+
+<!-- Main Content -->
+<div class="content-area">
+
+    <div class="detail-card">
+
+        <h2 class="mb-4 page-title">
+            Training Details for {{ training.worker.name }}
+        </h2>
+
+        {% include 'common/message.html' %}
+
+
+        <!-- Attendance Table -->
+
+        <h4 class="mb-3">Attendance</h4>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover">
+
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Present</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for att in attendances %}
+
+                    <tr>
+
+                        <td>{{ att.date }}</td>
+
+                        <td>{{ att.present }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <!-- Final Result -->
+
+        <h4 class="mt-4">Final Result</h4>
+
+        {% if result %}
+
+            <p><strong>Performance:</strong> {{ result.performance_appraisal }}</p>
+
+            <p><strong>Remarks:</strong> {{ result.remarks }}</p>
+
+        {% else %}
+
+            <p>No result recorded.</p>
+
+        {% endif %}
+
+
+        <!-- Action Buttons -->
+
+        <form method="post" class="mt-4">
+
+            {% csrf_token %}
+
+            <button type="submit"
+                    name="action"
+                    value="forward_to_mm"
+                    class="btn-primary-round">
+
+                    Forward to Mine Manager
+
+            </button>
+
+            <button type="submit"
+                    name="action"
+                    value="reject"
+                    class="btn-danger-round">
+
+                    Reject
+
+            </button>
+
+            <a href="{% url 'aso:forwarded_training_list' %}"
+               class="btn-secondary-round">
+
+               Back to List
+
+            </a>
+
+        </form>
+
     </div>
 
-    <!-- Main Content -->
-    <div class="col-md-9">
-      <h2>Training Details for {{ training.worker.name }}</h2>
-      {% include 'common/message.html' %}
+</div>
+```
 
-      <h4>Attendance</h4>
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Present</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for att in attendances %}
-          <tr>
-            <td>{{ att.date }}</td>
-            <td>{{ att.present }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+</div>
 
-      <h4>Final Result</h4>
-      {% if result %}
-        <p><strong>Performance:</strong> {{ result.performance_appraisal }}</p>
-        <p><strong>Remarks:</strong> {{ result.remarks }}</p>
-      {% else %}
-        <p>No result recorded.</p>
-      {% endif %}
-
-      <form method="post" class="mt-4">
-        {% csrf_token %}
-        <button type="submit" name="action" value="forward_to_mm" class="btn btn-primary">Forward to Mine Manager</button>
-        <button type="submit" name="action" value="reject" class="btn btn-danger">Reject</button>
-        <a href="{% url 'aso:forwarded_training_list' %}" class="btn btn-secondary">Back to List</a>
-      </form>
-    </div>
-
-  </div>
 </div>
 
 {% endblock %}
