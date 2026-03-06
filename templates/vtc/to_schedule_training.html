@@ -9,142 +9,147 @@ href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
 <style>
 
-body {
-    background-color: #f7fafd;
-    font-family: "Segoe UI", sans-serif;
+body{
+    background-color:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
 }
 
-h2 {
-    color: #0d6efd;
-    font-weight: 600;
-    margin-bottom: 25px;
+/* Sidebar */
+.sidebar-box{
+    background:#d9f1ff;
+    border-radius:12px;
+    padding:15px;
+    height:100%;
 }
 
-.main-card {
-    background: #ffffff;
-    border-radius: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
-    padding: 25px;
-    transition: all 0.2s ease;
+/* Main card */
+.main-card{
+    background:#ffffff;
+    border-radius:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.08);
+    padding:20px;
 }
 
-.main-card:hover {
-    transform: scale(1.01);
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.12);
+/* Heading */
+.page-title{
+    color:#0d6efd;
+    font-weight:600;
+    margin-bottom:20px;
 }
 
-table.dataTable {
-    border-radius: 10px !important;
-    overflow: hidden;
+/* Table styling */
+table.dataTable thead th{
+    background:#0d6efd !important;
+    color:white;
+    text-align:center;
 }
 
-table.dataTable thead th {
-    background-color: #0d6efd !important;
-    color: white;
-    text-align: center;
+table.dataTable tbody tr:hover{
+    background:#f1f7ff;
 }
 
-table.dataTable tbody tr:hover {
-    background-color: #f1f7ff;
+/* Button */
+.btn-warning{
+    border-radius:20px;
+    background:#ffc107;
+    border:none;
+    padding:5px 14px;
 }
 
-.btn-warning {
-    border-radius: 6px;
-    color: #000;
-    background-color: #ffc107;
-    border: none;
-    transition: 0.2s;
-}
-
-.btn-warning:hover {
-    background-color: #ffca2c;
-}
-
-.sidebar {
-    background-color: #d9f1ff;
-    border-radius: 15px;
-    height: 100%;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+.btn-warning:hover{
+    background:#ffca2c;
 }
 
 </style>
 
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
-    <div class="row">
+<div class="row">
 
-        <!-- Sidebar -->
-        <div class="col-md-3">
+<!-- SIDEBAR 25% -->
+<div class="col-lg-3 col-md-4 mb-3">
 
-            {% include 'vtc/sidebar.html' %}
+<div class="sidebar-box">
 
-        </div>
-
-
-        <!-- Main Content -->
-        <div class="col-md-9">
-
-            <div class="main-card mt-3">
-
-                <h2>Workers Available for Training</h2>
-
-                {% if workers %}
-
-                <table id="workersTable"
-                       class="table table-bordered table-striped align-middle">
-
-                    <thead>
-                        <tr>
-                            <th>S.No.</th>
-                            <th>Worker Name</th>
-                            <th>Aadhaar</th>
-                            <th>Date of Birth</th>
-                            <th>Mobile</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        {% for worker in workers %}
-
-                        <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ worker.name }}</td>
-                            <td>{{ worker.aadhar_number }}</td>
-                            <td>{{ worker.dob }}</td>
-                            <td>{{ worker.mobile }}</td>
-
-                            <td>
-                                <a href="{% url 'vtc:schedule_training' worker.pk %}"
-                                   class="btn btn-sm btn-warning">
-                                   Schedule
-                                </a>
-                            </td>
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-                {% else %}
-
-                <div class="alert alert-warning text-center" role="alert">
-                    No workers available for training.
-                </div>
-
-                {% endif %}
-
-            </div>
-
-        </div>
-
-    </div>
+{% include 'vtc/sidebar.html' %}
 
 </div>
+
+</div>
+
+
+<!-- MAIN CONTENT 75% -->
+<div class="col-lg-9 col-md-8">
+
+<div class="main-card">
+
+<h4 class="page-title">Workers Available for Training</h4>
+
+{% if workers %}
+
+<table id="workersTable"
+class="table table-bordered table-striped">
+
+<thead>
+<tr>
+<th>S.No.</th>
+<th>Worker Name</th>
+<th>Aadhaar</th>
+<th>Date of Birth</th>
+<th>Mobile</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for worker in workers %}
+
+<tr>
+<td>{{ forloop.counter }}</td>
+<td>{{ worker.name }}</td>
+<td>{{ worker.aadhar_number }}</td>
+<td>{{ worker.dob }}</td>
+<td>{{ worker.mobile }}</td>
+
+<td class="text-center">
+
+<a href="{% url 'vtc:schedule_training' worker.pk %}"
+class="btn btn-warning btn-sm">
+
+Schedule
+
+</a>
+
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% else %}
+
+<div class="alert alert-warning text-center">
+
+No workers available for training.
+
+</div>
+
+{% endif %}
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
 
 
 <!-- jQuery -->
@@ -156,24 +161,22 @@ table.dataTable tbody tr:hover {
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 
-<!-- Initialize DataTable -->
 <script>
 
-$(document).ready(function() {
+$(document).ready(function(){
 
-    $('#workersTable').DataTable({
+$('#workersTable').DataTable({
 
-        "pageLength": 10,
-        "order": [],
+pageLength:10,
 
-        "columnDefs": [
-            {
-                "orderable": false,
-                "targets": 5
-            }
-        ]
+columnDefs:[
+{
+orderable:false,
+targets:5
+}
+]
 
-    });
+});
 
 });
 
