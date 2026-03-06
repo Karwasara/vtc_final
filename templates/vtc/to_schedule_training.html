@@ -3,139 +3,99 @@
 
 {% block content %}
 
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
 <style>
 
-.main-content{
-    margin-left:250px;   /* keeps sidebar intact */
-    padding:30px;
+.container-fluid{
+    padding-left:20px;
+    padding-right:20px;
 }
 
-/* Worker Details Box */
-.worker-box{
-    background:white;
-    padding:25px;
+.main-card{
+    background:#fff;
     border-radius:10px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.1);
-    margin-bottom:30px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    padding:20px;
 }
 
-/* Worker Table */
-.worker-table td{
-    padding:8px 12px;
-}
-
-/* Certificate Table */
-#certificateTable{
-    width:100% !important;
-}
-
-/* Rounded Buttons */
-.btn-round{
-    padding:6px 16px;
-    border-radius:25px;
-    color:white;
-    font-weight:600;
-    border:none;
-    text-decoration:none;
-}
-
-/* Button Colors */
-.btn-view{background:#17a2b8;}
-.btn-verify{background:#28a745;}
-.btn-back{background:#dc3545;}
-
-.btn-round:hover{
-    opacity:0.85;
-}
-
-/* Hyperlinks */
-a.link-file{
-    color:#007bff;
-    text-decoration:underline;
-}
-
-/* DataTable Layout Fix */
 .dataTables_wrapper{
     width:100%;
 }
 
+#certificateTable{
+    width:100% !important;
+}
+
+table.dataTable thead th{
+    background:#0d6efd;
+    color:white;
+}
+
+.btn-round{
+    padding:8px 15px;
+    border-radius:6px;
+    text-decoration:none;
+}
+
+.btn-back{
+    background:#6c757d;
+    color:white;
+}
+
+.btn-back:hover{
+    background:#5a6268;
+}
+
+.link-file{
+    color:#0d6efd;
+    text-decoration:underline;
+}
+
 </style>
 
+<div class="container-fluid">
 
-<div class="main-content">
+<div class="row">
 
-<!-- Worker Details -->
-<div class="worker-box">
+<!-- SIDEBAR -->
+<div class="col-md-3">
 
-<h4><b>Worker Details</b></h4>
+{% include 'vtc/sidebar.html' %}
 
-<table class="worker-table">
+</div>
+
+
+<!-- MAIN CONTENT -->
+<div class="col-md-9">
+
+<div class="main-card">
+
+<h3>Worker Details</h3>
+
+<table class="table table-bordered">
 
 <tr>
-<td><b>Name of Worker:</b></td>
+<td><b>Name:</b></td>
 <td>{{ worker.name }}</td>
-
-<td><b>Father/Spouse Name:</b></td>
-<td>{{ worker.father_name }}</td>
 </tr>
 
 <tr>
-<td><b>Sex:</b></td>
-<td>{{ worker.sex }}</td>
-
-<td><b>Category:</b></td>
-<td>{{ worker.category }}</td>
-</tr>
-
-<tr>
-<td><b>Date of Birth:</b></td>
-<td>{{ worker.dob }}</td>
-
-<td><b>Blood group:</b></td>
-<td>{{ worker.blood_group }}</td>
-</tr>
-
-<tr>
-<td><b>Aadhar number:</b></td>
+<td><b>Aadhaar:</b></td>
 <td>{{ worker.aadhar_number }}</td>
-
-<td><b>Aadhar file:</b></td>
-<td>
-<a class="link-file" href="{{ worker.aadhar_file.url }}" target="_blank">View Aadhar file</a>
-</td>
 </tr>
 
 <tr>
-<td><b>Village:</b></td>
-<td>{{ worker.village }}</td>
-
-<td><b>Thana:</b></td>
-<td>{{ worker.thana }}</td>
+<td><b>DOB:</b></td>
+<td>{{ worker.dob }}</td>
 </tr>
 
 <tr>
-<td><b>Post Office:</b></td>
-<td>{{ worker.post_office }}</td>
-
-<td><b>District:</b></td>
-<td>{{ worker.district }}</td>
-</tr>
-
-<tr>
-<td><b>State:</b></td>
-<td>{{ worker.state }}</td>
-
-<td><b>Mobile Number:</b></td>
+<td><b>Mobile:</b></td>
 <td>{{ worker.mobile }}</td>
 </tr>
 
 <tr>
-<td><b>Qualification:</b></td>
-<td>{{ worker.qualification }}</td>
-
 <td><b>Photo:</b></td>
 <td>
 <a class="link-file" href="{{ worker.photo.url }}" target="_blank">View Photo</a>
@@ -146,25 +106,28 @@ a.link-file{
 
 <br>
 
-<a href="{% url 'worker_list' %}" class="btn-round btn-back">Back to List</a>
+<a href="{% url 'vtc:worker_list' %}" class="btn-round btn-back">Back to List</a>
 
 </div>
 
 
+<br>
+
+
 <!-- Generated Certificates -->
-<div class="worker-box">
+<div class="main-card">
 
 <h4><b>Generated Certificates</b></h4>
 
-<table id="certificateTable" class="display">
+<table id="certificateTable" class="table table-striped table-bordered">
 
 <thead>
 <tr>
-<th>Serial Number</th>
-<th>Training Type</th>
-<th>Training Period</th>
-<th>Issue Date</th>
-<th>Action</th>
+<th>S.No</th>
+<th>Certificate No</th>
+<th>Training Name</th>
+<th>Date</th>
+<th>Download</th>
 </tr>
 </thead>
 
@@ -173,20 +136,18 @@ a.link-file{
 {% for cert in certificates %}
 
 <tr>
-<td>{{ cert.serial_number }}</td>
 
-<td>{{ cert.training_type }}</td>
+<td>{{ forloop.counter }}</td>
 
-<td>
-{{ cert.training_start_date }} to {{ cert.training_end_date }}
-</td>
+<td>{{ cert.serial_no }}</td>
+
+<td>{{ cert.training_name }}</td>
 
 <td>{{ cert.issue_date }}</td>
 
 <td>
-<a href="{% url 'verify_certificate' cert.serial_number %}" 
-class="btn-round btn-verify">
-Verify
+<a href="{{ cert.certificate_file.url }}" class="btn btn-success btn-sm">
+Download
 </a>
 </td>
 
@@ -202,12 +163,16 @@ Verify
 
 </div>
 
+</div>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+</div>
 
-<!-- DataTables JS -->
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
 
@@ -215,19 +180,8 @@ $(document).ready(function(){
 
 $('#certificateTable').DataTable({
 
-    "pageLength":5,
-
-    "lengthMenu":[5,10,25,50],
-
-    "ordering":true,
-
-    "searching":true,
-
-    "paging":true,
-
-    "info":true,
-
-    "autoWidth":false
+pageLength:10,
+responsive:true
 
 });
 
