@@ -10,257 +10,223 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Layout spacing */
-.main-wrapper{
-    margin-top:20px;
+/* Layout */
+.page-layout{
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
 }
 
-/* Card design */
-.card-box{
-    background:#ffffff;
+/* Sidebar */
+.sidebar-container{
+    width:25%;
+}
+
+/* Main Content */
+.content-container{
+    width:75%;
+}
+
+/* Card */
+.form-card{
+    background:white;
+    padding:30px;
     border-radius:12px;
-    padding:25px;
-    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+    box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
 
-/* Page title */
+/* Heading */
 .page-title{
     color:#0d6efd;
     font-weight:600;
-    margin-bottom:20px;
+    margin-bottom:25px;
 }
 
-/* Stylish input fields */
-.form-control,
-.form-select{
+/* Form fields */
+.form-control, .form-select{
     border-radius:8px;
-    border:1px solid #ced4da;
-    padding:8px 10px;
+    padding:10px;
 }
 
-/* Focus effect */
 .form-control:focus,
 .form-select:focus{
     border-color:#0d6efd;
-    box-shadow:0 0 5px rgba(13,110,253,0.3);
+    box-shadow:0 0 4px rgba(13,110,253,0.4);
+}
+
+/* Labels */
+.form-label{
+    font-weight:500;
 }
 
 /* Submit button */
 .btn-submit{
     background:#0d6efd;
-    color:#fff;
     border:none;
-    padding:8px 20px;
-    border-radius:25px;
+    padding:10px 25px;
+    border-radius:8px;
+    font-weight:500;
 }
 
 .btn-submit:hover{
     background:#0b5ed7;
 }
 
-/* Edit button */
-.btn-warning{
-    border-radius:20px;
-}
-
-/* Previous training list */
-.list-group-item{
-    border-radius:8px !important;
-    margin-bottom:8px;
+/* Training list */
+.training-card{
+    background:white;
+    border-radius:10px;
+    padding:15px;
+    margin-bottom:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.06);
 }
 
 </style>
 
 
-<div class="container-fluid main-wrapper">
+<div class="container-fluid mt-4">
+
+<div class="page-layout">
+
+<!-- Sidebar -->
+<div class="sidebar-container">
+    {% include 'vtc/sidebar.html' %}
+</div>
+
+
+<!-- Main Content -->
+<div class="content-container">
+
+<div class="form-card">
+
+<h2 class="page-title">Schedule Training for {{ worker.name }}</h2>
+
+{% include 'common/message.html' %}
+
+<form method="post">
+{% csrf_token %}
 
 <div class="row">
 
-    <!-- SIDEBAR (25%) -->
-    <div class="col-md-3">
-        {% include 'vtc/sidebar.html' %}
-    </div>
+<div class="col-md-6 mb-3">
+<label class="form-label">From Date</label>
+<input type="date" name="from_date" class="form-control" required>
+</div>
 
+<div class="col-md-6 mb-3">
+<label class="form-label">To Date</label>
+<input type="date" name="to_date" class="form-control" required>
+</div>
 
-    <!-- MAIN CONTENT (75%) -->
-    <div class="col-md-9">
+<div class="col-md-6 mb-3">
+<label class="form-label">Type of Training</label>
+<select name="type_of_training" class="form-select" required>
+<option value="">Select</option>
+<option value="Basic">Basic</option>
+<option value="Refresher">Refresher</option>
+<option value="Special">Special</option>
+</select>
+</div>
 
-        <!-- TRAINING FORM -->
-        <div class="card-box">
+<div class="col-md-6 mb-3">
+<label class="form-label">Nature of Training</label>
+<input type="text" name="nature_of_training" class="form-control" required>
+</div>
 
-            <h2 class="page-title">
-                Schedule Training for {{ worker.name }}
-            </h2>
+<div class="col-md-6 mb-3">
+<label class="form-label">Contractor Name</label>
+<input type="text" name="contractor_name" class="form-control" required>
+</div>
 
-            {% include 'common/message.html' %}
+<!-- AREA LOGIC -->
 
-            <form method="post">
-            {% csrf_token %}
+{% if user_areas.count > 1 %}
 
-            <div class="row">
+<div class="col-md-6 mb-3">
+<label class="form-label">Area</label>
+<select name="area_name" class="form-select" required>
+<option value="">Select Area</option>
+{% for area in user_areas %}
+<option value="{{ area.area_name }}">{{ area.area_name }}</option>
+{% endfor %}
+</select>
+</div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">From Date</label>
-                    <input type="date" name="from_date"
-                           class="form-control" required>
-                </div>
+{% elif user_areas.count == 1 %}
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">To Date</label>
-                    <input type="date" name="to_date"
-                           class="form-control" required>
-                </div>
+<input type="hidden" name="area_name" value="{{ user_areas.first.area_name }}">
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Type of Training</label>
-                    <select name="type_of_training"
-                            class="form-select" required>
-                        <option value="">Select</option>
-                        <option value="Basic">Basic</option>
-                        <option value="Refresher">Refresher</option>
-                        <option value="Special">Special</option>
-                    </select>
-                </div>
+<div class="col-md-6 mb-3">
+<label class="form-label">Area</label>
+<input type="text" class="form-control" value="{{ user_areas.first.area_name }}" disabled>
+</div>
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Nature of Training</label>
-                    <input type="text" name="nature_of_training"
-                           class="form-control" required>
-                </div>
+{% else %}
 
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Name of Contractor</label>
-                    <input type="text" name="contractor_name"
-                           class="form-control" required>
-                </div>
+<div class="col-md-6 mb-3">
+<label class="form-label">Area</label>
+<input type="text" name="area_name" class="form-control" required>
+</div>
 
-
-                <!-- AREA FIELD -->
-                <div class="col-md-6 mb-3">
-
-                {% if user_areas.count > 1 %}
-
-                    <label class="form-label">Area</label>
-
-                    <select name="area_name"
-                            class="form-select" required>
-
-                        <option value="">Select Area</option>
-
-                        {% for area in user_areas %}
-                        <option value="{{ area.area_name }}">
-                            {{ area.area_name }}
-                        </option>
-                        {% endfor %}
-
-                    </select>
-
-                {% elif user_areas.count == 1 %}
-
-                    <label class="form-label">Area</label>
-
-                    <input type="hidden"
-                           name="area_name"
-                           value="{{ user_areas.first.area_name }}">
-
-                    <input type="text"
-                           class="form-control"
-                           value="{{ user_areas.first.area_name }}"
-                           disabled>
-
-                {% else %}
-
-                    <label class="form-label">Area</label>
-
-                    <input type="text"
-                           name="area_name"
-                           class="form-control"
-                           required>
-
-                {% endif %}
-
-                </div>
-
-            </div>
-
-            <button type="submit"
-                    class="btn btn-submit">
-                Submit
-            </button>
-
-            </form>
-
-        </div>
-
-
-        <!-- PREVIOUS TRAINING -->
-        <div class="card-box mt-4">
-
-            <h4 class="mb-3">Previous Training Schedules</h4>
-
-            {% if worker.trainings.all %}
-
-            <ul class="list-group">
-
-                {% for training in worker.trainings.all %}
-
-                <li class="list-group-item
-                           d-flex
-                           justify-content-between
-                           align-items-center">
-
-                    <span>
-
-                        <b>From:</b> {{ training.from_date }}
-                        |
-                        <b>To:</b> {{ training.to_date }}
-                        |
-                        <b>Created:</b> {{ training.created_at }}
-
-                    </span>
-
-                    <span>
-
-                    {% if training.vtc_status == "Pending" and training.created_by_id == request.user.id %}
-
-                        <a href="{% url 'vtc:edit_training' training.id %}"
-                           class="btn btn-sm btn-warning">
-
-                           Edit
-
-                        </a>
-
-                    {% else %}
-
-                        <button class="btn btn-sm btn-warning"
-                                disabled>
-                            Edit
-                        </button>
-
-                    {% endif %}
-
-                    </span>
-
-                </li>
-
-                {% endfor %}
-
-            </ul>
-
-            {% else %}
-
-            <p class="text-muted">
-                No previous trainings scheduled.
-            </p>
-
-            {% endif %}
-
-        </div>
-
-    </div>
+{% endif %}
 
 </div>
 
+<button type="submit" class="btn btn-submit mt-2">
+Submit Training
+</button>
+
+</form>
+
+<hr class="mt-4 mb-4">
+
+<h4 class="page-title">Previous Training Schedules</h4>
+
+{% if worker.trainings.all %}
+
+{% for training in worker.trainings.all %}
+
+<div class="training-card d-flex justify-content-between align-items-center">
+
+<div>
+<strong>From:</strong> {{ training.from_date }} |
+<strong>To:</strong> {{ training.to_date }} |
+<strong>Created:</strong> {{ training.created_at }}
+</div>
+
+<div>
+
+{% if training.vtc_status == "Pending" and training.created_by_id == request.user.id %}
+
+<a href="{% url 'vtc:edit_training' training.id %}"
+class="btn btn-sm btn-warning">
+Edit
+</a>
+
+{% else %}
+
+<button class="btn btn-sm btn-warning" disabled>
+Edit
+</button>
+
+{% endif %}
+
+</div>
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<p>No previous trainings scheduled.</p>
+
+{% endif %}
+
+</div>
+</div>
+
+</div>
 </div>
 
 {% endblock %}
