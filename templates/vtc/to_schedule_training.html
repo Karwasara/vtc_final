@@ -9,147 +9,142 @@ href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
 <style>
 
-body{
-    background-color:#f7fafd;
-    font-family:"Segoe UI",sans-serif;
+body {
+    background-color: #f7fafd;
+    font-family: "Segoe UI", sans-serif;
 }
 
-/* Sidebar */
-.sidebar-box{
-    background:#d9f1ff;
-    border-radius:12px;
-    padding:15px;
-    height:100%;
+h2 {
+    color: #0d6efd;
+    font-weight: 600;
+    margin-bottom: 25px;
 }
 
-/* Main card */
-.main-card{
-    background:#ffffff;
-    border-radius:15px;
-    box-shadow:0 0 10px rgba(0,0,0,0.08);
-    padding:20px;
+.main-card {
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+    padding: 25px;
+    transition: all 0.2s ease;
 }
 
-/* Heading */
-.page-title{
-    color:#0d6efd;
-    font-weight:600;
-    margin-bottom:20px;
+.main-card:hover {
+    transform: scale(1.01);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.12);
 }
 
-/* Table styling */
-table.dataTable thead th{
-    background:#0d6efd !important;
-    color:white;
-    text-align:center;
+table.dataTable {
+    border-radius: 10px !important;
+    overflow: hidden;
 }
 
-table.dataTable tbody tr:hover{
-    background:#f1f7ff;
+table.dataTable thead th {
+    background-color: #0d6efd !important;
+    color: white;
+    text-align: center;
 }
 
-/* Button */
-.btn-warning{
-    border-radius:20px;
-    background:#ffc107;
-    border:none;
-    padding:5px 14px;
+table.dataTable tbody tr:hover {
+    background-color: #f1f7ff;
 }
 
-.btn-warning:hover{
-    background:#ffca2c;
+.btn-warning {
+    border-radius: 6px;
+    color: #000;
+    background-color: #ffc107;
+    border: none;
+    transition: 0.2s;
+}
+
+.btn-warning:hover {
+    background-color: #ffca2c;
+}
+
+.sidebar {
+    background-color: #d9f1ff;
+    border-radius: 15px;
+    height: 100%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
 }
 
 </style>
 
 
-<div class="container-fluid mt-4">
+<div class="container mt-4">
 
-<div class="row">
+    <div class="row">
 
-<!-- SIDEBAR 25% -->
-<div class="col-lg-3 col-md-4 mb-3">
+        <!-- Sidebar -->
+        <div class="col-md-3">
 
-<div class="sidebar-box">
+            {% include 'vtc/sidebar.html' %}
 
-{% include 'vtc/sidebar.html' %}
-
-</div>
-
-</div>
+        </div>
 
 
-<!-- MAIN CONTENT 75% -->
-<div class="col-lg-9 col-md-8">
+        <!-- Main Content -->
+        <div class="col-md-9">
 
-<div class="main-card">
+            <div class="main-card mt-3">
 
-<h4 class="page-title">Workers Available for Training</h4>
+                <h2>Workers Available for Training</h2>
 
-{% if workers %}
+                {% if workers %}
 
-<table id="workersTable"
-class="table table-bordered table-striped">
+                <table id="workersTable"
+                       class="table table-bordered table-striped align-middle">
 
-<thead>
-<tr>
-<th>S.No.</th>
-<th>Worker Name</th>
-<th>Aadhaar</th>
-<th>Date of Birth</th>
-<th>Mobile</th>
-<th>Action</th>
-</tr>
-</thead>
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Worker Name</th>
+                            <th>Aadhaar</th>
+                            <th>Date of Birth</th>
+                            <th>Mobile</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-<tbody>
+                    <tbody>
 
-{% for worker in workers %}
+                        {% for worker in workers %}
 
-<tr>
-<td>{{ forloop.counter }}</td>
-<td>{{ worker.name }}</td>
-<td>{{ worker.aadhar_number }}</td>
-<td>{{ worker.dob }}</td>
-<td>{{ worker.mobile }}</td>
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ worker.name }}</td>
+                            <td>{{ worker.aadhar_number }}</td>
+                            <td>{{ worker.dob }}</td>
+                            <td>{{ worker.mobile }}</td>
 
-<td class="text-center">
+                            <td>
+                                <a href="{% url 'vtc:schedule_training' worker.pk %}"
+                                   class="btn btn-sm btn-warning">
+                                   Schedule
+                                </a>
+                            </td>
+                        </tr>
 
-<a href="{% url 'vtc:schedule_training' worker.pk %}"
-class="btn btn-warning btn-sm">
+                        {% endfor %}
 
-Schedule
+                    </tbody>
 
-</a>
+                </table>
 
-</td>
+                {% else %}
 
-</tr>
+                <div class="alert alert-warning text-center" role="alert">
+                    No workers available for training.
+                </div>
 
-{% endfor %}
+                {% endif %}
 
-</tbody>
+            </div>
 
-</table>
+        </div>
 
-{% else %}
-
-<div class="alert alert-warning text-center">
-
-No workers available for training.
-
-</div>
-
-{% endif %}
+    </div>
 
 </div>
-
-</div>
-
-</div>
-
-</div>
-
 
 
 <!-- jQuery -->
@@ -161,22 +156,24 @@ No workers available for training.
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 
+<!-- Initialize DataTable -->
 <script>
 
-$(document).ready(function(){
+$(document).ready(function() {
 
-$('#workersTable').DataTable({
+    $('#workersTable').DataTable({
 
-pageLength:10,
+        "pageLength": 10,
+        "order": [],
 
-columnDefs:[
-{
-orderable:false,
-targets:5
-}
-]
+        "columnDefs": [
+            {
+                "orderable": false,
+                "targets": 5
+            }
+        ]
 
-});
+    });
 
 });
 
