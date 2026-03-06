@@ -5,28 +5,20 @@
 
 <style>
 
-/* ONLY DASHBOARD AREA STYLING */
-
 .dashboard-wrapper{
     display:flex;
     gap:25px;
     width:100%;
 }
 
-/* Sidebar */
-
 .dashboard-sidebar{
     width:25%;
     flex-shrink:0;
 }
 
-/* Content */
-
 .dashboard-content{
     width:75%;
 }
-
-/* Card */
 
 .dashboard-card{
     background:#ffffff;
@@ -34,8 +26,6 @@
     padding:30px;
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
-
-/* Title */
 
 .dashboard-title{
     color:#004B87;
@@ -47,12 +37,10 @@
 
 .tiles-row{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:20px;
     margin-bottom:30px;
 }
-
-/* Tile */
 
 .dashboard-tile{
     cursor:pointer;
@@ -83,8 +71,6 @@
     border:2px solid #000;
 }
 
-/* Chart */
-
 #areaChart{
     height:350px !important;
 }
@@ -99,9 +85,7 @@
 <!-- SIDEBAR -->
 
 <div class="dashboard-sidebar">
-
 {% include 'mm/sidebar.html' %}
-
 </div>
 
 
@@ -141,13 +125,6 @@ Contractual Worker Training Dashboard
 </div>
 </div>
 
-<div class="dashboard-tile card text-center bg-info text-white" data-type="total_workers">
-<div class="card-body">
-<h2>{{ total_workers }}</h2>
-<p>Total Registered Workers</p>
-</div>
-</div>
-
 </div>
 
 
@@ -170,11 +147,10 @@ Contractual Worker Training Dashboard
 
 <script>
 
-const areaLabels = JSON.parse("{{ area_labels|escapejs }}");
-const trainedCounts = JSON.parse("{{ trained_counts|escapejs }}");
-const underTrainingCounts = JSON.parse("{{ under_training_counts|escapejs }}");
-const totalTrainingsCounts = JSON.parse("{{ total_trainings_counts|escapejs }}");
-const totalWorkersCounts = JSON.parse("{{ total_workers_counts|escapejs }}");
+const areaLabels = JSON.parse('{{ area_labels|escapejs }}');
+const trainedCounts = JSON.parse('{{ trained_counts|escapejs }}');
+const underTrainingCounts = JSON.parse('{{ under_training_counts|escapejs }}');
+const totalTrainingsCounts = JSON.parse('{{ total_trainings_counts|escapejs }}');
 
 let chart=null;
 
@@ -183,22 +159,20 @@ function renderChart(type){
 const datasetsMap={
 'trained':trainedCounts,
 'under_training':underTrainingCounts,
-'total_trainings':totalTrainingsCounts,
-'total_workers':totalWorkersCounts
+'total_trainings':totalTrainingsCounts
 };
 
 const colorsMap={
 'trained':'rgba(0,123,255,0.7)',
 'under_training':'rgba(40,167,69,0.7)',
-'total_trainings':'rgba(255,193,7,0.7)',
-'total_workers':'rgba(23,162,184,0.7)'
+'total_trainings':'rgba(255,193,7,0.7)'
 };
 
-const dataArray=datasetsMap[type].slice();
+const dataArray=[...datasetsMap[type]];
 const total=dataArray.reduce((a,b)=>a+b,0);
 dataArray.push(total);
 
-const labelsArray=areaLabels.slice();
+const labelsArray=[...areaLabels];
 labelsArray.push("Total");
 
 if(chart) chart.destroy();
