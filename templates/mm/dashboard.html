@@ -8,25 +8,26 @@
 <style>
 
 body{
-    background-color:#f7fafd;
+    background:#f7fafd;
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Layout */
+/* FLEX LAYOUT (same as table page) */
 .dashboard-layout{
     display:flex;
-    align-items:flex-start;
+    gap:20px;
 }
 
-/* Sidebar (same behaviour as other pages) */
-.sidebar-section{
-    width:260px;
-    margin-right:20px;
+/* Sidebar (25%) */
+.sidebar-area{
+    flex:0 0 25%;
+    max-width:25%;
 }
 
-/* Main section */
-.main-section{
-    flex:1;
+/* Content (75%) */
+.content-area{
+    flex:0 0 75%;
+    max-width:75%;
 }
 
 /* Dashboard Card */
@@ -40,19 +41,18 @@ body{
 
 /* Heading */
 .dashboard-heading{
-  font-size:2.5rem;
+  font-size:2.3rem;
   font-weight:800;
   background:linear-gradient(90deg,#007bff,#00c6ff,#00ff99);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
-  text-shadow:2px 2px 6px rgba(0,0,0,0.2);
 }
 
 /* Tiles Row */
 .tiles-row{
     display:flex;
     gap:20px;
-    margin-bottom:40px;
+    margin-bottom:35px;
 }
 
 /* Tile */
@@ -70,7 +70,7 @@ body{
 /* Active tile */
 .dashboard-tile.active-tile{
   transform:scale(1.05);
-  box-shadow:0 0 20px rgba(0,0,0,0.3);
+  box-shadow:0 0 15px rgba(0,0,0,0.3);
   border:2px solid black;
 }
 
@@ -81,14 +81,14 @@ body{
 
 <div class="dashboard-layout">
 
-<!-- Sidebar -->
-<div class="sidebar-section">
+<!-- SIDEBAR -->
+<div class="sidebar-area">
     {% include 'mm/sidebar.html' %}
 </div>
 
 
-<!-- Main Section -->
-<div class="main-section">
+<!-- MAIN CONTENT -->
+<div class="content-area">
 
 <div class="dashboard-card">
 
@@ -97,7 +97,7 @@ Contractual Worker Training Dashboard
 </h1>
 
 
-<!-- Dashboard Tiles -->
+<!-- DASHBOARD TILES -->
 <div class="tiles-row">
 
 <div class="dashboard-tile card text-center bg-primary text-white active-tile" data-type="trained">
@@ -131,7 +131,7 @@ Contractual Worker Training Dashboard
 </div>
 
 
-<!-- Chart -->
+<!-- CHART -->
 <div class="card p-4">
 <canvas id="areaChart" height="100"></canvas>
 </div>
@@ -145,8 +145,8 @@ Contractual Worker Training Dashboard
 </div>
 
 
+<!-- Chart.js -->
 <script src="{% static 'chart.umd.js' %}"></script>
-<script src="{% static 'bootstrap.bundle.min.js' %}"></script>
 
 <script>
 
