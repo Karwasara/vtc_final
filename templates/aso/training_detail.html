@@ -10,177 +10,171 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Table Header */
-table.dataTable thead th{
-    background:#004B87 !important;
+/* Card */
+.detail-card{
+    background:white;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Title */
+.page-title{
+    color:#004B87;
+    font-weight:600;
+}
+
+/* Table header */
+.table thead{
+    background:#004B87;
     color:white;
 }
 
-/* Row Hover */
-table.dataTable tbody tr:hover{
-    background:#f1f7ff;
-}
+/* Buttons */
 
-/* Blue Button */
-.btn-blue{
+.btn-primary-round{
     background:#2563eb;
     color:white;
     border:none;
-    padding:6px 16px;
-    border-radius:25px;
-    font-size:13px;
+    padding:8px 18px;
+    border-radius:50px;
 }
 
-.btn-blue:hover{
+.btn-primary-round:hover{
     background:#1d4ed8;
 }
 
-/* Red Button */
-.btn-red{
-    background:#dc2626;
+.btn-danger-round{
+    background:#dc3545;
     color:white;
     border:none;
-    padding:6px 16px;
-    border-radius:25px;
-    font-size:13px;
+    padding:8px 18px;
+    border-radius:50px;
 }
 
-/* Grey Button */
-.btn-grey{
+.btn-secondary-round{
     background:#64748b;
     color:white;
-    padding:6px 16px;
-    border-radius:25px;
-    font-size:13px;
+    border:none;
+    padding:8px 18px;
+    border-radius:50px;
 }
 
 </style>
 
-<div class="grid grid-cols-12 gap-6">
 
-```
-<!-- Sidebar -->
-<div class="col-span-12 md:col-span-3">
+<div class="container-fluid mt-4">
 
-    {% include 'aso/sidebar.html' %}
+<div class="row">
 
-</div>
+    <!-- Sidebar -->
+    <div class="col-md-3">
 
+        {% include 'aso/sidebar.html' %}
 
-<!-- Main Content -->
-<div class="col-span-12 md:col-span-9">
-
-    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-
-        <h2 class="text-xl font-semibold text-brand-blue mb-4">
-            Training Details for {{ training.worker.name }}
-        </h2>
-
-        {% include 'common/message.html' %}
+    </div>
 
 
-        <!-- Attendance Table -->
+    <!-- Main Content -->
+    <div class="col-md-9">
 
-        <h4 class="mb-3 font-semibold">Attendance</h4>
+        <div class="detail-card">
 
-        <div class="overflow-x-auto">
+            <h2 class="mb-4 page-title">
+                Training Details for {{ training.worker.name }}
+            </h2>
 
-            <table class="table table-bordered w-full text-sm">
+            {% include 'common/message.html' %}
 
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Present</th>
-                    </tr>
-                </thead>
 
-                <tbody>
+            <!-- Attendance Table -->
 
-                {% for att in attendances %}
+            <h4 class="mb-3">Attendance</h4>
 
-                <tr>
+            <div class="table-responsive">
 
-                    <td>{{ att.date }}</td>
+                <table class="table table-bordered table-hover">
 
-                    <td>{{ att.present }}</td>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Present</th>
+                        </tr>
+                    </thead>
 
-                </tr>
+                    <tbody>
 
-                {% endfor %}
+                        {% for att in attendances %}
 
-                </tbody>
+                        <tr>
+                            <td>{{ att.date }}</td>
+                            <td>{{ att.present }}</td>
+                        </tr>
 
-            </table>
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- Final Result -->
+
+            <h4 class="mt-4">Final Result</h4>
+
+            {% if result %}
+
+                <p><strong>Performance:</strong> {{ result.performance_appraisal }}</p>
+
+                <p><strong>Remarks:</strong> {{ result.remarks }}</p>
+
+            {% else %}
+
+                <p>No result recorded.</p>
+
+            {% endif %}
+
+
+            <!-- Action Buttons -->
+
+            <form method="post" class="mt-4">
+
+                {% csrf_token %}
+
+                <button type="submit"
+                        name="action"
+                        value="forward_to_mm"
+                        class="btn-primary-round">
+
+                    Forward to Mine Manager
+
+                </button>
+
+                <button type="submit"
+                        name="action"
+                        value="reject"
+                        class="btn-danger-round">
+
+                    Reject
+
+                </button>
+
+                <a href="{% url 'aso:forwarded_training_list' %}"
+                   class="btn-secondary-round">
+
+                   Back to List
+
+                </a>
+
+            </form>
 
         </div>
-
-
-
-        <!-- Final Result -->
-
-        <h4 class="mt-6 mb-2 font-semibold">
-            Final Result
-        </h4>
-
-        {% if result %}
-
-            <p>
-                <strong>Performance:</strong>
-                {{ result.performance_appraisal }}
-            </p>
-
-            <p>
-                <strong>Remarks:</strong>
-                {{ result.remarks }}
-            </p>
-
-        {% else %}
-
-            <p>No result recorded.</p>
-
-        {% endif %}
-
-
-
-        <!-- Action Buttons -->
-
-        <form method="post" class="flex gap-3 mt-6">
-
-            {% csrf_token %}
-
-            <button type="submit"
-                    name="action"
-                    value="forward_to_mm"
-                    class="btn-blue">
-
-                Forward to Mine Manager
-
-            </button>
-
-
-            <button type="submit"
-                    name="action"
-                    value="reject"
-                    class="btn-red">
-
-                Reject
-
-            </button>
-
-
-            <a href="{% url 'aso:forwarded_training_list' %}"
-               class="btn-grey">
-
-               Back to List
-
-            </a>
-
-        </form>
 
     </div>
 
 </div>
-```
 
 </div>
 
