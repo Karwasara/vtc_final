@@ -3,7 +3,6 @@
 
 {% block content %}
 
-<!-- Local Bootstrap -->
 <link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
 
 <style>
@@ -16,17 +15,18 @@ body{
 /* Layout */
 .dashboard-layout{
     display:flex;
-    gap:20px;
+    align-items:flex-start;
 }
 
-/* Sidebar */
+/* Sidebar (same behaviour as other pages) */
 .sidebar-section{
-    width:25%;
+    width:260px;
+    margin-right:20px;
 }
 
-/* Main */
+/* Main section */
 .main-section{
-    width:75%;
+    flex:1;
 }
 
 /* Dashboard Card */
@@ -77,15 +77,13 @@ body{
 </style>
 
 
-<div class="container mt-4">
+<div class="container-fluid mt-4">
 
 <div class="dashboard-layout">
 
 <!-- Sidebar -->
 <div class="sidebar-section">
-
     {% include 'mm/sidebar.html' %}
-
 </div>
 
 
@@ -147,10 +145,7 @@ Contractual Worker Training Dashboard
 </div>
 
 
-<!-- Chart.js -->
 <script src="{% static 'chart.umd.js' %}"></script>
-
-<!-- Bootstrap -->
 <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
 
 <script>
