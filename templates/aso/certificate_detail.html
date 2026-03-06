@@ -16,12 +16,12 @@ body{
     gap:20px;
 }
 
-/* Sidebar (25%) */
+/* Sidebar */
 .sidebar-area{
     width:25%;
 }
 
-/* Content (75%) */
+/* Content */
 .content-area{
     width:75%;
 }
@@ -40,10 +40,26 @@ body{
     font-weight:600;
 }
 
-/* Search Layout */
+/* Search layout */
 .search-box{
     display:flex;
     gap:12px;
+    align-items:center;
+}
+
+/* Input field */
+.serial-input{
+    width:350px;        /* shorter width */
+    padding:8px 12px;
+    border:2px solid #cfd8dc;   /* border added */
+    border-radius:6px;
+    outline:none;
+    transition:0.2s;
+}
+
+/* focus effect */
+.serial-input:focus{
+    border-color:#0d6efd;
 }
 
 /* Search Button */
@@ -70,9 +86,7 @@ body{
 
     <!-- Sidebar -->
     <div class="sidebar-area">
-
         {% include 'aso/sidebar.html' %}
-
     </div>
 
 
@@ -95,7 +109,8 @@ body{
                            name="serial_number"
                            placeholder="Enter Certificate Serial Number"
                            value="{{ request.GET.serial_number }}"
-                           class="form-control">
+                           class="serial-input"
+                           maxlength="50">
 
                     <button type="submit" class="btn-search">
                         Search
@@ -143,29 +158,19 @@ body{
                 <div class="mt-3">
 
                     <p>
-
                     This is to certify that <strong>{{ worker.name }}</strong>,
-
                     S/o/D/o/W/o <strong>{{ worker.father_or_spouse_name }}</strong>,
-
                     of Village <strong>{{ worker.village }}</strong>,
-
                     Thana <strong>{{ worker.thana }}</strong>,
-
                     PO <strong>{{ worker.po }}</strong>,
-
                     District <strong>{{ worker.district }}</strong>,
-
                     State <strong>{{ worker.state }}</strong>,
-
                     has between <strong>{{ from_date }}</strong>
                     to <strong>{{ to_date }}</strong>
-
                     duly undergone the {{ training.type_of_training }} training
                     required under <strong>{{ chapter }}</strong>
                     of the Mine Vocational Training Rules, 1966,
                     for employment in a mine on surface and in opencast workings.
-
                     </p>
 
                 </div>
@@ -183,18 +188,14 @@ body{
                 <div class="mt-3">
 
                     <p>
-
                     <strong>Period of Training:</strong>
                     {{ from_date }} to {{ to_date }}
                     (Days Present: {{ present_days }})
-
                     </p>
 
                     <p>
-
                     <strong>Vocational Training Centre:</strong>
                     {{ area_name|default:"N/A" }}
-
                     </p>
 
                 </div>
@@ -202,7 +203,6 @@ body{
 
                 <div class="row mt-4">
 
-                    <!-- Photo -->
                     <div class="col-md-4 text-center">
 
                         {% if worker.photo %}
@@ -222,26 +222,21 @@ body{
                     </div>
 
 
-                    <!-- Notes -->
                     <div class="col-md-8">
 
                         <hr>
 
                         <p>
-
                         <em>
                         * This certificate will have no claim for employment in NCL.
                         </em>
-
                         </p>
 
                         <p>
-
                         <em>
                         * This certificate is valid for {{ validity_years }}
                         years from the issue date.
                         </em>
-
                         </p>
 
                     </div>
@@ -254,9 +249,7 @@ body{
             {% elif searched %}
 
             <div class="alert alert-danger mt-4 text-center">
-
                 No certificate found with the entered details.
-
             </div>
 
             {% endif %}
