@@ -4,49 +4,76 @@
 {% block content %}
 
 <style>
-  body{
-    background-color:#f7fafd;
-    font-family:"Segoe UI",sans-serif;
-  }
+body {
+  background-color: #f4f7fb;
+}
 
-  .main-card{
-    background:#ffffff;
-    border-radius:15px;
-    box-shadow:0 0 10px rgba(0,0,0,0.08);
-    padding:25px;
-  }
+/* Main Card */
+.form-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e3e6ea;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  padding: 30px;
+}
 
-  .main-card h3{
-    color:#0d6efd;
-    font-weight:600;
-    margin-bottom:20px;
-  }
+.form-card h3 {
+  font-weight: 600;
+  margin-bottom: 25px;
+  color: #0d6efd;
+}
 
-  .main-card:hover{
-    transform:scale(1.01);
-    transition:0.2s;
-  }
+/* Form Fields */
+.form-card p {
+  margin-bottom: 14px;
+}
 
-  .btn-pill{
-    border-radius:50px;
-    padding:6px 18px;
-  }
+.form-card label {
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: block;
+}
 
-  .certificate-card{
-    margin-top:30px;
-    border-radius:15px;
-    border:1px solid #e3e6ea;
-    box-shadow:0 0 10px rgba(0,0,0,0.08);
-  }
+.form-card input,
+.form-card select,
+.form-card textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+}
 
-  .certificate-header{
-    background:#0d6efd;
-    color:white;
-    padding:12px 20px;
-    border-top-left-radius:15px;
-    border-top-right-radius:15px;
-    font-weight:600;
-  }
+.form-card input[disabled],
+.form-card select[disabled],
+.form-card textarea[disabled] {
+  background-color: #f1f3f5;
+}
+
+/* Certificate Card */
+.certificate-card {
+  margin-top: 35px;
+  border-radius: 14px;
+  border: 1px solid #e3e6ea;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.certificate-header {
+  background: linear-gradient(90deg, #0d6efd, #4dabf7);
+  color: white;
+  padding: 14px 20px;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 14px;
+  font-weight: 600;
+}
+
+.table th {
+  font-weight: 600;
+}
+
+.btn-pill {
+  border-radius: 50px;
+  padding: 4px 14px;
+}
 </style>
 
 
@@ -58,11 +85,11 @@
       {% include 'vtc/sidebar.html' %}
     </div>
 
-
     <!-- Main Content -->
     <div class="col-md-9 col-lg-10">
 
-      <div class="main-card mt-3">
+      <!-- Worker Details Card -->
+      <div class="form-card mt-3">
 
         <h3>
           {% if read_only %}
@@ -104,7 +131,7 @@
 
       <!-- Certificates Section -->
       {% if read_only %}
-      <div class="certificate-card mt-4">
+      <div class="certificate-card">
 
         <div class="certificate-header">
           Generated Certificates
@@ -161,9 +188,9 @@
           </div>
 
           {% else %}
-            <div class="text-muted">
-              No certificates generated for this worker.
-            </div>
+          <div class="text-muted">
+            No certificates generated for this worker.
+          </div>
           {% endif %}
 
         </div>
