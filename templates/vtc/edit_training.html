@@ -43,20 +43,24 @@ body{
 
 /* Label */
 .form-label{
+    display:block;
     font-weight:600;
     color:#444;
+    margin-bottom:6px;
 }
 
 /* Inputs */
 .form-control{
+    width:100%;
     border-radius:8px;
-    height:42px;
+    padding:10px;
     border:1px solid #d6dce5;
 }
 
 /* Focus */
 .form-control:focus{
     border-color:#0d6efd;
+    outline:none;
     box-shadow:0 0 5px rgba(13,110,253,.2);
 }
 
@@ -67,6 +71,7 @@ body{
     padding:10px 25px;
     border-radius:8px;
     color:white;
+    margin-right:10px;
 }
 
 .btn-update:hover{
@@ -134,8 +139,7 @@ Edit Training Schedule
 Update
 </button>
 
-<a href="{% url 'vtc:schedule_training' training.worker.id %}"
-   class="btn-cancel">
+<a href="{% url 'vtc:schedule_training' training.worker.id %}" class="btn-cancel">
 Cancel
 </a>
 
