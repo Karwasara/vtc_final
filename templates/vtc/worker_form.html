@@ -34,6 +34,7 @@ body{
   padding:30px;
 }
 
+/* Title */
 .form-card h3{
   font-weight:600;
   margin-bottom:25px;
@@ -58,58 +59,6 @@ body{
   border:1px solid #ced4da;
 }
 
-/* Hyperlink Style */
-a{
-  color:#0d6efd;
-  text-decoration:underline;
-  font-weight:500;
-}
-
-a:hover{
-  color:#084298;
-}
-
-/* Button Styles */
-.btn-save{
-  background:#198754;
-  color:white;
-  border:none;
-}
-
-.btn-save:hover{
-  background:#157347;
-}
-
-.btn-cancel{
-  background:#dc3545;
-  color:white;
-  border:none;
-}
-
-.btn-cancel:hover{
-  background:#bb2d3b;
-}
-
-.btn-back{
-  background:#0d6efd;
-  color:white;
-  border:none;
-}
-
-.btn-back:hover{
-  background:#0b5ed7;
-}
-
-.btn-verify{
-  background:#fd7e14;
-  color:white;
-  border:none;
-}
-
-.btn-verify:hover{
-  background:#e96b0c;
-}
-
 /* Certificate Section */
 .certificate-card{
   margin-top:35px;
@@ -126,13 +75,8 @@ a:hover{
   border-radius:10px 10px 0 0;
 }
 
-/* Table */
 .table{
   margin-bottom:0;
-}
-
-.table th{
-  background:#f1f3f5;
 }
 
 </style>
@@ -190,17 +134,17 @@ a:hover{
 
           {% if not read_only %}
 
-            <button type="submit" class="btn btn-save">
+            <button type="submit" class="btn btn-primary">
               Save
             </button>
 
-            <a href="{% url 'vtc:worker_list' %}" class="btn btn-cancel">
+            <a href="{% url 'vtc:worker_list' %}" class="btn btn-secondary">
               Cancel
             </a>
 
           {% else %}
 
-            <a href="{% url 'vtc:worker_list' %}" class="btn btn-back">
+            <a href="{% url 'vtc:worker_list' %}" class="btn btn-outline-primary">
               Back to List
             </a>
 
@@ -228,7 +172,7 @@ a:hover{
 
             <table class="table table-bordered table-striped table-hover">
 
-              <thead>
+              <thead class="table-light">
 
                 <tr>
                   <th>Serial Number</th>
@@ -267,7 +211,7 @@ a:hover{
                   <td class="text-center">
 
                     <a href="{% url 'vtc:certificate_detail' %}?serial_number={{ training.certificate_serial_number_final }}"
-                       class="btn btn-sm btn-verify">
+                       class="btn btn-sm btn-success">
 
                        Verify
 
