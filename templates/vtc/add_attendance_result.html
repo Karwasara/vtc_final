@@ -7,78 +7,48 @@
 <style>
 
 body{
-    background:#f4f8fc;
+    background-color:#f7fafd;
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Page Layout */
-.page-layout{
-    display:flex;
-    gap:20px;
-}
-
-/* Sidebar */
-.sidebar-container{
-    width:25%;
-}
-
-/* Content */
-.content-container{
-    width:75%;
-}
-
 /* Card */
-.page-card{
+.worker-card{
     background:white;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
     padding:25px;
-    border-radius:10px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.08);
 }
 
-/* Heading */
-.page-title{
-    color:#0d6efd;
-    font-weight:600;
-    margin-bottom:20px;
-}
-
-/* Table */
-.table thead{
-    background:#e7f1ff;
-}
-
-/* Attendance form inline */
-.attendance-form{
-    display:flex;
-    gap:8px;
-}
-
-/* Buttons */
-.btn-save{
-    background:#28a745;
-    border:none;
+/* Table header */
+table thead th{
+    background-color:#004B87;
     color:white;
+}
+
+/* Hover */
+table tbody tr:hover{
+    background:#f1f7ff;
 }
 
 </style>
 
 
-<div class="container-fluid mt-4">
-
-<div class="page-layout">
+<div class="grid grid-cols-12 gap-6">
 
 <!-- Sidebar -->
-<div class="sidebar-container">
+<div class="col-span-12 md:col-span-3">
+
     {% include 'vtc/sidebar.html' %}
+
 </div>
 
 
 <!-- Main Content -->
-<div class="content-container">
+<div class="col-span-12 md:col-span-9">
 
-<div class="page-card">
+<div class="worker-card">
 
-<h2 class="page-title">
+<h2 class="text-xl font-semibold text-brand-blue mb-4">
 Attendance & Final Result Entry for {{ training.worker.name }}
 </h2>
 
@@ -86,9 +56,10 @@ Attendance & Final Result Entry for {{ training.worker.name }}
 
 
 <!-- Attendance Table -->
-<h5 class="mt-4">Daily Attendance</h5>
 
-<table class="table table-bordered">
+<h5 class="mt-4 mb-3 font-semibold">Daily Attendance</h5>
+
+<table class="table table-bordered w-full text-sm">
 
 <thead>
 <tr>
@@ -114,21 +85,21 @@ Attendance & Final Result Entry for {{ training.worker.name }}
 
 {% elif day > today %}
 
-<span class="text-muted">Not Available (Future)</span>
+<span class="text-gray-500">Future</span>
 
 {% else %}
 
-<form method="post" class="attendance-form">
+<form method="post" class="flex gap-2">
 
 {% csrf_token %}
 
 <input type="hidden"
-       name="attendance_date"
-       value="{{ day|date:'Y-m-d' }}">
+name="attendance_date"
+value="{{ day|date:'Y-m-d' }}">
 
 <select name="status"
-        class="form-select form-select-sm"
-        required>
+class="form-select form-select-sm"
+required>
 
 <option value="">Select</option>
 <option value="Present">Present</option>
@@ -138,9 +109,9 @@ Attendance & Final Result Entry for {{ training.worker.name }}
 </select>
 
 <button type="submit"
-        name="action"
-        value="save_attendance"
-        class="btn btn-save btn-sm">
+name="action"
+value="save_attendance"
+class="btn btn-success btn-sm">
 
 Save
 
@@ -155,7 +126,7 @@ Save
 <td>
 
 {% if existing_attendance|get_item:day %}
-<span class="badge bg-success">✔ Saved</span>
+<span class="badge bg-success">Saved</span>
 
 {% elif day > today %}
 <span class="badge bg-secondary">Future</span>
@@ -180,7 +151,7 @@ Save
 
 {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
 
-<hr>
+<hr class="my-5">
 
 <form method="post" enctype="multipart/form-data">
 
@@ -193,14 +164,14 @@ Save
 
 <div class="mb-3">
 
-<label class="form-label">
+<label class="form-label font-semibold">
 Upload Attendance File
 </label>
 
 <input type="file"
-       name="attendance_field_file"
-       class="form-control"
-       required>
+name="attendance_field_file"
+class="form-control"
+required>
 
 </div>
 
@@ -211,7 +182,9 @@ Upload Attendance File
 Attendance file uploaded:
 
 <a href="{{ training.attendance_field_file.url }}" target="_blank">
+
 {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+
 </a>
 
 </div>
@@ -219,7 +192,10 @@ Attendance file uploaded:
 {% endif %}
 
 
-<h5 class="mt-4">Final Performance Appraisal</h5>
+<h5 class="mt-4 font-semibold">
+Final Performance Appraisal
+</h5>
+
 
 <div class="mb-3">
 
@@ -228,8 +204,8 @@ Appraisal
 </label>
 
 <select name="performance_appraisal"
-        class="form-select"
-        required>
+class="form-select"
+required>
 
 <option value="">Select</option>
 
@@ -265,7 +241,7 @@ Remarks
 </label>
 
 <textarea name="remarks"
-          class="form-control">
+class="form-control">
 
 {{ result.remarks }}
 
@@ -274,19 +250,19 @@ Remarks
 </div>
 
 
-<div class="d-flex">
+<div class="flex gap-3">
 
 <button type="submit"
-        name="action"
-        value="submit_final"
-        class="btn btn-success me-2">
+name="action"
+value="submit_final"
+class="btn btn-success">
 
 Forward for Approval
 
 </button>
 
 <a href="{% url 'vtc:scheduled_training_list' %}"
-   class="btn btn-secondary">
+class="btn btn-secondary">
 
 Cancel
 
@@ -299,21 +275,23 @@ Cancel
 
 {% elif training.vtc_status == 'approved' %}
 
-<hr>
+<hr class="my-5">
 
 
 {% if training.attendance_field_file %}
 
 <div class="mb-3">
 
-<label class="fw-bold">
+<label class="font-semibold">
 Attendance File
 </label>
 
 <br>
 
 <a href="{{ training.attendance_field_file.url }}" target="_blank">
+
 {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+
 </a>
 
 </div>
@@ -325,7 +303,7 @@ Attendance File
 
 <div class="mb-3">
 
-<label class="fw-bold">
+<label class="font-semibold">
 Performance Appraisal
 </label>
 
@@ -336,7 +314,7 @@ Performance Appraisal
 
 <div class="mb-3">
 
-<label class="fw-bold">
+<label class="font-semibold">
 Remarks
 </label>
 
@@ -355,7 +333,7 @@ Attendance and result are approved and locked.
 
 
 <a href="{% url 'vtc:scheduled_training_list' %}"
-   class="btn btn-secondary">
+class="btn btn-secondary">
 
 Back to List
 
@@ -363,8 +341,6 @@ Back to List
 
 {% endif %}
 
-
-</div>
 
 </div>
 
