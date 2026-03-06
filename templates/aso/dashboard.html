@@ -10,6 +10,22 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
+/* Layout */
+.dashboard-layout{
+    display:flex;
+    gap:20px;
+}
+
+/* Sidebar 25% */
+.sidebar-section{
+    width:25%;
+}
+
+/* Main content 75% */
+.main-section{
+    width:75%;
+}
+
 /* Dashboard card */
 .dashboard-card{
     background:white;
@@ -21,17 +37,18 @@ body{
 
 </style>
 
-<div class="container-fluid mt-4">
 
-    <div class="row">
+<div class="container mt-4">
 
-        <!-- SIDEBAR (25%) -->
-        <div class="col-md-3">
+    <div class="dashboard-layout">
+
+        <!-- Sidebar -->
+        <div class="sidebar-section">
             {% include 'vtc/sidebar.html' %}
         </div>
 
-        <!-- DASHBOARD CONTENT (75%) -->
-        <div class="col-md-9">
+        <!-- Dashboard -->
+        <div class="main-section">
 
             <div class="dashboard-card text-center">
 
