@@ -7,7 +7,34 @@
 
 <style>
 
-/* CARD */
+body{
+    background:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
+}
+
+/* FLEX LAYOUT (same as DataTable page) */
+
+.dashboard-layout{
+    display:flex;
+    gap:20px;
+}
+
+/* Sidebar 25% */
+
+.sidebar-area{
+    flex:0 0 25%;
+    max-width:25%;
+}
+
+/* Content 75% */
+
+.content-area{
+    flex:0 0 75%;
+    max-width:75%;
+}
+
+/* Dashboard Card */
+
 .dashboard-card{
     background:white;
     border-radius:12px;
@@ -15,13 +42,15 @@
     box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
-/* TITLE */
+/* Title */
+
 .page-title{
     color:#004B87;
     font-weight:600;
 }
 
-/* TILES */
+/* Tiles */
+
 .tiles-row{
     display:flex;
     gap:20px;
@@ -49,18 +78,20 @@
 
 <div class="container-fluid mt-4">
 
-<div class="row">
+<div class="dashboard-layout">
 
-<!-- SIDEBAR (UNCHANGED) -->
-<div class="col-md-3">
+<!-- SIDEBAR -->
 
-    {% include 'mm/sidebar.html' %}
+<div class="sidebar-area">
+
+{% include 'mm/sidebar.html' %}
 
 </div>
 
 
-<!-- DASHBOARD CONTENT -->
-<div class="col-md-9">
+<!-- MAIN CONTENT -->
+
+<div class="content-area">
 
 <div class="dashboard-card">
 
@@ -69,7 +100,8 @@ Contractual Worker Training Dashboard
 </h2>
 
 
-<!-- TILES -->
+<!-- DASHBOARD TILES -->
+
 <div class="tiles-row">
 
 <div class="dashboard-tile card text-center bg-primary text-white active-tile" data-type="trained">
@@ -104,6 +136,7 @@ Contractual Worker Training Dashboard
 
 
 <!-- CHART -->
+
 <div class="card p-4">
 <canvas id="areaChart" height="100"></canvas>
 </div>
