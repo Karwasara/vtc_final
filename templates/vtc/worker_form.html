@@ -9,22 +9,6 @@ body{
   background-color:#f4f7fb;
 }
 
-/* Layout */
-
-.page-wrapper{
-  display:flex;
-  gap:20px;
-}
-
-.sidebar-wrapper{
-  width:25%;
-  min-width:250px;
-}
-
-.content-wrapper{
-  width:75%;
-}
-
 /* Main Card */
 
 .form-card{
@@ -87,25 +71,21 @@ a{
 .btn-save{
   background:#0d6efd;
   color:white;
-  border:none;
 }
 
 .btn-cancel{
   background:#6c757d;
   color:white;
-  border:none;
 }
 
 .btn-back{
   background:#17a2b8;
   color:white;
-  border:none;
 }
 
 .btn-verify{
   background:#198754;
   color:white;
-  border:none;
 }
 
 /* Certificate Card */
@@ -130,7 +110,6 @@ a{
 
 .certificate-table{
   width:100%;
-  border-collapse:collapse;
 }
 
 .certificate-table th{
@@ -155,18 +134,20 @@ a{
 
 <div class="container-fluid mt-4">
 
-<div class="page-wrapper">
+<div class="row">
 
-<!-- Sidebar -->
+<!-- Sidebar (25%) -->
 
-<div class="sidebar-wrapper">
+<div class="col-md-3">
+
 {% include 'vtc/sidebar.html' %}
+
 </div>
 
 
-<!-- Main Content -->
+<!-- Main Content (75%) -->
 
-<div class="content-wrapper">
+<div class="col-md-9">
 
 <div class="form-card">
 
