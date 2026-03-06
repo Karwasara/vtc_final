@@ -5,6 +5,8 @@
 
 <style>
 
+/* DASHBOARD LAYOUT */
+
 .dashboard-wrapper{
     display:flex;
     gap:25px;
@@ -20,6 +22,8 @@
     width:75%;
 }
 
+/* CARD */
+
 .dashboard-card{
     background:#ffffff;
     border-radius:10px;
@@ -27,13 +31,15 @@
     box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
+/* TITLE */
+
 .dashboard-title{
     color:#004B87;
     font-weight:600;
     font-size:26px;
 }
 
-/* Tiles */
+/* TILE GRID */
 
 .tiles-row{
     display:grid;
@@ -42,9 +48,14 @@
     margin-bottom:30px;
 }
 
+/* TILE */
+
 .dashboard-tile{
     cursor:pointer;
     transition:0.3s;
+    border:none;
+    border-radius:12px;
+    color:white;
 }
 
 .dashboard-tile .card-body{
@@ -61,15 +72,33 @@
     font-size:15px;
 }
 
+/* TILE COLORS */
+
+.tile-trained{
+    background:linear-gradient(135deg,#007bff,#0047ab);
+}
+
+.tile-under-training{
+    background:linear-gradient(135deg,#28a745,#1e7e34);
+}
+
+.tile-total-trainings{
+    background:linear-gradient(135deg,#ffc107,#d39e00);
+    color:black;
+}
+
+/* HOVER */
+
 .dashboard-tile:hover{
-    transform:scale(1.05);
+    transform:scale(1.06);
 }
 
 .dashboard-tile.active-tile{
-    transform:scale(1.05);
-    box-shadow:0 0 10px rgba(0,0,0,0.25);
-    border:2px solid #000;
+    transform:scale(1.06);
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
 }
+
+/* CHART */
 
 #areaChart{
     height:350px !important;
@@ -104,21 +133,21 @@ Contractual Worker Training Dashboard
 
 <div class="tiles-row">
 
-<div class="dashboard-tile card text-center bg-primary text-white active-tile" data-type="trained">
+<div class="dashboard-tile card text-center tile-trained active-tile" data-type="trained">
 <div class="card-body">
 <h2>{{ total_trained }}</h2>
 <p>Workers Trained</p>
 </div>
 </div>
 
-<div class="dashboard-tile card text-center bg-success text-white" data-type="under_training">
+<div class="dashboard-tile card text-center tile-under-training" data-type="under_training">
 <div class="card-body">
 <h2>{{ total_under_training }}</h2>
 <p>Workers Under Training</p>
 </div>
 </div>
 
-<div class="dashboard-tile card text-center bg-warning text-dark" data-type="total_trainings">
+<div class="dashboard-tile card text-center tile-total-trainings" data-type="total_trainings">
 <div class="card-body">
 <h2>{{ total_trainings }}</h2>
 <p>Total Trainings Scheduled</p>
@@ -198,7 +227,12 @@ text:type.replace('_',' ').toUpperCase()+" AREA WISE"
 }
 },
 scales:{
-y:{beginAtZero:true}
+y:{
+beginAtZero:true,
+ticks:{
+precision:0
+}
+}
 }
 }
 });
