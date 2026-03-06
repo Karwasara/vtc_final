@@ -7,67 +7,41 @@
 
 <style>
 
-body{
-    background:#f7fafd;
-    font-family:"Segoe UI",sans-serif;
-}
-
-/* SAME STRUCTURE AS TABLE PAGE */
-.dashboard-layout{
-    display:flex;
-    gap:20px;
-}
-
-/* SIDEBAR */
-.sidebar-area{
-    flex:0 0 25%;
-    max-width:25%;
-}
-
-/* CONTENT */
-.content-area{
-    flex:0 0 75%;
-    max-width:75%;
-}
-
-/* CARD STYLE SAME AS TABLE PAGE */
-.training-card{
+/* CARD */
+.dashboard-card{
     background:white;
     border-radius:12px;
     padding:25px;
     box-shadow:0 2px 10px rgba(0,0,0,0.08);
 }
 
-/* Title */
+/* TITLE */
 .page-title{
     color:#004B87;
     font-weight:600;
 }
 
-/* Tiles Row */
+/* TILES */
 .tiles-row{
     display:flex;
     gap:20px;
-    margin-bottom:35px;
+    margin-bottom:30px;
 }
 
-/* Tile */
 .dashboard-tile{
     flex:1;
     cursor:pointer;
     transition:transform .2s, box-shadow .2s;
 }
 
-/* Hover */
 .dashboard-tile:hover{
     transform:scale(1.05);
 }
 
-/* Active */
 .dashboard-tile.active-tile{
     transform:scale(1.05);
-    box-shadow:0 0 15px rgba(0,0,0,0.3);
-    border:2px solid black;
+    box-shadow:0 0 12px rgba(0,0,0,0.25);
+    border:2px solid #000;
 }
 
 </style>
@@ -75,27 +49,27 @@ body{
 
 <div class="container-fluid mt-4">
 
-<div class="dashboard-layout">
+<div class="row">
 
-<!-- SIDEBAR -->
-<div class="sidebar-area">
+<!-- SIDEBAR (UNCHANGED) -->
+<div class="col-md-3">
 
     {% include 'mm/sidebar.html' %}
 
 </div>
 
 
-<!-- CONTENT -->
-<div class="content-area">
+<!-- DASHBOARD CONTENT -->
+<div class="col-md-9">
 
-<div class="training-card">
+<div class="dashboard-card">
 
-<h2 class="mb-4 page-title text-center">
+<h2 class="text-center mb-4 page-title">
 Contractual Worker Training Dashboard
 </h2>
 
 
-<!-- DASHBOARD TILES -->
+<!-- TILES -->
 <div class="tiles-row">
 
 <div class="dashboard-tile card text-center bg-primary text-white active-tile" data-type="trained">
@@ -153,7 +127,7 @@ const underTrainingCounts = JSON.parse("{{ under_training_counts|escapejs }}");
 const totalTrainingsCounts = JSON.parse("{{ total_trainings_counts|escapejs }}");
 const totalWorkersCounts = JSON.parse("{{ total_workers_counts|escapejs }}");
 
-let chart = null;
+let chart=null;
 
 function renderChart(type){
 
@@ -187,7 +161,6 @@ type:'bar',
 data:{
 labels:labelsArray,
 datasets:[{
-label:type.replace('_',' ').toUpperCase(),
 data:dataArray,
 backgroundColor:colorsMap[type]
 }]
@@ -211,7 +184,7 @@ document.querySelectorAll('.dashboard-tile').forEach(tile=>{
 tile.classList.remove('active-tile');
 });
 
-document.querySelector(`.dashboard-tile[data-type="${type}"]`).classList.add('active-tile');
+document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
 
 }
 
@@ -219,8 +192,7 @@ renderChart('trained');
 
 document.querySelectorAll('.dashboard-tile').forEach(tile=>{
 tile.addEventListener('click',()=>{
-const type=tile.getAttribute('data-type');
-renderChart(type);
+renderChart(tile.dataset.type);
 });
 });
 
