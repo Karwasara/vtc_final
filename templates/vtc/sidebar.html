@@ -1,89 +1,36 @@
-<!-- templates/vtc/sidebar.html -->
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
 
-{% load static %}
+    <h3 class="text-md font-semibold text-brand-blue border-b pb-2 mb-3">
+        Menu
+    </h3>
 
-<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 min-h-[520px]">
-
-    <!-- Sidebar Header -->
-    <div class="border-b pb-3 mb-4">
-        <h3 class="text-lg font-semibold text-brand-blue tracking-wide">
-            Menu
-        </h3>
-    </div>
-
-    <!-- Menu -->
     <ul class="space-y-2 text-sm">
 
-        <!-- Worker List -->
         <li>
             <a href="{% url 'vtc:worker_list' %}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-blue transition">
-
-                <!-- Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-5 w-5 text-brand-blue"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                     d="M17 20h5V4H2v16h5m10 0v-6a4 4 0 10-8 0v6m8 0H9"/>
-                </svg>
-
-                Worker List
+               class="block px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700">
+               Worker List
             </a>
         </li>
 
-        <!-- Schedule Training -->
         <li>
             <a href="{% url 'vtc:to_schedule_training' %}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-blue transition">
-
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-5 w-5 text-green-600"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                     d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7H4v11a2 2 0 002 2z"/>
-                </svg>
-
-                Schedule Training
+               class="block px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700">
+               Schedule Training
             </a>
         </li>
 
-        <!-- Attendance -->
         <li>
             <a href="{% url 'vtc:scheduled_training_list' %}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-blue transition">
-
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-5 w-5 text-yellow-600"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/>
-                </svg>
-
-                Add Attendance & Result
+               class="block px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700">
+               Add Attendance & Result
             </a>
         </li>
 
-        <!-- Verify Certificate -->
         <li>
             <a href="{% url 'vtc:certificate_detail' %}"
-               class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-brand-blue transition">
-
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="h-5 w-5 text-sky-600"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor">
-                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                     d="M9 12l2 2l4-4m5 2a9 9 0 11-18 0a9 9 0 0118 0z"/>
-                </svg>
-
-                Verify Certificate
+               class="block px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700">
+               Verify Certificate
             </a>
         </li>
 
