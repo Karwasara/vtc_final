@@ -3,213 +3,257 @@
 
 {% block content %}
 
+<!-- DataTables CSS -->
+<link rel="stylesheet"
+href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
 <style>
 
 body{
-  background-color:#f7fafd;
+    background-color:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
 }
 
-/* Layout */
-
-.page-wrapper{
-  display:flex;
-  align-items:flex-start;
-  gap:20px;
+/* Table Header */
+table.dataTable thead th{
+    background-color:#004B87 !important;
+    color:white;
 }
 
-.sidebar-wrapper{
-  flex:0 0 260px;
-  max-width:260px;
+/* Hover */
+table.dataTable tbody tr:hover{
+    background-color:#f1f7ff;
 }
 
-.content-wrapper{
-  flex:1;
+/* Card */
+.training-card{
+    background:white;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    padding:25px;
 }
 
-/* Table Card */
+/* Buttons */
 
-.table-card{
-  background:#ffffff;
-  padding:20px;
-  border-radius:10px;
-  border:1px solid #e3e6ea;
-  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+.btn-attendance{
+    background:#0d6efd;
+    color:white;
+    padding:5px 12px;
+    border-radius:6px;
+    text-decoration:none;
+    font-size:13px;
 }
 
-/* Table */
-
-.table thead th{
-  text-align:center;
+.btn-attendance:hover{
+    background:#0b5ed7;
 }
 
-.table tbody td{
-  vertical-align:middle;
-  text-align:center;
+.btn-certificate{
+    background:#198754;
+    color:white;
+    padding:5px 12px;
+    border-radius:6px;
+    text-decoration:none;
+    font-size:13px;
+}
+
+.btn-certificate:hover{
+    background:#157347;
+}
+
+.btn-generate{
+    background:#ffc107;
+    color:black;
+    padding:5px 12px;
+    border-radius:6px;
+    text-decoration:none;
+    font-size:13px;
+}
+
+.btn-generate:hover{
+    background:#ffca2c;
 }
 
 </style>
 
-<!-- DataTables CSS -->
-<link rel="stylesheet"
-href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
-<div class="container-fluid mt-4">
+<div class="grid grid-cols-12 gap-6">
 
-<div class="page-wrapper">
+    <!-- SIDEBAR -->
+    <div class="col-span-12 md:col-span-3">
 
-<!-- Sidebar -->
-<div class="sidebar-wrapper">
-{% include 'vtc/sidebar.html' %}
+        {% include 'vtc/sidebar.html' %}
+
+    </div>
+
+
+    <!-- MAIN CONTENT -->
+    <div class="col-span-12 md:col-span-9">
+
+        <div class="training-card">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 class="text-xl font-semibold text-brand-blue">
+                    Scheduled Trainings
+                </h2>
+
+            </div>
+
+
+            {% if trainings %}
+
+            <table id="trainingsTable" class="display w-full text-sm">
+
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Worker Name</th>
+                        <th>From Date</th>
+                        <th>To Date</th>
+                        <th>VTC Status</th>
+                        <th>Attendance / Result</th>
+                        <th style="display:none;">SortCert</th>
+                        <th>Certificate</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for training in trainings %}
+
+                <tr data-status="{{ training.vtc_status }}">
+
+                    <td>{{ forloop.counter }}</td>
+
+                    <td>{{ training.worker.name }}</td>
+
+                    <td>{{ training.from_date }}</td>
+
+                    <td>{{ training.to_date }}</td>
+
+                    <td>
+
+                        {% if training.vtc_status == 'approved' %}
+
+                        <span class="text-green-600 font-semibold">
+                            Approved
+                        </span>
+
+                        {% else %}
+
+                        <span class="text-yellow-600 font-semibold">
+                            Pending
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {% if training.vtc_status == 'approved' %}
+
+                        <a href="{% url 'vtc:add_training_attendance_and_result' training.pk %}"
+                           class="btn-attendance">
+
+                           View
+
+                        </a>
+
+                        {% else %}
+
+                        <a href="{% url 'vtc:add_training_attendance_and_result' training.pk %}"
+                           class="btn-attendance">
+
+                           Mark
+
+                        </a>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <td style="display:none;">
+
+                        {% if training.mm_status != 'approved' %}
+                        1
+                        {% elif training.mm_status == 'approved' and not training.certificate_serial_number %}
+                        2
+                        {% else %}
+                        3
+                        {% endif %}
+
+                    </td>
+
+
+                    <td>
+
+                        {% if training.mm_status == 'approved' %}
+
+                            {% if training.certificate_serial_number %}
+
+                            <a href="{% url 'mm:generate_form_a_pdf' training.pk %}"
+                               class="btn-certificate"
+                               target="_blank">
+
+                               Download
+
+                            </a>
+
+                            {% else %}
+
+                            <a href="{% url 'mm:generate_form_a_pdf' training.pk %}"
+                               class="btn-generate"
+                               target="_blank">
+
+                               Generate
+
+                            </a>
+
+                            {% endif %}
+
+                        {% else %}
+
+                        <span class="text-gray-400">
+                            Not Approved
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <div class="text-center text-red-600 p-4">
+                No scheduled trainings found.
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
 </div>
 
-<!-- Main Content -->
-<div class="content-wrapper">
-
-<div class="table-card">
-
-<h2 class="mb-4">Scheduled Trainings</h2>
-
-{% if trainings %}
-
-<table id="trainingsTable" class="table table-bordered table-striped">
-
-<thead class="table-primary">
-<tr>
-<th>S.No.</th>
-<th>Worker Name</th>
-<th>From Date</th>
-<th>To Date</th>
-<th>VTC Status</th>
-<th>Attendance / Result</th>
-<th style="display:none;">SortCert</th>
-<th>Download Certificate</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for training in trainings %}
-
-<tr data-status="{{ training.vtc_status }}">
-
-<td>{{ forloop.counter }}</td>
-
-<td>{{ training.worker.name }}</td>
-
-<td>{{ training.from_date }}</td>
-
-<td>{{ training.to_date }}</td>
-
-<td>
-
-{% if training.vtc_status == 'approved' %}
-<span class="badge bg-success">Approved</span>
-{% else %}
-<span class="badge bg-warning text-dark">Pending</span>
-{% endif %}
-
-</td>
-
-<td>
-
-{% if training.vtc_status == 'approved' %}
-
-<a href="{% url 'vtc:add_training_attendance_and_result' training.pk %}"
-class="btn btn-info btn-sm">
-
-View Attendance & Result
-
-</a>
-
-{% else %}
-
-<a href="{% url 'vtc:add_training_attendance_and_result' training.pk %}"
-class="btn btn-primary btn-sm">
-
-Mark Attendance & Result
-
-</a>
-
-{% endif %}
-
-</td>
 
 
-<td style="display:none;">
-
-{% if training.mm_status != 'approved' %}
-1
-{% elif training.mm_status == 'approved' and not training.certificate_serial_number %}
-2
-{% else %}
-3
-{% endif %}
-
-</td>
-
-
-<td>
-
-{% if training.mm_status == 'approved' %}
-
-{% if training.certificate_serial_number %}
-
-<a href="{% url 'mm:generate_form_a_pdf' training.pk %}"
-class="btn btn-success btn-sm"
-target="_blank">
-
-Download Certificate
-
-</a>
-
-{% else %}
-
-<a href="{% url 'mm:generate_form_a_pdf' training.pk %}"
-class="btn btn-primary btn-sm"
-target="_blank">
-
-Generate Certificate
-
-</a>
-
-{% endif %}
-
-{% else %}
-
-<span class="text-muted">Not Approved</span>
-
-{% endif %}
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-{% else %}
-
-<div class="alert alert-warning text-center">
-No scheduled trainings found.
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<!-- jQuery + DataTables -->
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
 
 <script>
 
@@ -217,13 +261,14 @@ $(document).ready(function(){
 
 let table = $('#trainingsTable').DataTable({
 
-"order": [[6,'asc']],
-"pageLength":10,
+    pageLength:10,
+    order:[[6,'asc']],
+    responsive:true,
 
-"columnDefs":[
-{ "orderable": false, "targets":[0,5,7]},
-{ "visible": false, "targets":[6]}
-]
+    columnDefs:[
+        {orderable:false, targets:[0,5,7]},
+        {visible:false, targets:[6]}
+    ]
 
 });
 
@@ -235,7 +280,8 @@ let status = $(this.node()).data('status');
 let displayText = status === "approved" ? "Approved" : "Pending";
 let sortValue = status === "approved" ? "1" : "0";
 
-this.cell(this.index(),4).data(`<span data-order="${sortValue}">${displayText}</span>`);
+this.cell(this.index(),4)
+.data(`<span data-order="${sortValue}">${displayText}</span>`);
 
 });
 
