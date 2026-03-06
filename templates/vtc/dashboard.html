@@ -2,28 +2,57 @@
 {% load static %}
 
 {% block content %}
+
 <style>
-  body { background-color: #f7fafd; }
-  .btn-create { margin-bottom: 20px; }
+
+body{
+    background-color:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
+}
+
+/* Dashboard card */
+.dashboard-card{
+    background:white;
+    border-radius:12px;
+    border:1px solid #e2e8f0;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    padding:30px;
+}
+
 </style>
 
-<div class="container mt-4">
-  <div class="row">
-    
-    <!-- Sidebar -->
-    <div class="col-md-3">
-      {% include 'vtc/sidebar.html' %}
+
+<div class="grid grid-cols-12 gap-6">
+
+    <!-- SIDEBAR (25%) -->
+    <div class="col-span-12 md:col-span-3">
+
+        {% include 'vtc/sidebar.html' %}
+
     </div>
 
-    <!-- Main Contractor List -->
-    <div class="col-md-9">
-<div class="container mt-4">
-    <h1 class="text-center mb-3">Dashboard Overview</h1>
-    <p class="text-center">Manage Contracts, Work Assignments, and Workers</p>
 
-    This is for vtc
-</div>
+    <!-- DASHBOARD CONTENT (75%) -->
+    <div class="col-span-12 md:col-span-9">
+
+        <div class="dashboard-card text-center">
+
+            <h1 class="text-2xl font-semibold text-brand-blue mb-3">
+                Dashboard Overview
+            </h1>
+
+            <p class="text-slate-600 mb-4">
+                Manage Contracts, Work Assignments, and Workers
+            </p>
+
+            <div class="text-slate-700">
+                This is for VTC
+            </div>
+
+        </div>
+
     </div>
-  </div>
+
 </div>
+
 {% endblock %}
