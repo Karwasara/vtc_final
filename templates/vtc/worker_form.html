@@ -9,22 +9,6 @@ body{
   background-color:#f4f7fb;
 }
 
-/* Layout */
-
-.page-wrapper{
-  display:flex;
-  gap:20px;
-}
-
-.sidebar-wrapper{
-  width:25%;
-  min-width:250px;
-}
-
-.content-wrapper{
-  width:75%;
-}
-
 /* Main Card */
 
 .form-card{
@@ -71,9 +55,7 @@ body{
 /* Links */
 
 a{
-  color:#0d6efd;
   text-decoration:underline;
-  font-weight:500;
 }
 
 /* Buttons */
@@ -155,18 +137,20 @@ a{
 
 <div class="container-fluid mt-4">
 
-<div class="page-wrapper">
+<div class="row">
 
 <!-- Sidebar -->
 
-<div class="sidebar-wrapper">
+<div class="col-md-3">
+
 {% include 'vtc/sidebar.html' %}
+
 </div>
 
 
 <!-- Main Content -->
 
-<div class="content-wrapper">
+<div class="col-md-9">
 
 <div class="form-card">
 
@@ -229,7 +213,7 @@ Back to List
 </div>
 
 
-<!-- Certificates Section -->
+<!-- Certificates -->
 
 {% if read_only %}
 
