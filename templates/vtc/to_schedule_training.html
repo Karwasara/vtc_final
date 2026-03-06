@@ -4,127 +4,189 @@
 {% block content %}
 
 <!-- DataTables CSS -->
-<link rel="stylesheet"
-href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <style>
 
-body{
-    background-color:#f7fafd;
-    font-family:"Segoe UI",sans-serif;
+.main-content{
+    margin-left:250px;   /* keeps sidebar intact */
+    padding:30px;
 }
 
-/* FLEX LAYOUT FIX */
-.page-layout{
-    display:flex;
-    gap:20px;
-}
-
-/* SIDEBAR 25% */
-.sidebar-container{
-    width:25%;
-}
-
-/* CONTENT 75% */
-.content-container{
-    width:75%;
-}
-
-h2{
-    color:#0d6efd;
-    font-weight:600;
-    margin-bottom:25px;
-}
-
-.main-card{
-    background:#ffffff;
-    border-radius:15px;
-    box-shadow:0 0 10px rgba(0,0,0,0.08);
+/* Worker Details Box */
+.worker-box{
+    background:white;
     padding:25px;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.1);
+    margin-bottom:30px;
 }
 
-/* Sidebar styling */
-.sidebar-box{
-    background-color:#d9f1ff;
-    border-radius:15px;
-    padding:15px;
+/* Worker Table */
+.worker-table td{
+    padding:8px 12px;
 }
 
-/* Table styling */
-table.dataTable thead th{
-    background-color:#0d6efd !important;
+/* Certificate Table */
+#certificateTable{
+    width:100% !important;
+}
+
+/* Rounded Buttons */
+.btn-round{
+    padding:6px 16px;
+    border-radius:25px;
     color:white;
-    text-align:center;
-}
-
-table.dataTable tbody tr:hover{
-    background-color:#f1f7ff;
-}
-
-.btn-warning{
-    border-radius:6px;
-    color:#000;
-    background-color:#ffc107;
+    font-weight:600;
     border:none;
+    text-decoration:none;
 }
 
-.btn-warning:hover{
-    background-color:#ffca2c;
+/* Button Colors */
+.btn-view{background:#17a2b8;}
+.btn-verify{background:#28a745;}
+.btn-back{background:#dc3545;}
+
+.btn-round:hover{
+    opacity:0.85;
+}
+
+/* Hyperlinks */
+a.link-file{
+    color:#007bff;
+    text-decoration:underline;
+}
+
+/* DataTable Layout Fix */
+.dataTables_wrapper{
+    width:100%;
 }
 
 </style>
 
 
-<div class="container-fluid mt-4">
+<div class="main-content">
 
-<div class="page-layout">
+<!-- Worker Details -->
+<div class="worker-box">
 
-<!-- Sidebar -->
-<div class="sidebar-container">
-<div class="sidebar-box">
-{% include 'vtc/sidebar.html' %}
+<h4><b>Worker Details</b></h4>
+
+<table class="worker-table">
+
+<tr>
+<td><b>Name of Worker:</b></td>
+<td>{{ worker.name }}</td>
+
+<td><b>Father/Spouse Name:</b></td>
+<td>{{ worker.father_name }}</td>
+</tr>
+
+<tr>
+<td><b>Sex:</b></td>
+<td>{{ worker.sex }}</td>
+
+<td><b>Category:</b></td>
+<td>{{ worker.category }}</td>
+</tr>
+
+<tr>
+<td><b>Date of Birth:</b></td>
+<td>{{ worker.dob }}</td>
+
+<td><b>Blood group:</b></td>
+<td>{{ worker.blood_group }}</td>
+</tr>
+
+<tr>
+<td><b>Aadhar number:</b></td>
+<td>{{ worker.aadhar_number }}</td>
+
+<td><b>Aadhar file:</b></td>
+<td>
+<a class="link-file" href="{{ worker.aadhar_file.url }}" target="_blank">View Aadhar file</a>
+</td>
+</tr>
+
+<tr>
+<td><b>Village:</b></td>
+<td>{{ worker.village }}</td>
+
+<td><b>Thana:</b></td>
+<td>{{ worker.thana }}</td>
+</tr>
+
+<tr>
+<td><b>Post Office:</b></td>
+<td>{{ worker.post_office }}</td>
+
+<td><b>District:</b></td>
+<td>{{ worker.district }}</td>
+</tr>
+
+<tr>
+<td><b>State:</b></td>
+<td>{{ worker.state }}</td>
+
+<td><b>Mobile Number:</b></td>
+<td>{{ worker.mobile }}</td>
+</tr>
+
+<tr>
+<td><b>Qualification:</b></td>
+<td>{{ worker.qualification }}</td>
+
+<td><b>Photo:</b></td>
+<td>
+<a class="link-file" href="{{ worker.photo.url }}" target="_blank">View Photo</a>
+</td>
+</tr>
+
+</table>
+
+<br>
+
+<a href="{% url 'worker_list' %}" class="btn-round btn-back">Back to List</a>
+
 </div>
-</div>
 
 
-<!-- Worker List -->
-<div class="content-container">
+<!-- Generated Certificates -->
+<div class="worker-box">
 
-<div class="main-card">
+<h4><b>Generated Certificates</b></h4>
 
-<h2>Workers Available for Training</h2>
-
-{% if workers %}
-
-<table id="workersTable"
-class="table table-bordered table-striped align-middle">
+<table id="certificateTable" class="display">
 
 <thead>
 <tr>
-<th>S.No.</th>
-<th>Worker Name</th>
-<th>Aadhaar</th>
-<th>Date of Birth</th>
-<th>Mobile</th>
+<th>Serial Number</th>
+<th>Training Type</th>
+<th>Training Period</th>
+<th>Issue Date</th>
 <th>Action</th>
 </tr>
 </thead>
 
 <tbody>
 
-{% for worker in workers %}
+{% for cert in certificates %}
 
 <tr>
-<td>{{ forloop.counter }}</td>
-<td>{{ worker.name }}</td>
-<td>{{ worker.aadhar_number }}</td>
-<td>{{ worker.dob }}</td>
-<td>{{ worker.mobile }}</td>
+<td>{{ cert.serial_number }}</td>
 
-<td class="text-center">
-<a href="{% url 'vtc:schedule_training' worker.pk %}"
-class="btn btn-sm btn-warning">
-Schedule
+<td>{{ cert.training_type }}</td>
+
+<td>
+{{ cert.training_start_date }} to {{ cert.training_end_date }}
+</td>
+
+<td>{{ cert.issue_date }}</td>
+
+<td>
+<a href="{% url 'verify_certificate' cert.serial_number %}" 
+class="btn-round btn-verify">
+Verify
 </a>
 </td>
 
@@ -136,44 +198,37 @@ Schedule
 
 </table>
 
-{% else %}
-
-<div class="alert alert-warning text-center">
-No workers available for training.
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
 </div>
 
 </div>
 
 
 <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-<!-- DataTables -->
+<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
 
 $(document).ready(function(){
 
-$('#workersTable').DataTable({
-pageLength:10,
-order:[],
-columnDefs:[
-{
-orderable:false,
-targets:5
-}
-]
+$('#certificateTable').DataTable({
+
+    "pageLength":5,
+
+    "lengthMenu":[5,10,25,50],
+
+    "ordering":true,
+
+    "searching":true,
+
+    "paging":true,
+
+    "info":true,
+
+    "autoWidth":false
+
 });
 
 });
