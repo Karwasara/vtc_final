@@ -9,29 +9,28 @@ body{
   background-color:#f4f7fb;
 }
 
-/* Page Layout */
+/* Layout */
 .page-wrapper{
   display:flex;
-  gap:20px;
+  gap:25px;
 }
 
 /* Sidebar */
 .sidebar-wrapper{
-  width:25%;
-  min-width:250px;
+  width:260px;
+  flex-shrink:0;
 }
 
-/* Main Content */
+/* Content */
 .content-wrapper{
-  width:75%;
+  flex:1;
 }
 
-/* Form Card */
+/* Card */
 .form-card{
-  background:#ffffff;
-  border-radius:12px;
-  border:1px solid #e3e6ea;
-  box-shadow:0 3px 8px rgba(0,0,0,0.05);
+  background:#fff;
+  border-radius:10px;
+  border:1px solid #dee2e6;
   padding:30px;
 }
 
@@ -41,78 +40,82 @@ body{
   color:#0d6efd;
 }
 
-/* Form Fields */
-
+/* Form */
 .form-card p{
   margin-bottom:15px;
 }
 
 .form-card label{
   font-weight:500;
-  display:block;
-  margin-bottom:5px;
 }
 
 .form-card input,
 .form-card select,
 .form-card textarea{
   width:100%;
-  padding:8px 10px;
+  padding:8px;
   border-radius:6px;
   border:1px solid #ced4da;
 }
 
-.form-card input[disabled],
-.form-card select[disabled],
-.form-card textarea[disabled]{
-  background-color:#f1f3f5;
-}
-
-
-/* Buttons */
-
-.btn-primary{
-  background-color:#0d6efd;
-  border:none;
-}
-
-.btn-secondary{
-  background-color:#6c757d;
-  border:none;
-}
-
-.btn-outline-primary{
-  border-color:#0d6efd;
-  color:#0d6efd;
-}
-
-.btn-success{
-  background-color:#198754;
-}
-
-.btn-pill{
-  border-radius:50px;
-  padding:6px 18px;
-  font-weight:500;
-}
-
-
-/* Link styling */
-
+/* Hyperlink Style */
 a{
   color:#0d6efd;
   text-decoration:underline;
   font-weight:500;
 }
 
+a:hover{
+  color:#084298;
+}
+
+/* Button Styles */
+.btn-save{
+  background:#198754;
+  color:white;
+  border:none;
+}
+
+.btn-save:hover{
+  background:#157347;
+}
+
+.btn-cancel{
+  background:#dc3545;
+  color:white;
+  border:none;
+}
+
+.btn-cancel:hover{
+  background:#bb2d3b;
+}
+
+.btn-back{
+  background:#0d6efd;
+  color:white;
+  border:none;
+}
+
+.btn-back:hover{
+  background:#0b5ed7;
+}
+
+.btn-verify{
+  background:#fd7e14;
+  color:white;
+  border:none;
+}
+
+.btn-verify:hover{
+  background:#e96b0c;
+}
 
 /* Certificate Section */
-
 .certificate-card{
   margin-top:35px;
-  border-radius:12px;
-  border:1px solid #e3e6ea;
-  background:white;
+  background:#fff;
+  border-radius:10px;
+  border:1px solid #dee2e6;
 }
 
 .certificate-header{
@@ -120,26 +123,19 @@ a{
   color:white;
   padding:12px 18px;
   font-weight:600;
-  border-radius:12px 12px 0 0;
+  border-radius:10px 10px 0 0;
 }
 
-
-/* Table Styling */
+/* Table */
+.table{
+  margin-bottom:0;
+}
 
 .table th{
-  font-weight:600;
-}
-
-.table thead{
-  background-color:#e9f2ff;
-}
-
-.table-hover tbody tr:hover{
-  background-color:#f1f6ff;
+  background:#f1f3f5;
 }
 
 </style>
-
 
 
 <div class="container-fluid mt-4">
@@ -147,33 +143,24 @@ a{
   <div class="page-wrapper">
 
     <!-- Sidebar -->
-
     <div class="sidebar-wrapper">
-
       {% include 'vtc/sidebar.html' %}
-
     </div>
 
 
     <!-- Main Content -->
-
     <div class="content-wrapper">
 
-
-      <!-- Worker Form Card -->
-
+      <!-- Worker Form -->
       <div class="form-card">
 
         <h3>
-
           {% if read_only %}
             Worker Details
           {% else %}
             Enter Worker Details
           {% endif %}
-
         </h3>
-
 
         <form method="post" enctype="multipart/form-data">
 
@@ -188,9 +175,7 @@ a{
             {% if field.field.widget.input_type == "file" and field.value %}
 
               <a href="{{ field.value.url }}" target="_blank">
-
                 View {{ field.label }}
-
               </a>
 
             {% else %}
@@ -203,21 +188,19 @@ a{
 
           {% endfor %}
 
-
-
           {% if not read_only %}
 
-            <button type="submit" class="btn btn-primary btn-pill">
+            <button type="submit" class="btn btn-save">
               Save
             </button>
 
-            <a href="{% url 'vtc:worker_list' %}" class="btn btn-secondary btn-pill">
+            <a href="{% url 'vtc:worker_list' %}" class="btn btn-cancel">
               Cancel
             </a>
 
           {% else %}
 
-            <a href="{% url 'vtc:worker_list' %}" class="btn btn-outline-primary btn-pill">
+            <a href="{% url 'vtc:worker_list' %}" class="btn btn-back">
               Back to List
             </a>
 
@@ -228,18 +211,14 @@ a{
       </div>
 
 
-
-      <!-- Generated Certificates Section -->
-
+      <!-- Certificates -->
       {% if read_only %}
 
       <div class="certificate-card">
 
-
         <div class="certificate-header">
           Generated Certificates
         </div>
-
 
         <div class="p-3">
 
@@ -247,28 +226,19 @@ a{
 
           <div class="table-responsive">
 
-
             <table class="table table-bordered table-striped table-hover">
-
 
               <thead>
 
                 <tr>
-
                   <th>Serial Number</th>
-
                   <th>Training Type</th>
-
                   <th>Training Period</th>
-
                   <th>Issue Date</th>
-
                   <th class="text-center">Action</th>
-
                 </tr>
 
               </thead>
-
 
               <tbody>
 
@@ -277,43 +247,29 @@ a{
                 <tr>
 
                   <td>
-
-                    <strong>
-                      {{ training.certificate_serial_number_final }}
-                    </strong>
-
+                    <strong>{{ training.certificate_serial_number_final }}</strong>
                   </td>
-
 
                   <td>
                     {{ training.type_of_training }}
                   </td>
 
-
                   <td>
-
-                    {{ training.from_date|date:"d-m-Y" }}
-
-                    to
-
+                    {{ training.from_date|date:"d-m-Y" }} 
+                    to 
                     {{ training.to_date|date:"d-m-Y" }}
-
                   </td>
-
 
                   <td>
-
                     {{ training.certificate_created_date|date:"d-m-Y" }}
-
                   </td>
-
 
                   <td class="text-center">
 
                     <a href="{% url 'vtc:certificate_detail' %}?serial_number={{ training.certificate_serial_number_final }}"
-                       class="btn btn-success btn-sm btn-pill">
+                       class="btn btn-sm btn-verify">
 
-                      Verify Certificate
+                       Verify
 
                     </a>
 
@@ -329,13 +285,10 @@ a{
 
           </div>
 
-
           {% else %}
 
-          <div class="alert alert-info">
-
+          <div class="alert alert-light">
             No certificates generated for this worker.
-
           </div>
 
           {% endif %}
@@ -345,7 +298,6 @@ a{
       </div>
 
       {% endif %}
-
 
     </div>
 
