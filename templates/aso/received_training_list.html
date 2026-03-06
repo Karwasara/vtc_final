@@ -15,6 +15,24 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
+/* FLEX LAYOUT */
+.dashboard-layout{
+    display:flex;
+    gap:20px;
+}
+
+/* Sidebar (25%) */
+.sidebar-area{
+    flex:0 0 25%;
+    max-width:25%;
+}
+
+/* Content (75%) */
+.content-area{
+    flex:0 0 75%;
+    max-width:75%;
+}
+
 /* Card */
 .training-card{
     background:white;
@@ -29,7 +47,7 @@ body{
     font-weight:600;
 }
 
-/* Table Header */
+/* DataTable Header */
 table.dataTable thead th{
     background:#004B87 !important;
     color:white !important;
@@ -59,19 +77,19 @@ table.dataTable tbody tr:hover{
 
 <div class="container-fluid mt-4">
 
-<div class="row">
+<div class="dashboard-layout">
 
 ```
-<!-- Sidebar (25%) -->
-<div class="col-md-3">
+<!-- SIDEBAR -->
+<div class="sidebar-area">
 
     {% include 'aso/sidebar.html' %}
 
 </div>
 
 
-<!-- Main Content (75%) -->
-<div class="col-md-9">
+<!-- MAIN CONTENT -->
+<div class="content-area">
 
     <div class="training-card">
 
@@ -118,9 +136,7 @@ table.dataTable tbody tr:hover{
 
                             <a href="{% url 'aso:training_detail' training.pk %}"
                                class="btn-detail">
-
                                Detail
-
                             </a>
 
                         </td>
@@ -165,11 +181,9 @@ table.dataTable tbody tr:hover{
 $(document).ready(function(){
 
     $('#trainingsTable').DataTable({
-
         pageLength:10,
         order:[],
         responsive:true
-
     });
 
 });
