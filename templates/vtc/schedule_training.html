@@ -6,7 +6,7 @@
 <style>
 
 body{
-    background:#f4f8fc;
+    background:#eef3f9;
     font-family:"Segoe UI",sans-serif;
 }
 
@@ -28,15 +28,16 @@ body{
 
 /* Form Card */
 .form-card{
-    background:#eef5ff;
-    padding:30px;
+    background:#1f2a40;
+    color:white;
+    padding:35px;
     border-radius:12px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.08);
+    box-shadow:0 6px 18px rgba(0,0,0,0.2);
 }
 
 /* Title */
 .page-title{
-    color:#0d6efd;
+    color:#ffd54f;
     font-weight:600;
     margin-bottom:25px;
 }
@@ -44,24 +45,24 @@ body{
 /* Label */
 .form-label{
     font-weight:600;
-    margin-bottom:6px;
 }
 
-/* Input fields */
+/* Input */
 .form-control,
 .form-select{
+    width:100%;
     border-radius:8px;
     padding:10px;
-    height:40px;
+    height:42px;
 }
 
-/* Submit Button */
+/* Button */
 .btn-submit{
     background:#0d6efd;
-    color:white;
     border:none;
-    padding:10px 25px;
+    padding:10px 30px;
     border-radius:8px;
+    color:white;
     font-weight:500;
 }
 
@@ -69,32 +70,31 @@ body{
     background:#0b5ed7;
 }
 
-/* Training Card */
-.training-card{
+/* Training Card Row */
+.training-row{
     background:white;
     border-radius:10px;
-    padding:14px 18px;
+    padding:15px 20px;
     margin-bottom:12px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.05);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
 }
 
-/* Editable button */
+/* Edit Button */
 .btn-edit{
     background:#ffc107;
-    color:black;
     border:none;
-    padding:6px 16px;
+    padding:6px 18px;
     border-radius:6px;
     font-weight:500;
 }
 
-/* Disabled button */
-.btn-disabled{
-    background:#d3d3d3;
-    color:#666;
-    border:none;
-    padding:6px 16px;
-    border-radius:6px;
+/* Disabled Edit */
+.btn-edit:disabled{
+    opacity:.5;
+    cursor:not-allowed;
 }
 
 </style>
@@ -124,24 +124,18 @@ Schedule Training for {{ worker.name }}
 <form method="post">
 {% csrf_token %}
 
-<!-- From Date -->
 <div class="mb-3">
 <label class="form-label">From Date</label>
-<br>
 <input type="date" name="from_date" class="form-control" required>
 </div>
 
-<!-- To Date -->
 <div class="mb-3">
 <label class="form-label">To Date</label>
-<br>
 <input type="date" name="to_date" class="form-control" required>
 </div>
 
-<!-- Training Type -->
 <div class="mb-3">
 <label class="form-label">Type of Training</label>
-<br>
 <select name="type_of_training" class="form-select" required>
 <option value="">Select</option>
 <option value="Basic">Basic</option>
@@ -150,45 +144,36 @@ Schedule Training for {{ worker.name }}
 </select>
 </div>
 
-<!-- Nature -->
 <div class="mb-3">
 <label class="form-label">Nature of Training</label>
-<br>
 <input type="text" name="nature_of_training" class="form-control" required>
 </div>
 
-<!-- Contractor -->
 <div class="mb-3">
 <label class="form-label">Name of Contractor</label>
-<br>
 <input type="text" name="contractor_name" class="form-control" required>
 </div>
 
-<!-- AREA LOGIC -->
+<!-- AREA -->
 
 {% if user_areas.count > 1 %}
 
 <div class="mb-3">
 <label class="form-label">Area</label>
-<br>
 <select name="area_name" class="form-select" required>
 <option value="">Select Area</option>
 {% for area in user_areas %}
-<option value="{{ area.area_name }}">
-{{ area.area_name }}
-</option>
+<option value="{{ area.area_name }}">{{ area.area_name }}</option>
 {% endfor %}
 </select>
 </div>
 
 {% elif user_areas.count == 1 %}
 
-<input type="hidden" name="area_name"
-value="{{ user_areas.first.area_name }}">
+<input type="hidden" name="area_name" value="{{ user_areas.first.area_name }}">
 
 <div class="mb-3">
 <label class="form-label">Area</label>
-<br>
 <input type="text" class="form-control"
 value="{{ user_areas.first.area_name }}" disabled>
 </div>
@@ -197,9 +182,7 @@ value="{{ user_areas.first.area_name }}" disabled>
 
 <div class="mb-3">
 <label class="form-label">Area</label>
-<br>
-<input type="text" name="area_name"
-class="form-control" required>
+<input type="text" name="area_name" class="form-control" required>
 </div>
 
 {% endif %}
@@ -210,7 +193,12 @@ Submit Training
 
 </form>
 
-<hr class="mt-4 mb-4">
+</div>
+
+
+<!-- Previous Trainings -->
+
+<div class="mt-4">
 
 <h4 class="page-title">
 Previous Training Schedules
@@ -220,7 +208,7 @@ Previous Training Schedules
 
 {% for training in worker.trainings.all %}
 
-<div class="training-card d-flex justify-content-between align-items-center">
+<div class="training-row">
 
 <div>
 <strong>From:</strong> {{ training.from_date }} |
@@ -239,7 +227,7 @@ Edit
 
 {% else %}
 
-<button class="btn-disabled" disabled>
+<button class="btn-edit" disabled>
 Edit
 </button>
 
@@ -258,9 +246,10 @@ Edit
 {% endif %}
 
 </div>
-</div>
 
 </div>
+</div>
+
 </div>
 
 {% endblock %}
