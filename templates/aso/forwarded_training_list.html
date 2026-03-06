@@ -1,78 +1,193 @@
 {% extends 'common/base.html' %}
+{% load static %}
+
 {% block content %}
 
-<div class="container mt-4">
-  <div class="row">
+<!-- DataTables CSS -->
+<link rel="stylesheet"
+href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
-    <!-- Sidebar -->
-    <div class="col-md-3">
-      {% include 'aso/sidebar.html' %}
-    </div>
+<style>
 
-    <!-- Main Content -->
-    <div class="col-md-9">
-      <h2>Workers Sent to Mine Manager for Approval</h2>
-      {% include 'common/message.html' %}
+body{
+    background:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
+}
 
-      <table id="trainingsTable" class="table table-bordered table-striped table-hover mt-3">
-        <thead class="table-primary">
-          <tr>
-            <th scope="col">S.No.</th>
-            <th scope="col">Worker Name</th>
-            <th scope="col">Training From</th>
-            <th scope="col">Training To</th>
-            <th scope="col">Nature of Training</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for training in trainings %}
-          <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ training.worker.name }}</td>
-            <td>{{ training.from_date|date:"d M Y" }}</td>
-            <td>{{ training.to_date|date:"d M Y" }}</td>
-            <td>{{ training.nature_of_training }}</td>
-            <td>
-              <a href="{% url 'aso:approved_worker_detail' training.pk %}" class="btn btn-info btn-sm">View Details</a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" class="text-center">No workers forwarded to Mine Manager.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+/* FLEX LAYOUT */
+.dashboard-layout{
+    display:flex;
+    gap:20px;
+}
+
+/* Sidebar (25%) */
+.sidebar-area{
+    flex:0 0 25%;
+    max-width:25%;
+}
+
+/* Content (75%) */
+.content-area{
+    flex:0 0 75%;
+    max-width:75%;
+}
+
+/* Card */
+.training-card{
+    background:white;
+    border-radius:12px;
+    padding:25px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+}
+
+/* Title */
+.page-title{
+    color:#004B87;
+    font-weight:600;
+}
+
+/* DataTable Header */
+table.dataTable thead th{
+    background:#004B87 !important;
+    color:white !important;
+}
+
+/* Row Hover */
+table.dataTable tbody tr:hover{
+    background:#f1f7ff;
+}
+
+/* Rounded Button */
+.btn-detail{
+    background:#0d6efd;
+    color:white;
+    padding:6px 18px;
+    border-radius:50px;
+    text-decoration:none;
+    font-size:13px;
+}
+
+.btn-detail:hover{
+    background:#0b5ed7;
+    color:white;
+}
+
+</style>
+
+
+<div class="container-fluid mt-4">
+
+<div class="dashboard-layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar-area">
+
+    {% include 'aso/sidebar.html' %}
+
 </div>
 
-<!-- ✅ DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 
-<!-- ✅ jQuery & DataTables JS -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- MAIN CONTENT -->
+<div class="content-area">
+
+    <div class="training-card">
+
+        <h2 class="mb-4 page-title">
+            Workers Sent to Mine Manager for Approval
+        </h2>
+
+        {% include 'common/message.html' %}
+
+        <div class="table-responsive">
+
+            <table id="trainingsTable" class="display table">
+
+                <thead>
+                    <tr>
+                        <th>S.No.</th>
+                        <th>Worker Name</th>
+                        <th>Training From</th>
+                        <th>Training To</th>
+                        <th>Nature of Training</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for training in trainings %}
+
+                    <tr>
+
+                        <td>{{ forloop.counter }}</td>
+
+                        <td>{{ training.worker.name }}</td>
+
+                        <td>{{ training.from_date|date:"d M Y" }}</td>
+
+                        <td>{{ training.to_date|date:"d M Y" }}</td>
+
+                        <td>{{ training.nature_of_training }}</td>
+
+                        <td>
+
+                            <a href="{% url 'aso:approved_worker_detail' training.pk %}"
+                               class="btn-detail">
+
+                               View Details
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+
+                        <td colspan="6" class="text-center">
+                            No workers forwarded to Mine Manager.
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 
-<!-- ✅ DataTables Initialization -->
 <script>
-  $(document).ready(function () {
+
+$(document).ready(function(){
+
     $('#trainingsTable').DataTable({
-      responsive: true,
-      order: [[6, "asc"]], // Sort by Training From date (descending)
-      pageLength: 10,
-      lengthMenu: [5, 10, 25, 50],
-      language: {
-        search: "🔍 Search Worker:",
-        lengthMenu: "Show _MENU_ entries"
-      }
+        pageLength:10,
+        order:[],
+        responsive:true
     });
-  });
+
+});
+
 </script>
 
 {% endblock %}
