@@ -1,48 +1,182 @@
 {% extends 'common/base.html' %}
+{% load static %}
+
 {% block content %}
 
-<div class="container mt-4">
-  <div class="row">
-    
+<!-- DataTables CSS -->
+<link rel="stylesheet"
+href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<style>
+
+body{
+    background:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
+}
+
+/* DataTable Header */
+table.dataTable thead th{
+    background:#004B87 !important;
+    color:white;
+}
+
+/* Hover */
+table.dataTable tbody tr:hover{
+    background:#f1f7ff;
+}
+
+/* Buttons */
+
+.btn-blue{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
+}
+
+.btn-blue:hover{
+    background:#1d4ed8;
+}
+
+.btn-red{
+    background:#dc3545;
+    color:white;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
+}
+
+.btn-grey{
+    background:#64748b;
+    color:white;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
+}
+
+</style>
+
+
+
+<div class="grid grid-cols-12 gap-6 mt-4">
+
     <!-- Sidebar -->
-    <div class="col-md-3">
-      {% include 'aso/sidebar.html' %}
+    <div class="col-span-12 md:col-span-3">
+
+        {% include 'aso/sidebar.html' %}
+
     </div>
+
 
     <!-- Main Content -->
-    <div class="col-md-9">
-      <h2>Training Details for {{ training.worker.name }}</h2>
-      {% include 'common/message.html' %}
+    <div class="col-span-12 md:col-span-9">
 
-      <h4>Attendance</h4>
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Present</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for att in attendances %}
-          <tr>
-            <td>{{ att.date }}</td>
-            <td>{{ att.present}}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 
-      <h4>Final Result</h4>
-      {% if result %}
-        <p><strong>Performance:</strong> {{ result.performance_appraisal }}</p>
-        <p><strong>Remarks:</strong> {{ result.remarks }}</p>
-      {% else %}
-        <p>No result recorded.</p>
-      {% endif %}
+            <h2 class="text-xl font-semibold text-brand-blue mb-4">
+                Training Details for {{ training.worker.name }}
+            </h2>
 
-      <a href="{% url 'aso:forwarded_training_list' %}" class="btn btn-secondary mt-3">Back to List</a>
+            {% include 'common/message.html' %}
+
+
+            <!-- Attendance Table -->
+
+            <h4 class="mb-3 font-semibold">Attendance</h4>
+
+            <div class="table-responsive">
+
+                <table id="attendanceTable" class="display w-full text-sm">
+
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Present</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    {% for att in attendances %}
+
+                        <tr>
+                            <td>{{ att.date }}</td>
+                            <td>{{ att.present }}</td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="2" class="text-center">
+                                No attendance records found.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- Final Result -->
+
+            <h4 class="mt-6 font-semibold">Final Result</h4>
+
+            {% if result %}
+
+                <p><strong>Performance:</strong> {{ result.performance_appraisal }}</p>
+
+                <p><strong>Remarks:</strong> {{ result.remarks }}</p>
+
+            {% else %}
+
+                <p>No result recorded.</p>
+
+            {% endif %}
+
+
+            <!-- Action Buttons -->
+
+            <div class="flex gap-3 mt-6">
+
+                <a href="{% url 'aso:forwarded_training_list' %}"
+                   class="btn-grey">
+
+                    Back to List
+
+                </a>
+
+            </div>
+
+        </div>
+
     </div>
-  </div>
+
 </div>
+
+
+
+<!-- DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+
+$(document).ready(function(){
+
+    $('#attendanceTable').DataTable({
+        pageLength:10,
+        order:[]
+    });
+
+});
+
+</script>
 
 {% endblock %}
