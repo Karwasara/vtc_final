@@ -48,16 +48,26 @@ body{
   text-shadow:2px 2px 6px rgba(0,0,0,0.2);
 }
 
-/* Dashboard tiles */
-.dashboard-tile{
-  cursor:pointer;
-  transition:transform .2s, box-shadow .2s;
+/* Tiles Row */
+.tiles-row{
+    display:flex;
+    gap:20px;
+    margin-bottom:40px;
 }
 
+/* Tile */
+.dashboard-tile{
+    flex:1;
+    cursor:pointer;
+    transition:transform .2s, box-shadow .2s;
+}
+
+/* Hover */
 .dashboard-tile:hover{
   transform:scale(1.05);
 }
 
+/* Active tile */
 .dashboard-tile.active-tile{
   transform:scale(1.05);
   box-shadow:0 0 20px rgba(0,0,0,0.3);
@@ -88,42 +98,35 @@ body{
 Contractual Worker Training Dashboard
 </h1>
 
-<!-- Dashboard Tiles -->
-<div class="row g-4 mb-5">
 
-<div class="col-md-6 col-lg-3">
-<div class="card text-center bg-primary text-white dashboard-tile active-tile" data-type="trained">
+<!-- Dashboard Tiles -->
+<div class="tiles-row">
+
+<div class="dashboard-tile card text-center bg-primary text-white active-tile" data-type="trained">
 <div class="card-body">
 <h2>{{ total_trained }}</h2>
 <p>Workers Trained</p>
 </div>
 </div>
-</div>
 
-<div class="col-md-6 col-lg-3">
-<div class="card text-center bg-success text-white dashboard-tile" data-type="under_training">
+<div class="dashboard-tile card text-center bg-success text-white" data-type="under_training">
 <div class="card-body">
 <h2>{{ total_under_training }}</h2>
 <p>Workers Under Training</p>
 </div>
 </div>
-</div>
 
-<div class="col-md-6 col-lg-3">
-<div class="card text-center bg-warning text-dark dashboard-tile" data-type="total_trainings">
+<div class="dashboard-tile card text-center bg-warning text-dark" data-type="total_trainings">
 <div class="card-body">
 <h2>{{ total_trainings }}</h2>
 <p>Total Trainings Scheduled</p>
 </div>
 </div>
-</div>
 
-<div class="col-md-6 col-lg-3">
-<div class="card text-center bg-info text-white dashboard-tile" data-type="total_workers">
+<div class="dashboard-tile card text-center bg-info text-white" data-type="total_workers">
 <div class="card-body">
 <h2>{{ total_workers }}</h2>
 <p>Total Registered Workers</p>
-</div>
 </div>
 </div>
 
