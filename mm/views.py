@@ -419,7 +419,7 @@ def generate_form_a_pdf(request, training_id):
    
 	# Footer note
 	
-	y -= line_gap
+	#y -= line_gap
     year = {
     "Basic": "5",
     "Refresher": "5"
@@ -555,6 +555,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
