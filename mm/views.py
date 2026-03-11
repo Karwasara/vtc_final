@@ -422,7 +422,7 @@ def generate_form_a_pdf(request, training_id):
     c.setFont("Helvetica-BoldOblique", 10)
     #c.drawString(50, y, "* This certificate is valid only for the nature of job for which the training is imparted.")
     y -= line_gap
-    c.drawString(50, y, "* This certificate will have no claim for employment in {subsidiary_name}.")
+    c.drawString(50, y, f"* This certificate will have no claim for employment in {subsidiary_name}.")
     y -= line_gap
     year = {
     "Basic": "5",
@@ -559,6 +559,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
