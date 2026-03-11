@@ -418,9 +418,7 @@ def generate_form_a_pdf(request, training_id):
     c.drawString(50, y, f"  * Blood Group - {worker.blood_group}")
    
 	# Footer note
-	# c.drawString(50, y, "* This certificate is valid only for the nature of job for which the training is imparted.")
 	
-	c.drawString(50, y, f"* This certificate will have no claim for employment in NCL.")
 	y -= line_gap
     year = {
     "Basic": "5",
@@ -557,6 +555,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
