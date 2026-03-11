@@ -428,10 +428,11 @@ def generate_form_a_pdf(request, training_id):
     if request.user.areas.exists() and request.user.areas.first().subsidiary
     else "Unknown"
 	)
+	c.setFont("Helvetica-BoldOblique", 10)
 	c.drawString(
     50,
     y,
-    "* This certificate will have no claim for employment in NCL."
+    f"* This certificate will have no claim for employment in {subsidiary_name}."
 	)
     y -= line_gap
     year = {
@@ -569,6 +570,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
