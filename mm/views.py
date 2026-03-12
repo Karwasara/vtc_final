@@ -437,7 +437,8 @@ def generate_form_a_pdf(request, training_id):
 
     c.drawString(50, y, f"  * Blood Group - {worker.blood_group}")
 
-    y -= line_gap * 2
+    y -= line_gap
+	y -= line_gap
 
     c.setFont("Helvetica-BoldOblique", 10)
 
@@ -591,6 +592,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
