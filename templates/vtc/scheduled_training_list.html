@@ -73,7 +73,9 @@ table.dataTable tbody tr:hover{
 .btn-generate:hover{
     background:#ffca2c;
 }
-
+#trainingsTable{
+    display:none;
+}
 </style>
 
 
@@ -102,7 +104,9 @@ table.dataTable tbody tr:hover{
 
 
             {% if trainings %}
-
+            <div id="tableLoader" style="text-align:center;padding:20px;">
+                Loading workers...
+            </div>
             <table id="trainingsTable" class="display w-full text-sm">
 
                 <thead>
@@ -284,9 +288,11 @@ this.cell(this.index(),4)
 .data(`<span data-order="${sortValue}">${displayText}</span>`);
 
 });
-
+$('#tableLoader').hide();
+$('#trainingsTable').show();
 });
 
 </script>
 
 {% endblock %}
+
