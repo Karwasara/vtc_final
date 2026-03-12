@@ -272,7 +272,7 @@ def generate_form_a_pdf(request, training_id):
     c.drawString(
         50,
         y,
-        f"Certificate No.- {serial_number}                         Issue Date: {date_only}"
+        f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}"
     )
 
     y -= 50
@@ -548,6 +548,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
