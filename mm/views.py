@@ -177,7 +177,7 @@ def generate_form_a_pdf(request, training_id):
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
 
-    # -------- Get Area and Subsidiary --------
+    # ---------- Area & Subsidiary ----------
     user_area = request.user.areas.first()
 
     area_code = user_area.area_code if user_area else "UNKNOWN"
@@ -195,99 +195,75 @@ def generate_form_a_pdf(request, training_id):
         else "NCL"
     )
 
-    # -------- Serial Number --------
+    # ---------- Serial Number ----------
     if not training.certificate_serial_number:
 
-        last_number = TrainingSchedule.objects.filter(
-            certificate_serial_number__isnull=False
-        ).order_by('-certificate_serial_number').first()
-
-        new_serial = (last_number.certificate_serial_number + 1) if last_number else 10000000
+        new_serial = generate_unique_serial_number()
 
         training.certificate_serial_number = new_serial
-        training.certificate_serial_number_final = "VTC" + area_code + str(new_serial)
+        training.certificate_serial_number_final = f"VTC{area_code}{new_serial}"
         training.certificate_created_date = timezone.now()
         training.save()
 
     serial_number = training.certificate_serial_number_final
 
-    # -------- PDF Response --------
+    # ---------- PDF Response ----------
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=VTC certificate for {worker.name}.pdf'
+    response['Content-Disposition'] = f'attachment; filename=VTC_certificate_{worker.name}.pdf'
 
     c = canvas.Canvas(response, pagesize=A4)
 
     width, height = A4
 
-    # -------- Logo --------
-    logo_path = os.path.join('E:/VTC training/mysite/static/ncl_logo.jpeg')
+    # ---------- Logo ----------
+    logo_path = "E:/VTC training/mysite/static/ncl_logo.jpeg"
 
     if os.path.exists(logo_path):
-
         logo = ImageReader(logo_path)
-
-        c.drawImage(
-            logo,
-            40,
-            height - 110,
-            width=120,
-            height=100,
-            preserveAspectRatio=True
-        )
+        c.drawImage(logo, 40, height - 110, width=120, height=100, preserveAspectRatio=True)
 
     y = height - 50
     line_gap = 16
 
-    # -------- Header --------
+    # ---------- Header ----------
     c.setFont("Helvetica-Bold", 15)
-
-    # Dynamic Subsidiary Name
     c.drawCentredString(width / 2, y, subsidiary_name)
 
     y -= 20
-
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, f"{area_name} MINE")
 
     y -= 25
 
-    # -------- Certificate Title --------
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, "Certificate of Vocational Training")
 
     y -= 15
-
-    c.setStrokeColorRGB(0, 0, 0)
-    c.setLineWidth(1)
     c.line(50, y, width - 50, y)
 
     y -= 15
-
     c.setFont("Helvetica", 10)
     c.drawCentredString(width / 2, y, "Mines Vocation Training Rules, 1966")
 
     y -= 15
 
     form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
-
     c.drawCentredString(width / 2, y, form_type)
 
     y -= 15
-
     c.setFont("Helvetica-Bold", 10)
     c.drawCentredString(width / 2, y, "{Rule 28(1)}")
 
     y -= 15
-
     c.setFont("Helvetica", 10)
 
-    form_type = (
+    description = (
         "Certificate of Training for employment in mine on surface and in opencast working"
         if training.type_of_training == "Basic"
-        else "Certificate of Refresher Training/Training of special categories of workmen"
+        else "Certificate of Refresher Training / Training of special categories of workmen"
     )
 
-    c.drawCentredString(width / 2, y, form_type)
+    c.drawCentredString(width / 2, y, description)
 
     y -= 20
 
@@ -296,12 +272,12 @@ def generate_form_a_pdf(request, training_id):
     c.drawString(
         50,
         y,
-        f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}"
+        f"Certificate No.- {serial_number}                         Issue Date: {date_only}"
     )
 
     y -= 50
 
-    # -------- Paragraph Style --------
+    # ---------- Paragraph ----------
     styles = getSampleStyleSheet()
 
     justified_style = ParagraphStyle(
@@ -313,53 +289,53 @@ def generate_form_a_pdf(request, training_id):
         leading=18,
     )
 
-    from_date_str = training.from_date.strftime("%d-%m-%Y")
-    to_date_str = training.to_date.strftime("%d-%m-%Y")
+    from_date = training.from_date.strftime("%d-%m-%Y")
+    to_date = training.to_date.strftime("%d-%m-%Y")
 
-    chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV/Chapter V"
+    chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV / Chapter V"
 
     para_text = f"""
-    I, hereby certify that Shri/Shrimati <b>{worker.name}</b>, S/o/D/o/W/o <b>{worker.father_or_spouse_name}</b>,
-    of Village <b>{worker.village}</b>, Thana <b>{worker.thana}</b>, PO <b>{worker.po}</b>, District <b>{worker.district}</b>,
-    State <b>{worker.state}</b>, has between {from_date_str} to {to_date_str} duly undergone the training required under
-    {chapter} of the Mine Vocational Training Rules,1966, for employment in the mine on surface and in opencast workings.
+    I hereby certify that Shri/Shrimati <b>{worker.name}</b>, 
+    S/o/D/o/W/o <b>{worker.father_or_spouse_name}</b>,
+    of Village <b>{worker.village}</b>, Thana <b>{worker.thana}</b>,
+    PO <b>{worker.po}</b>, District <b>{worker.district}</b>,
+    State <b>{worker.state}</b>, has between {from_date} to {to_date}
+    duly undergone the training required under {chapter} of the
+    Mine Vocational Training Rules, 1966.
     """
 
-    paragraph = Paragraph(para_text, style=justified_style)
+    paragraph = Paragraph(para_text, justified_style)
 
     frame = Frame(50, y - 80, width - 100, 120, showBoundary=0)
     frame.addFromList([paragraph], c)
 
     y -= line_gap * 4
 
-    # -------- Training Info --------
+    # ---------- Training Info ----------
     c.setFont("Helvetica", 10)
+
     c.drawString(50, y, "Type of Training: ")
-
-    label_width = c.stringWidth("Type of Training :  ", "Helvetica", 10)
-
-    c.drawString(50 + label_width, y, f"{training.type_of_training} Training")
+    label_width = c.stringWidth("Type of Training :", "Helvetica", 10)
+    c.drawString(50 + label_width + 5, y, f"{training.type_of_training} Training")
 
     y -= line_gap
 
     c.drawString(50, y, "Training For:")
-
     label_width = c.stringWidth("Training For:", "Helvetica", 10)
-
-    c.drawString(50 + label_width, y, f"{training.nature_of_training}")
+    c.drawString(50 + label_width + 5, y, f"{training.nature_of_training}")
 
     c.drawRightString(width - 50, y, "Signed...................................................")
 
     y -= line_gap
 
-    present_days_count = training.attendances.filter(
+    present_days = training.attendances.filter(
         Q(present=True) | Q(present='Present') | Q(present='present')
     ).count()
 
     c.drawString(
         50,
         y,
-        f"Period of training: {from_date_str} to {to_date_str} (Days Present: {present_days_count})"
+        f"Period of training: {from_date} to {to_date} (Days Present: {present_days})"
     )
 
     y -= line_gap * 2
@@ -376,73 +352,53 @@ def generate_form_a_pdf(request, training_id):
     right_y = y - 20
     c.drawString(right_x, right_y, "Registration No. of the Training Centre: .......")
 
-    # -------- Photo --------
+    # ---------- Photo ----------
     photo_x = 50
     photo_y = y - 120
 
-    if worker.photo:
-
-        photo_path = worker.photo.path
-
-        if os.path.exists(photo_path):
-
-            c.drawImage(photo_path, photo_x, photo_y, width=100, height=120)
-
-        else:
-
-            c.rect(photo_x, photo_y, 100, 120)
-            c.drawString(photo_x + 10, photo_y + 50, "Photo not found")
-
+    if worker.photo and os.path.exists(worker.photo.path):
+        c.drawImage(worker.photo.path, photo_x, photo_y, width=100, height=120)
     else:
-
         c.rect(photo_x, photo_y, 100, 120)
-        c.drawString(photo_x + 10, photo_y + 50, "No Photo")
+        c.drawString(photo_x + 20, photo_y + 60, "No Photo")
 
-    # -------- Counter Signature --------
+    # ---------- Counter Signature ----------
     right_x = width / 2 + 50
-    right_y = photo_y + 100
-
-    right_y -= line_gap * 4
+    right_y = photo_y + 40
 
     c.drawString(right_x, right_y, "Counter Signature of")
-
     right_y -= line_gap
-
     c.drawString(right_x, right_y, "The Agent or Manager.............")
 
     y -= 200
 
-    # -------- Footer --------
+    # ---------- Footer ----------
     c.line(50, y, width - 50, y)
 
     y -= line_gap
-
     c.drawString(50, y, "Personal Details of Trainee")
 
     y -= line_gap
 
-    full_adhar = worker.aadhar_number or ""
+    full_aadhar = worker.aadhar_number or ""
+    masked_aadhar = "XXXX-XXXX-" + full_aadhar[-4:] if len(full_aadhar) >= 4 else "Invalid"
 
-    masked_adhar = "XXXX-XXXX-" + full_adhar[-4:] if len(full_adhar) >= 4 else "Invalid"
-
-    c.drawString(50, y, f"  * Aadhar No. - {masked_adhar}")
-
-    y -= line_gap
-
-    dob_str = worker.dob.strftime("%d-%m-%Y") if worker.dob else "Not Available"
-
-    c.drawString(50, y, f"  * Date of Birth - {dob_str}")
+    c.drawString(50, y, f"* Aadhaar No. - {masked_aadhar}")
 
     y -= line_gap
 
-    c.drawString(50, y, f"  * Blood Group - {worker.blood_group}")
+    dob = worker.dob.strftime("%d-%m-%Y") if worker.dob else "Not Available"
+    c.drawString(50, y, f"* Date of Birth - {dob}")
 
     y -= line_gap
-	y -= line_gap
+
+    blood = worker.blood_group if worker.blood_group else "Not Available"
+    c.drawString(50, y, f"* Blood Group - {blood}")
+
+    y -= line_gap * 2
 
     c.setFont("Helvetica-BoldOblique", 10)
 
-    # Dynamic Subsidiary Code
     c.drawString(
         50,
         y,
@@ -451,7 +407,7 @@ def generate_form_a_pdf(request, training_id):
 
     y -= line_gap
 
-    year = {
+    validity_years = {
         "Basic": "5",
         "Refresher": "5"
     }.get(training.type_of_training, "....")
@@ -459,7 +415,7 @@ def generate_form_a_pdf(request, training_id):
     c.drawString(
         50,
         y,
-        f"* This certificate is valid for {year} years from date of issue of certificate."
+        f"* This certificate is valid for {validity_years} years from date of issue of certificate."
     )
 
     c.showPage()
@@ -592,6 +548,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
