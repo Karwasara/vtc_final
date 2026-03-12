@@ -173,94 +173,137 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import enums
 
 def generate_form_a_pdf(request, training_id):
+
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
 
-    # Generate unique serial number if not assigned
+    # -------- Get Area and Subsidiary --------
+    user_area = request.user.areas.first()
+
+    area_code = user_area.area_code if user_area else "UNKNOWN"
+    area_name = user_area.area_name if user_area else "Unknown"
+
+    subsidiary_name = (
+        user_area.subsidiary.subsidiary_name
+        if user_area and user_area.subsidiary
+        else "Unknown"
+    )
+
+    subsidiary_code = (
+        user_area.subsidiary.subsidiary_code
+        if user_area and user_area.subsidiary
+        else "NCL"
+    )
+
+    # -------- Serial Number --------
     if not training.certificate_serial_number:
-        last_number = TrainingSchedule.objects.filter(certificate_serial_number__isnull=False).order_by('-certificate_serial_number').first()
+
+        last_number = TrainingSchedule.objects.filter(
+            certificate_serial_number__isnull=False
+        ).order_by('-certificate_serial_number').first()
+
         new_serial = (last_number.certificate_serial_number + 1) if last_number else 10000000
+
         training.certificate_serial_number = new_serial
-        area_code = request.user.area.area_code if request.user.area else "UNKNOWN"
         training.certificate_serial_number_final = "VTC" + area_code + str(new_serial)
-        training.certificate_created_date= timezone.now()
+        training.certificate_created_date = timezone.now()
         training.save()
+
     serial_number = training.certificate_serial_number_final
 
-    # Prepare PDF response
+    # -------- PDF Response --------
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=VTC certificate for {worker.name}.pdf'
+
     c = canvas.Canvas(response, pagesize=A4)
+
     width, height = A4
-    #c.setFillColorRGB(0.95, 0.95, 0.95)  # Light grey (adjust RGB values as needed)
-    #c.rect(0, 0, width, height, stroke=0, fill=1)
 
-    # Reset fill color back to black for text and other elements
-    #c.setFillColorRGB(0, 0, 0)
-    logo_path = os.path.join('E:/VTC training/mysite/static/ncl_logo.jpeg')  # adjust as per your project static folder
+    # -------- Logo --------
+    logo_path = os.path.join('E:/VTC training/mysite/static/ncl_logo.jpeg')
 
-    # Load image if exists
     if os.path.exists(logo_path):
+
         logo = ImageReader(logo_path)
-        logo_width = 120  # Adjust size as needed
-        logo_height = 100
-        # Place logo on top-left aligned with three header lines
-        c.drawImage(logo, 40, height - 110, width=logo_width, height=logo_height, preserveAspectRatio=True)
+
+        c.drawImage(
+            logo,
+            40,
+            height - 110,
+            width=120,
+            height=100,
+            preserveAspectRatio=True
+        )
 
     y = height - 50
     line_gap = 16
 
-    # Header
+    # -------- Header --------
     c.setFont("Helvetica-Bold", 15)
-    c.drawCentredString(width / 2, y, "NORTHERN COALIFIELDS LIMITED")
+
+    # Dynamic Subsidiary Name
+    c.drawCentredString(width / 2, y, subsidiary_name)
+
     y -= 20
+
     c.setFont("Helvetica-Bold", 12)
-    
-
-# Get the location name or fallback to original if not mapped
-   
-# Draw centered string
-    area_name = request.user.area.area_name if request.user.area else "Unknown"
     c.drawCentredString(width / 2, y, f"{area_name} MINE")
-
-
-
 
     y -= 25
 
-    # Appendix II FORM A centered with Serial Number on right
+    # -------- Certificate Title --------
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, "Certificate of Vocational Training")
-    
+
     y -= 15
-    
-    c.setStrokeColorRGB(0, 0, 0)     # Set stroke color to black
-    c.setLineWidth(1)                # Thickness of the line (adjust as needed)
-    c.line(50, y, width - 50, y) 
+
+    c.setStrokeColorRGB(0, 0, 0)
+    c.setLineWidth(1)
+    c.line(50, y, width - 50, y)
+
     y -= 15
+
     c.setFont("Helvetica", 10)
     c.drawCentredString(width / 2, y, "Mines Vocation Training Rules, 1966")
+
     y -= 15
-    c.setFont("Helvetica", 10)
+
     form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
+
     c.drawCentredString(width / 2, y, form_type)
+
     y -= 15
+
     c.setFont("Helvetica-Bold", 10)
     c.drawCentredString(width / 2, y, "{Rule 28(1)}")
+
     y -= 15
+
     c.setFont("Helvetica", 10)
-    form_type = "Certificate of Training for employment in mine on surface and in opencast working " if training.type_of_training == "Basic" else "Certificate of Refresher Training/Training of special categories of workmen"
+
+    form_type = (
+        "Certificate of Training for employment in mine on surface and in opencast working"
+        if training.type_of_training == "Basic"
+        else "Certificate of Refresher Training/Training of special categories of workmen"
+    )
+
     c.drawCentredString(width / 2, y, form_type)
+
     y -= 20
-    c.setFont("Helvetica", 10)
+
     date_only = training.certificate_created_date.strftime('%d/%m/%Y')
-    area_code = request.user.area.area_code if request.user.area else "Unknown"
-    c.drawString(50, y, f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}")
-    
+
+    c.drawString(
+        50,
+        y,
+        f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}"
+    )
+
     y -= 50
-    # Body content
-   # Define the justified style
+
+    # -------- Paragraph Style --------
     styles = getSampleStyleSheet()
+
     justified_style = ParagraphStyle(
         name='Justified',
         parent=styles['Normal'],
@@ -269,157 +312,160 @@ def generate_form_a_pdf(request, training_id):
         fontSize=10,
         leading=18,
     )
-    
-    if training.type_of_training == "Basic": schedule_number = "First" 
-    elif training.type_of_training == "Refresher": schedule_number = "Fourth" 
-    else: schedule_number = ""
+
     from_date_str = training.from_date.strftime("%d-%m-%Y")
     to_date_str = training.to_date.strftime("%d-%m-%Y")
-    present_days_count = training.attendances.filter(present=True).count()
+
     chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV/Chapter V"
-    
-    # Compose the paragraph text
+
     para_text = f"""
     I, hereby certify that Shri/Shrimati <b>{worker.name}</b>, S/o/D/o/W/o <b>{worker.father_or_spouse_name}</b>,
     of Village <b>{worker.village}</b>, Thana <b>{worker.thana}</b>, PO <b>{worker.po}</b>, District <b>{worker.district}</b>,
-    State <b>{worker.state}</b>, has between {from_date_str} to {to_date_str} duly undergone the training required under 
-    {chapter} of the Mine Vocational Training Rules,1966, for employement in the mine on surface and in  opencast workings. 
+    State <b>{worker.state}</b>, has between {from_date_str} to {to_date_str} duly undergone the training required under
+    {chapter} of the Mine Vocational Training Rules,1966, for employment in the mine on surface and in opencast workings.
     """
 
-    # Create the paragraph
     paragraph = Paragraph(para_text, style=justified_style)
 
-    # Define the frame (position on the PDF)
-    frame = Frame(50, y - 80, width - 100, 120, showBoundary=0)  # Adjust height as needed
-
-    # Draw the paragraph inside the frame
+    frame = Frame(50, y - 80, width - 100, 120, showBoundary=0)
     frame.addFromList([paragraph], c)
 
-    # Adjust y position for next elements
- 
- 
-    
     y -= line_gap * 4
-    
-    
-    y -= line_gap
+
+    # -------- Training Info --------
     c.setFont("Helvetica", 10)
     c.drawString(50, y, "Type of Training: ")
 
-    # Measure width of the preceding text to position the bold text correctly
     label_width = c.stringWidth("Type of Training :  ", "Helvetica", 10)
 
-    # Set bold font for the value
-    c.setFont("Helvetica", 10)
     c.drawString(50 + label_width, y, f"{training.type_of_training} Training")
+
     y -= line_gap
-    c.setFont("Helvetica", 10)
+
     c.drawString(50, y, "Training For:")
 
-    # Measure width of the preceding text to position the bold text correctly
     label_width = c.stringWidth("Training For:", "Helvetica", 10)
 
-    # Set bold font for the value
-    c.setFont("Helvetica", 10)
     c.drawString(50 + label_width, y, f"{training.nature_of_training}")
 
-
-    c.setFont("Helvetica", 10)
     c.drawRightString(width - 50, y, "Signed...................................................")
 
-    
-
-# Draw on PDF
-   
-    #c.drawRightString(width - 50, y, f"({accounts_customuser.current}Name in block letters with date)")
-
     y -= line_gap
-    c.setFont("Helvetica", 10)
-    from_date_str = training.from_date.strftime("%d-%m-%Y")
-    to_date_str = training.to_date.strftime("%d-%m-%Y")
+
     present_days_count = training.attendances.filter(
-    Q(present=True) | Q(present='Present') | Q(present='present')
+        Q(present=True) | Q(present='Present') | Q(present='present')
     ).count()
 
-# Draw with present days
-    c.drawString(50, y, f"Period of training: {from_date_str} to {to_date_str} (Days Present: {present_days_count})")
+    c.drawString(
+        50,
+        y,
+        f"Period of training: {from_date_str} to {to_date_str} (Days Present: {present_days_count})"
+    )
 
     y -= line_gap * 2
-    c.drawRightString(width - 50, y, f"Training Officer..........................................")
-    right_x = width / 2 + 50
-    right_y = y - 20
-    c.setFont("Helvetica", 10)
-    c.drawString(right_x, right_y, f"Mine/Training Center: {area_name}")
-    y -= line_gap 
-    right_x = width / 2 + 50
-    right_y = y - 20
-    c.setFont("Helvetica", 10)
-    c.drawString(right_x, right_y, f"Registration No. of the Training Centre: .......")
-    
-    #y -= line_gap * 2
 
-    # Photo placeholder or actual photo
+    c.drawRightString(width - 50, y, "Training Officer..........................................")
+
+    right_x = width / 2 + 50
+    right_y = y - 20
+
+    c.drawString(right_x, right_y, f"Mine/Training Center: {area_name}")
+
+    y -= line_gap
+
+    right_y = y - 20
+    c.drawString(right_x, right_y, "Registration No. of the Training Centre: .......")
+
+    # -------- Photo --------
     photo_x = 50
     photo_y = y - 120
-    photo_width = 100
-    photo_height = 120
 
     if worker.photo:
+
         photo_path = worker.photo.path
+
         if os.path.exists(photo_path):
-            c.drawImage(photo_path, photo_x, photo_y, width=photo_width, height=photo_height)
+
+            c.drawImage(photo_path, photo_x, photo_y, width=100, height=120)
+
         else:
-            c.rect(photo_x, photo_y, photo_width, photo_height)
+
+            c.rect(photo_x, photo_y, 100, 120)
             c.drawString(photo_x + 10, photo_y + 50, "Photo not found")
+
     else:
-        c.rect(photo_x, photo_y, photo_width, photo_height)
+
+        c.rect(photo_x, photo_y, 100, 120)
         c.drawString(photo_x + 10, photo_y + 50, "No Photo")
 
-    # Right side content strictly after mid-column
+    # -------- Counter Signature --------
     right_x = width / 2 + 50
     right_y = photo_y + 100
 
-    
-    right_y -= line_gap *4
-    c.drawString(right_x, right_y, "Counter Singnature of            ")
+    right_y -= line_gap * 4
+
+    c.drawString(right_x, right_y, "Counter Signature of")
+
     right_y -= line_gap
+
     c.drawString(right_x, right_y, "The Agent or Manager.............")
-   
+
     y -= 200
-    
-    c.setStrokeColorRGB(0, 0, 0)     # Set stroke color to black
-    c.setLineWidth(1)                # Thickness of the line (adjust as needed)
+
+    # -------- Footer --------
     c.line(50, y, width - 50, y)
+
     y -= line_gap
-    c.setFont("Helvetica", 10)
+
     c.drawString(50, y, "Personal Details of Trainee")
+
     y -= line_gap
-    c.setFont("Helvetica", 10)
+
     full_adhar = worker.aadhar_number or ""
+
     masked_adhar = "XXXX-XXXX-" + full_adhar[-4:] if len(full_adhar) >= 4 else "Invalid"
+
     c.drawString(50, y, f"  * Aadhar No. - {masked_adhar}")
+
     y -= line_gap
-    dob_str = worker.dob.strftime("%d-%m-%Y")
+
+    dob_str = worker.dob.strftime("%d-%m-%Y") if worker.dob else "Not Available"
+
     c.drawString(50, y, f"  * Date of Birth - {dob_str}")
+
     y -= line_gap
+
     c.drawString(50, y, f"  * Blood Group - {worker.blood_group}")
-   
-    # Footer note
+
     y -= line_gap
+
     c.setFont("Helvetica-BoldOblique", 10)
-    #c.drawString(50, y, "* This certificate is valid only for the nature of job for which the training is imparted.")
+
+    # Dynamic Subsidiary Code
+    c.drawString(
+        50,
+        y,
+        f"* This certificate will have no claim for employment in {subsidiary_code}."
+    )
+
     y -= line_gap
-    c.drawString(50, y, "* This certificate will have no claim for employment in NCL.")
-    y -= line_gap
+
     year = {
-    "Basic": "5",
-    "Refresher": "5"
+        "Basic": "5",
+        "Refresher": "5"
     }.get(training.type_of_training, "....")
-    c.setFont("Helvetica-BoldOblique", 10)
-    c.drawString(50, y, f"* This certificate is valid for {year} years from date of issue of certificate.")
+
+    c.drawString(
+        50,
+        y,
+        f"* This certificate is valid for {year} years from date of issue of certificate."
+    )
+
     c.showPage()
     c.save()
+
     return response
+
 
 
 
@@ -545,6 +591,7 @@ def certificate_detail(request):
         }
 
     return render(request, 'mm/certificate_detail.html', context)
+
 
 
 
