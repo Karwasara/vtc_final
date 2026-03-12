@@ -15,6 +15,9 @@ table.dataTable thead th {
 table.dataTable tbody tr:hover {
     background-color: #f1f7ff;
 }
+#workersTable{
+    display:none;
+}
 </style>
 
 <div class="grid grid-cols-12 gap-6">
@@ -39,7 +42,9 @@ table.dataTable tbody tr:hover {
                    + New Worker
                 </a>
             </div>
-
+            <div id="tableLoader" style="text-align:center;padding:20px;">
+                Loading workers...
+            </div>
             <table id="workerTable" class="display w-full text-sm">
 
                 <thead>
@@ -90,7 +95,10 @@ $(document).ready(function() {
         pageLength: 10,
         order: []
     });
+    $('#tableLoader').hide();
+    $('#workersTable').show();
 });
 </script>
 
 {% endblock %}
+
