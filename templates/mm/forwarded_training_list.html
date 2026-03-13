@@ -28,8 +28,8 @@ body{
 
 /* Content (75%) */
 .content-area{
-    flex:0 0 78%;
-    max-width:78%;
+    flex:0 0 75%;
+    max-width:75%;
 }
 
 /* Card */
@@ -126,7 +126,7 @@ Workers Sent to Mine Manager for Approval
 <th>Training To</th>
 <th>Nature of Training</th>
 <th style="display:none;">Status Level</th>
-<th>Actions</th>
+<th>Actions(certificate)</th>
 </tr>
 </thead>
 
@@ -173,7 +173,7 @@ View Details
     <a href="{% url 'mm:generate_form_a_pdf' training.pk %}"
        class="btn-download"
        target="_blank">
-       Download Certificate
+       Download
     </a>
 
     {% else %}
@@ -181,7 +181,7 @@ View Details
     <a href="{% url 'mm:generate_form_a_pdf' training.pk %}"
        class="btn-generate"
        target="_blank">
-       Generate Certificate
+       Generate
     </a>
 
     {% endif %}
@@ -259,5 +259,6 @@ next:"Next"
 </script>
 
 {% endblock %}
+
 
 
