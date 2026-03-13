@@ -28,8 +28,8 @@ body{
 
 /* Content (75%) */
 .content-area{
-    flex:0 0 75%;
-    max-width:75%;
+    flex:0 0 78%;
+    max-width:78%;
 }
 
 /* Card */
@@ -147,7 +147,7 @@ Workers Sent to Mine Manager for Approval
 <td>{{ training.nature_of_training }}</td>
 
 <!-- Hidden column for sorting -->
-<!--<td style="display:none;">-->
+<td style="display:none;">
 
 {% if training.mm_status != 'approved' %}
 1
@@ -259,4 +259,5 @@ next:"Next"
 </script>
 
 {% endblock %}
+
 
