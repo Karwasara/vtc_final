@@ -23,9 +23,6 @@
 .dashboard-tile.active-tile{transform:scale(1.06);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
 
 #areaChart{height:350px !important;}
-.summary-table{margin-top:30px;width:100%;border-collapse:collapse;}
-.summary-table th, .summary-table td{border:1px solid #ddd;padding:8px;text-align:center;}
-.summary-table th{background:#004B87;color:white;}
 </style>
 
 <div class="container-fluid mt-4">
@@ -77,31 +74,6 @@ Contractual Worker Training Dashboard
     <canvas id="areaChart"></canvas>
 </div>
 
-<!-- SUMMARY TABLE -->
-<div class="card p-4 mt-4">
-<h4 class="mb-3 text-center">{{ level|title }} Summary</h4>
-<table class="summary-table">
-    <thead>
-        <tr>
-            <th>{{ level|title }}</th>
-            <th>Trained</th>
-            <th>Under Training</th>
-            <th>Total Trainings</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for i in table_names|length|make_list %}
-        <tr>
-            <td>{{ table_names|slice:forloop.counter0|first }}</td>
-            <td>{{ trained|slice:forloop.counter0|first }}</td>
-            <td>{{ under_training|slice:forloop.counter0|first }}</td>
-            <td>{{ total|slice:forloop.counter0|first }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-</div>
-
 </div>
 </div>
 </div>
@@ -127,13 +99,11 @@ function updateTiles(){
 }
 
 function renderChart(type){
-
     const datasetsMap = {
         'trained': trainedCounts,
         'under_training': underTrainingCounts,
         'total': totalCounts
     };
-
     const colorsMap = {
         'trained':'rgba(0,123,255,0.7)',
         'under_training':'rgba(40,167,69,0.7)',
@@ -143,15 +113,11 @@ function renderChart(type){
     if(chart) chart.destroy();
 
     const ctx = document.getElementById('areaChart').getContext('2d');
-
     chart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: labels, // show subsidiary codes on chart
-            datasets: [{
-                data: datasetsMap[type],
-                backgroundColor: colorsMap[type]
-            }]
+            labels: labels,
+            datasets: [{ data: datasetsMap[type], backgroundColor: colorsMap[type] }]
         },
         options: {
             responsive: true,
@@ -166,7 +132,7 @@ function renderChart(type){
                     align: 'end',
                     color: '#000',
                     font: { weight: 'bold', size: 12 },
-                    formatter: function(value){ return value; } // show count on top
+                    formatter: function(value){ return value; }
                 }
             },
             onClick: function(evt, elements){
@@ -181,11 +147,8 @@ function renderChart(type){
         plugins: [ChartDataLabels]
     });
 
-    document.querySelectorAll('.dashboard-tile').forEach(tile=>{
-        tile.classList.remove('active-tile');
-    });
+    document.querySelectorAll('.dashboard-tile').forEach(tile=>tile.classList.remove('active-tile'));
     document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
-
     updateTiles();
 }
 
