@@ -89,30 +89,19 @@ def delete_worker(request, pk):
     return render(request, 'vtc/confirm_delete_w.html', {'object': worker})
 
 
-# for training schedule and result
-from django.shortcuts import render
-from django.shortcuts import render, redirect
-from vtc.models import TrainingSchedule
-
-# Create your views here.
-
-# def unscheduled_worker_list(request):
-#     # workers = WorkerID.objects.filter(approval_status='pending')
-#     workers = IndependentWorker.objects.filter(mm_approval_status='approved')
-#     return render(request, 'vtc/hod_approved_workers.html', {'workers': workers})
-from datetime import datetime, date
-from django.contrib import messages
-from django.shortcuts import get_object_or_404, redirect, render
-
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils.dateparse import parse_date
 from datetime import date
 
+from vtc.models import TrainingSchedule
+from .models import IndependentWorker   # adjust if needed
+
+
 def schedule_training(request, pk):
     worker = get_object_or_404(IndependentWorker, pk=pk)
 
-    # Get user's mapped areas
+    # 🔹 Get user's mapped areas
     user_areas = request.user.areas.all()
 
     if request.method == 'POST':
@@ -122,30 +111,34 @@ def schedule_training(request, pk):
         nature_of_training = request.POST.get('nature_of_training')
         contractor_name = request.POST.get('contractor_name')
 
-        # AREA HANDLING
+        # 🔹 AREA HANDLING
         if user_areas.count() == 1:
             area_name = user_areas.first().area_name
         else:
             area_name = request.POST.get('area_name')
 
-        # Convert to date objects
-        try:
-            from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
-            to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
-        except (ValueError, TypeError):
-            messages.error(request, 'Invalid date format.')
-            return render(request, 'vtc/schedule_training.html', {'worker': worker})
+        # ✅ SAFE DATE CONVERSION (FIXED)
+        from_date = parse_date(from_date_str)
+        to_date = parse_date(to_date_str)
 
-        # Rule 1
+        # 🔴 Validation: invalid date
+        if not from_date or not to_date:
+            messages.error(request, 'Invalid date format.')
+            return render(request, 'vtc/schedule_training.html', {
+                'worker': worker,
+                'user_areas': user_areas
+            })
+
+        # 🔴 Rule 1: past date
         if from_date < date.today():
             messages.error(request, 'Training can only be scheduled from today or a future date.')
 
-        # Rule 2
+        # 🔴 Rule 2: invalid range
         elif from_date > to_date:
             messages.error(request, 'From Date cannot be after To Date.')
 
         else:
-            # Rule 3
+            # 🔴 Rule 3: overlapping training
             overlapping = TrainingSchedule.objects.filter(
                 worker=worker,
                 from_date__lte=to_date,
@@ -156,7 +149,7 @@ def schedule_training(request, pk):
                 messages.error(request, 'This training period overlaps with an existing training for this worker.')
 
             else:
-                # SAVE WITH AREA
+                # ✅ SAVE DATA
                 TrainingSchedule.objects.create(
                     worker=worker,
                     from_date=from_date,
@@ -164,7 +157,7 @@ def schedule_training(request, pk):
                     type_of_training=type_of_training,
                     nature_of_training=nature_of_training,
                     contractor_name=contractor_name,
-                    area_name=area_name,            # 👈 saved here
+                    area_name=area_name,
                     created_by=request.user,
                     modified_by=request.user
                 )
@@ -174,9 +167,8 @@ def schedule_training(request, pk):
 
     return render(request, 'vtc/schedule_training.html', {
         'worker': worker,
-        'user_areas': user_areas   # for dropdown rendering
+        'user_areas': user_areas
     })
-
 
 
 
