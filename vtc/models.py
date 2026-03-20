@@ -153,6 +153,10 @@ class TrainingAttendance(models.Model):
         ('Holiday', 'Holiday'),
     ]
     training = models.ForeignKey(TrainingSchedule, on_delete=models.CASCADE, related_name='attendances')
+    # ✅ NEW FIELDS
+    in_time = models.TimeField(null=True, blank=True)
+    out_time = models.TimeField(null=True, blank=True)
+    
     date = models.DateField()
     present = models.CharField(max_length=10, choices=STATUS_CHOICES)
     class Meta:
