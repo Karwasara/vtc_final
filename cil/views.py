@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.db.models import Q
 from vtc.models import TrainingSchedule
-from accounts.models import AreaMaster
+from accounts.models import AreaMaster, SubsidiaryMaster
 import json
 
 def dashboard(request):
@@ -12,24 +12,26 @@ def dashboard(request):
     # =========================
     if not selected_subsidiary:
 
-        # Get all distinct subsidiaries
-        subsidiaries = AreaMaster.objects.values_list('subsidiary', flat=True).distinct()
+        # Get all distinct subsidiary IDs from AreaMaster
+        subsidiaries = AreaMaster.objects.values_list('subsidiary_id', flat=True).distinct()
         data = []
+        labels = []  # will contain subsidiary codes
 
-        labels = []  # this will contain subsidiary codes
-
-        for sub in subsidiaries:
-            # Get all areas for this subsidiary
-            areas = AreaMaster.objects.filter(subsidiary=sub)
-            area_names = list(areas.values_list('area_name', flat=True))
-
-            # Get subsidiary code: pick first area's code (or define a proper field)
-            if areas.exists() and hasattr(areas.first(), 'subsidiary_code'):
-                code = areas.first().subsidiary_code
-            else:
-                code = sub  # fallback to name if code not present
+        for sub_id in subsidiaries:
+            # Fetch subsidiary code and name from SubsidiaryMaster
+            try:
+                sub_obj = SubsidiaryMaster.objects.get(id=sub_id)
+                code = sub_obj.subsidiary_code
+                name = sub_obj.subsidiary_name
+            except SubsidiaryMaster.DoesNotExist:
+                code = str(sub_id)
+                name = str(sub_id)
 
             labels.append(code)
+
+            # Get all areas for this subsidiary
+            areas = AreaMaster.objects.filter(subsidiary_id=sub_id)
+            area_names = list(areas.values_list('area_name', flat=True))
 
             # Count schedules
             if area_names:
@@ -43,7 +45,7 @@ def dashboard(request):
                 total = 0
 
             data.append({
-                "name": sub,
+                "name": name,  # full name for summary table
                 "trained": trained,
                 "under_training": under_training,
                 "total": total,
@@ -51,10 +53,11 @@ def dashboard(request):
 
         context = {
             "level": "subsidiary",
-            "labels": json.dumps(labels),  # use codes on X-axis
+            "labels": json.dumps(labels),  # chart X-axis: subsidiary codes
             "trained": json.dumps([d["trained"] for d in data]),
             "under_training": json.dumps([d["under_training"] for d in data]),
             "total": json.dumps([d["total"] for d in data]),
+            "table_names": json.dumps([d["name"] for d in data]),  # full names for table
         }
 
         return render(request, "cil/dashboard.html", context)
@@ -63,23 +66,22 @@ def dashboard(request):
     # 🟢 LEVEL 2: AREA VIEW
     # =========================
     else:
-        areas = AreaMaster.objects.filter(subsidiary=selected_subsidiary).order_by('area_name')
+        areas = AreaMaster.objects.filter(subsidiary_id=selected_subsidiary).order_by('area_name')
         area_names = list(areas.values_list('area_name', flat=True))
         schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
 
         data = []
-        labels = []  # area codes or names
+        labels = []  # area names
 
         for area in areas:
-            area_name = area.area_name
-            labels.append(area_name)  # for area view, can use name or code if available
+            labels.append(area.area_name)  # can use area code if available
 
-            trained = schedules.filter(mm_status='approved', area_name=area_name).count()
-            under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending'), area_name=area_name).count()
-            total = schedules.filter(area_name=area_name).count()
+            trained = schedules.filter(mm_status='approved', area_name=area.area_name).count()
+            under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending'), area_name=area.area_name).count()
+            total = schedules.filter(area_name=area.area_name).count()
 
             data.append({
-                "name": area_name,
+                "name": area.area_name,
                 "trained": trained,
                 "under_training": under_training,
                 "total": total,
@@ -88,7 +90,7 @@ def dashboard(request):
         context = {
             "level": "area",
             "selected_subsidiary": selected_subsidiary,
-            "labels": json.dumps(labels),  # area names or codes
+            "labels": json.dumps(labels),
             "trained": json.dumps([d["trained"] for d in data]),
             "under_training": json.dumps([d["under_training"] for d in data]),
             "total": json.dumps([d["total"] for d in data]),
