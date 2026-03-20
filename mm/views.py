@@ -15,17 +15,25 @@ from django.db.models import Q
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
 import json
-
 from django.shortcuts import render
 from django.db.models import Q
-import json
-#from .models import TrainingSchedule, IndependentWorker
-
-from django.db.models import Q
+from vtc.models import TrainingSchedule
+from accounts.models import AreaMaster
 import json
 
 def dashboard(request):
-    areas = AreaMaster.objects.all().order_by('area_name')
+    # Assume user has a related field `area` pointing to AreaMaster
+    user_areas = getattr(request.user, 'area', None)
+
+    # If user_areas is a single object, wrap it in a list
+    if user_areas is None:
+        areas = AreaMaster.objects.none()  # No areas for user
+    elif isinstance(user_areas, AreaMaster):
+        areas = [user_areas]
+    else:
+        # Assume ManyToMany
+        areas = user_areas.all()
+
     area_data = []
 
     for area in areas:
@@ -45,10 +53,6 @@ def dashboard(request):
             area_name=area_name
         ).count()
 
-#        total_workers_count = IndependentWorker.objects.filter(
- #           area_name=area_name
-  #      ).count()
-
         area_data.append({
             "name": area_name,
             "trained": trained_count,
@@ -65,15 +69,12 @@ def dashboard(request):
         "trained_counts": json.dumps([a["trained"] for a in area_data]),
         "under_training_counts": json.dumps([a["under_training"] for a in area_data]),
         "total_trainings_counts": json.dumps([a["total_trainings"] for a in area_data]),
-#        "total_workers_counts": json.dumps([a["total_workers"] for a in area_data]),
         "total_trained": sum(a['trained'] for a in area_data),
         "total_under_training": sum(a['under_training'] for a in area_data),
         "total_trainings": sum(a['total_trainings'] for a in area_data),
-#        "total_workers": sum(a['total_workers'] for a in area_data),
     }
 
     return render(request, "mm/dashboard.html", context)
-
 
 
 # def hod_forwarded_workers_list(request):
