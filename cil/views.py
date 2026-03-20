@@ -5,12 +5,12 @@ from accounts.models import AreaMaster, SubsidiaryMaster
 import json
 
 def dashboard(request):
-    selected_subsidiary = request.GET.get('subsidiary')
+    selected_sub_code = request.GET.get('subsidiary')  # this is code, e.g., 'NCL'
 
     # =========================
     # 🔵 LEVEL 1: SUBSIDIARY VIEW
     # =========================
-    if not selected_subsidiary:
+    if not selected_sub_code:
 
         # Get all distinct subsidiary IDs from AreaMaster
         subsidiaries = AreaMaster.objects.values_list('subsidiary_id', flat=True).distinct()
@@ -66,7 +66,19 @@ def dashboard(request):
     # 🟢 LEVEL 2: AREA VIEW
     # =========================
     else:
-        areas = AreaMaster.objects.filter(subsidiary_id=selected_subsidiary).order_by('area_name')
+        # Lookup subsidiary ID from code
+        try:
+            sub_obj = SubsidiaryMaster.objects.get(subsidiary_code=selected_sub_code)
+            sub_id = sub_obj.id
+        except SubsidiaryMaster.DoesNotExist:
+            # fallback: invalid code
+            sub_id = None
+
+        if not sub_id:
+            return render(request, "cil/dashboard.html", {"level": "area", "labels": [], "trained": [], "under_training": [], "total": []})
+
+        # Fetch areas under this subsidiary
+        areas = AreaMaster.objects.filter(subsidiary_id=sub_id).order_by('area_name')
         area_names = list(areas.values_list('area_name', flat=True))
         schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
 
@@ -89,7 +101,7 @@ def dashboard(request):
 
         context = {
             "level": "area",
-            "selected_subsidiary": selected_subsidiary,
+            "selected_subsidiary": selected_sub_code,
             "labels": json.dumps(labels),
             "trained": json.dumps([d["trained"] for d in data]),
             "under_training": json.dumps([d["under_training"] for d in data]),
