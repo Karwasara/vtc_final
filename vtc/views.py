@@ -251,25 +251,9 @@ def delete_training(request, pk):
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from datetime import timedelta
-from .models import TrainingSchedule, TrainingAttendance, TrainingResult
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from datetime import timedelta
-from .models import TrainingSchedule, TrainingAttendance, TrainingResult
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
+from datetime import date, timedelta, time
 from django.utils import timezone
-from datetime import timedelta, date
 from .models import TrainingSchedule, TrainingAttendance, TrainingResult
-
-from datetime import date, timedelta
-import datetime
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.utils import timezone
 
 def add_training_attendance_and_result(request, pk):
     training = get_object_or_404(TrainingSchedule, pk=pk)
@@ -281,9 +265,9 @@ def add_training_attendance_and_result(request, pk):
         date_range.append(current)
         current += timedelta(days=1)
 
-    # ✅ IMPORTANT: store full object (for in_time/out_time access in template)
+    # Existing attendance as dict keyed by date
     existing_attendance = {
-        att.date: att for att in training.attendances.all()
+        att.attendance_date: att for att in training.attendances.all()
     }
 
     result = getattr(training, 'result', None)
@@ -291,131 +275,105 @@ def add_training_attendance_and_result(request, pk):
     if request.method == 'POST':
         action = request.POST.get('action')
 
-        # =====================================================
-        # ✅ SAVE ATTENDANCE (WITH TIME)
-        # =====================================================
-        if action == "save_attendance":
+        # ================= SAVE DAILY ATTENDANCE =================
+        if action == 'save_attendance':
             attendance_date_str = request.POST.get("attendance_date")
-            status = request.POST.get("status")
             in_time_str = request.POST.get("in_time")
             out_time_str = request.POST.get("out_time")
+            status = request.POST.get("status")
 
-            if not attendance_date_str or not status:
-                messages.error(request, "Invalid attendance data.")
-            else:
-                try:
-                    attendance_date = date.fromisoformat(attendance_date_str)
-                except ValueError:
-                    messages.error(request, f"Invalid date format: {attendance_date_str}")
-                    return redirect(request.path)
+            if not attendance_date_str or not status or not in_time_str or not out_time_str:
+                messages.error(request, "Please fill all fields for attendance.")
+                return redirect(request.path)
 
-                # ⛔ Block future dates
-                if attendance_date > date.today():
-                    messages.error(request, "You cannot mark attendance for a future date.")
-                else:
-                    attendance, created = TrainingAttendance.objects.get_or_create(
-                        training=training,
-                        date=attendance_date
-                    )
+            # Convert date
+            try:
+                attendance_date = date.fromisoformat(attendance_date_str)
+            except ValueError:
+                messages.error(request, "Invalid date format.")
+                return redirect(request.path)
 
-                    if created:
-                        # ✅ Convert time safely
-                        try:
-                            in_time = (
-                                datetime.time.fromisoformat(in_time_str)
-                                if in_time_str else datetime.time(0, 0, 0)
-                            )
-                            out_time = (
-                                datetime.time.fromisoformat(out_time_str)
-                                if out_time_str else datetime.time(0, 0, 0)
-                            )
-                        except ValueError:
-                            messages.error(request, "Invalid time format.")
-                            return redirect(request.path)
+            # Block future dates
+            if attendance_date > date.today():
+                messages.error(request, "Cannot mark attendance for future dates.")
+                return redirect(request.path)
 
-                        # ✅ Optional validation
-                        if status == "Present" and out_time <= in_time:
-                            messages.error(request, "Out time must be greater than In time.")
-                            return redirect(request.path)
+            # Convert times
+            try:
+                in_time = time.fromisoformat(in_time_str)
+                out_time = time.fromisoformat(out_time_str)
+            except ValueError:
+                messages.error(request, "Invalid time format.")
+                return redirect(request.path)
 
-                        attendance.present = status
-                        attendance.in_time = in_time
-                        attendance.out_time = out_time
-                        attendance.save()
+            if status == 'Present' and out_time <= in_time:
+                messages.error(request, "Out time must be greater than In time.")
+                return redirect(request.path)
 
-                        messages.success(
-                            request,
-                            f"Attendance for {attendance_date} saved as {status} "
-                            f"({in_time} - {out_time})"
-                        )
-                    else:
-                        messages.warning(
-                            request,
-                            f"Attendance for {attendance_date} is already saved and locked."
-                        )
+            # Save or update attendance
+            attendance, created = TrainingAttendance.objects.update_or_create(
+                training=training,
+                attendance_date=attendance_date,
+                defaults={
+                    'in_time': in_time,
+                    'out_time': out_time,
+                    'present': status
+                }
+            )
 
-        # =====================================================
-        # ✅ FINAL SUBMISSION
-        # =====================================================
-        elif action == "submit_final":
+            messages.success(request, f"Attendance for {attendance_date} saved successfully.")
+            return redirect(request.path)
 
-            # Allow forward only if all past dates are marked
-            all_days = [d for d in date_range if d <= date.today()]
-            recorded_days = TrainingAttendance.objects.filter(
-                training=training
-            ).values_list('date', flat=True)
+        # ================= FINAL RESULT SUBMISSION =================
+        elif action == 'submit_final':
+            # Ensure all past dates are marked
+            past_dates = [d for d in date_range if d <= date.today()]
+            recorded_dates = training.attendances.values_list('attendance_date', flat=True)
 
-            if set(all_days).issubset(set(recorded_days)):
+            if not set(past_dates).issubset(set(recorded_dates)):
+                messages.error(request, "Please mark attendance for all past dates before final submission.")
+                return redirect(request.path)
 
-                attendance_file = request.FILES.get('attendance_field_file')
-                performance_appraisal = request.POST.get('performance_appraisal')
-                remarks = request.POST.get('remarks')
+            attendance_file = request.FILES.get('attendance_field_file')
+            performance_appraisal = request.POST.get('performance_appraisal')
+            remarks = request.POST.get('remarks')
 
-                if not training.attendance_field_file and not attendance_file:
-                    messages.error(request, "Attendance file is required.")
-                    return redirect(request.path)
+            if not training.attendance_field_file and not attendance_file:
+                messages.error(request, "Attendance file is required.")
+                return redirect(request.path)
 
-                if attendance_file:
-                    training.attendance_field_file = attendance_file
+            if attendance_file:
+                training.attendance_field_file = attendance_file
+            training.save()
 
-                training.save()
+            # Save result
+            TrainingResult.objects.update_or_create(
+                training=training,
+                defaults={
+                    'performance_appraisal': performance_appraisal,
+                    'remarks': remarks,
+                    'attendance_field_file': training.attendance_field_file
+                }
+            )
 
-                # ✅ Save result
-                TrainingResult.objects.update_or_create(
-                    training=training,
-                    defaults={
-                        'performance_appraisal': performance_appraisal,
-                        'remarks': remarks,
-                        'attendance_field_file': (
-                            attendance_file if attendance_file else training.attendance_field_file
-                        )
-                    }
-                )
+            # Update training status
+            training.vtc_status = 'approved'
+            training.vtc_approved_by = request.user
+            training.vtc_approved_at = timezone.now()
+            training.aso_status = 'pending'
+            training.save()
 
-                # ✅ Update status
-                training.vtc_status = 'approved'
-                training.vtc_approved_by = request.user
-                training.vtc_approved_at = timezone.now()
-                training.aso_status = 'pending'
-                training.save()
+            messages.success(request, "Attendance and final result submitted successfully.")
+            return redirect('vtc:scheduled_training_list')
 
-                messages.success(request, "✅ Attendance & Result submitted for approval.")
-                return redirect('vtc:scheduled_training_list')
-
-            else:
-                messages.error(
-                    request,
-                    "⚠ Please mark attendance for all past dates before submitting."
-                )
-
-    return render(request, 'vtc/add_attendance_result.html', {
+    context = {
         'training': training,
         'date_range': date_range,
         'existing_attendance': existing_attendance,
         'result': result,
         'today': date.today(),
-    })
-
+    }
+    return render(request, 'vtc/add_attendance_result.html', context)
 
 
 
