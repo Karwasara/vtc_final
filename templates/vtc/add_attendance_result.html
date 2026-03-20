@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <style>
-table.dataTable thead th{background:#004B87 !important;color:white;}
+table.dataTable thead th{background:#004B87;color:white;}
 table.dataTable tbody tr:hover{background:#f1f7ff;}
 .btn-blue{background:#2563eb;color:white;border:none;padding:6px 14px;border-radius:25px;font-size:13px;}
 .btn-blue:hover{background:#1d4ed8;}
@@ -14,92 +14,104 @@ table.dataTable tbody tr:hover{background:#f1f7ff;}
 </style>
 
 <div class="grid grid-cols-12 gap-6">
-<div class="col-span-12 md:col-span-3">{% include 'vtc/sidebar.html' %}</div>
-<div class="col-span-12 md:col-span-9">
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+  <div class="col-span-12 md:col-span-3">{% include 'vtc/sidebar.html' %}</div>
 
-<h2 class="text-xl font-semibold text-brand-blue mb-4">
-Attendance & Final Result Entry for {{ training.worker.name }}
-</h2>
+  <div class="col-span-12 md:col-span-9">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <h2 class="text-xl font-semibold text-brand-blue mb-4">
+        Attendance & Final Result Entry for {{ training.worker.name }}
+      </h2>
 
-{% include 'common/message.html' %}
+      {% include 'common/message.html' %}
 
-<!-- SINGLE FORM FOR ALL ATTENDANCE -->
-<form method="post">{% csrf_token %}
-<table id="attendanceTable" class="display w-full text-sm">
-<thead>
-<tr><th>Date</th><th>In Time</th><th>Out Time</th><th>Status</th></tr>
-</thead>
-<tbody>
-{% for day in date_range %}
-<tr>
-<td>{{ day }}</td>
+      <!-- ================= ATTENDANCE TABLE ================= -->
+      <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <table id="attendanceTable" class="display w-full text-sm">
+        <thead>
+          <tr><th>Date</th><th>In Time</th><th>Out Time</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for day in date_range %}
+          <tr>
+            <td>{{ day }}</td>
+            {% if existing_attendance|get_item:day %}
+              {% with att=existing_attendance|get_item:day %}
+              <td>{{ att.in_time }}</td>
+              <td>{{ att.out_time }}</td>
+              <td>{{ att.present }}</td>
+              {% endwith %}
+            {% elif day > today %}
+              <td>—</td><td>—</td><td class="text-gray-400">Future</td>
+            {% else %}
+              <td><input type="time" name="in_time_{{ day }}" required></td>
+              <td><input type="time" name="out_time_{{ day }}" required></td>
+              <td>
+                <select name="status_{{ day }}" required>
+                  <option value="">Select</option>
+                  <option value="Present">Present</option>
+                  <option value="Absent">Absent</option>
+                  <option value="Holiday">Holiday</option>
+                </select>
+              </td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-{% if existing_attendance|get_item:day %}
-{% with att=existing_attendance|get_item:day %}
-<td>{{ att.in_time }}</td>
-<td>{{ att.out_time }}</td>
-<td>{{ att.present }}</td>
-{% endwith %}
-{% elif day > today %}
-<td>—</td><td>—</td><td class="text-gray-400">Future</td>
-{% else %}
-<td><input type="time" name="in_time_{{ day }}" value="" required></td>
-<td><input type="time" name="out_time_{{ day }}" value="" required></td>
-<td>
-<select name="status_{{ day }}" required>
-<option value="">Select</option>
-<option value="Present">Present</option>
-<option value="Absent">Absent</option>
-<option value="Holiday">Holiday</option>
-</select>
-</td>
-{% endif %}
-</tr>
-{% endfor %}
-</tbody>
-</table>
+      <div class="mt-4 flex gap-3">
+        <button type="submit" name="action" value="save_attendance" class="btn-blue">Save Attendance</button>
+      </div>
 
-<div class="mt-4">
-<button type="submit" name="action" value="save_attendance" class="btn-blue">Save Attendance</button>
+      <!-- ================= FINAL RESULT ================= -->
+      {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
+      <hr class="my-6">
+
+      {% if not training.attendance_field_file %}
+      <div class="mb-4">
+        <label class="block mb-2 font-medium">Upload Attendance File</label>
+        <input type="file" name="attendance_field_file" class="border rounded w-full p-2" required>
+      </div>
+      {% else %}
+      <div class="bg-green-50 border border-green-200 p-3 rounded mb-4">
+        Attendance file uploaded:
+        <a href="{{ training.attendance_field_file.url }}" target="_blank" class="text-blue-600 underline">
+          {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+        </a>
+      </div>
+      {% endif %}
+
+      <div class="mb-4">
+        <label class="block mb-2 font-medium">Performance Appraisal</label>
+        <select name="performance_appraisal" class="border rounded w-full p-2" required>
+          <option value="">Select</option>
+          <option value="Excellent">Excellent</option>
+          <option value="Good">Good</option>
+          <option value="Average">Average</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="block mb-2 font-medium">Remarks</label>
+        <textarea name="remarks" class="border rounded w-full p-2" rows="3"></textarea>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit" name="action" value="submit_final" class="btn-blue">Forward for Approval</button>
+        <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Cancel</a>
+      </div>
+      {% endif %}
+      </form>
+    </div>
+  </div>
 </div>
-</form>
-
-<!-- FINAL RESULT FORM -->
-{% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
-<hr class="my-6">
-<form method="post" enctype="multipart/form-data">{% csrf_token %}
-{% if not training.attendance_field_file %}
-<div class="mb-4">
-<label>Upload Attendance File</label>
-<input type="file" name="attendance_field_file" required>
-</div>
-{% endif %}
-<div class="mb-4">
-<label>Performance Appraisal</label>
-<select name="performance_appraisal" required>
-<option value="">Select</option>
-<option value="Excellent">Excellent</option>
-<option value="Good">Good</option>
-<option value="Average">Average</option>
-<option value="Poor">Poor</option>
-</select>
-</div>
-<div class="mb-4">
-<label>Remarks</label>
-<textarea name="remarks" rows="3"></textarea>
-</div>
-<button type="submit" name="action" value="submit_final" class="btn-blue">Forward for Approval</button>
-</form>
-{% endif %}
-
-</div></div></div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
 $(document).ready(function(){
-$('#attendanceTable').DataTable({pageLength:10, order:[]});
+  $('#attendanceTable').DataTable({pageLength:10, order:[]});
 });
 </script>
 {% endblock %}
