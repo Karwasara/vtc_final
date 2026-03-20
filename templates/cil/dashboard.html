@@ -7,6 +7,7 @@
 .dashboard-wrapper{display:flex;gap:25px;width:100%;}
 .dashboard-sidebar{width:25%;flex-shrink:0;}
 .dashboard-content{width:75%;}
+
 .dashboard-card{background:#fff;border-radius:10px;padding:30px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
 .dashboard-title{color:#004B87;font-weight:600;font-size:26px;}
 
@@ -74,7 +75,6 @@
 Contractual Worker Training Dashboard
 </h2>
 
-<!-- 🔙 BACK BUTTON -->
 {% if level == "area" %}
 <a href="{% url 'cil:dashboard' %}" class="btn btn-secondary mb-3">
     ← Back to Subsidiaries
@@ -112,7 +112,7 @@ Contractual Worker Training Dashboard
     <canvas id="areaChart"></canvas>
 </div>
 
-<!-- ✅ SUMMARY TABLE BELOW CHART -->
+<!-- SUMMARY TABLE -->
 <div class="card p-4 mt-4">
 <h4 class="mb-3 text-center">{{ level|title }} Summary</h4>
 <table class="summary-table">
@@ -142,12 +142,11 @@ Contractual Worker Training Dashboard
 </div>
 </div>
 
-<!-- Chart.js + plugin for datalabels -->
 <script src="{% static 'chart.umd.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
 <script>
-const labels = JSON.parse('{{ labels|escapejs }}');
+const labels = JSON.parse('{{ labels|escapejs }}'); // these are subsidiary/area names
 const trainedCounts = JSON.parse('{{ trained|escapejs }}');
 const underTrainingCounts = JSON.parse('{{ under_training|escapejs }}');
 const totalCounts = JSON.parse('{{ total|escapejs }}');
@@ -158,10 +157,8 @@ let chart=null;
 function updateTiles(){
     document.getElementById('trainedTotal').innerText =
         trainedCounts.reduce((a,b)=>a+b,0);
-
     document.getElementById('underTrainingTotal').innerText =
         underTrainingCounts.reduce((a,b)=>a+b,0);
-
     document.getElementById('totalTrainingTotal').innerText =
         totalCounts.reduce((a,b)=>a+b,0);
 }
@@ -187,10 +184,10 @@ const ctx=document.getElementById('areaChart').getContext('2d');
 chart=new Chart(ctx,{
 type:'bar',
 data:{
-labels:labels,
+labels: labels, // ✅ show subsidiary names instead of numbers
 datasets:[{
-data:datasetsMap[type],
-backgroundColor:colorsMap[type]
+data: datasetsMap[type],
+backgroundColor: colorsMap[type]
 }]
 },
 options:{
@@ -205,8 +202,8 @@ datalabels: {
     anchor: 'end',
     align: 'end',
     color: '#000',
-    font: {weight:'bold',size:12},
-    formatter: function(value){ return value; }
+    font: {weight:'bold', size:12},
+    formatter: function(value){ return value; } // show count on bar
 }
 },
 onClick: function(evt, elements){
@@ -229,14 +226,12 @@ document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
 updateTiles();
 }
 
-// 🔥 INITIAL LOAD
+// INITIAL LOAD
 renderChart('trained');
 
-// 🔥 TILE CLICK
+// TILE CLICK
 document.querySelectorAll('.dashboard-tile').forEach(tile=>{
-    tile.addEventListener('click',()=>{
-        renderChart(tile.dataset.type);
-    });
+    tile.addEventListener('click',()=>{ renderChart(tile.dataset.type); });
 });
 </script>
 
