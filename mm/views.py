@@ -14,7 +14,6 @@ from django.shortcuts import render
 from django.db.models import Q
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
-import json
 from django.shortcuts import render
 from django.db.models import Q
 from vtc.models import TrainingSchedule
@@ -22,17 +21,15 @@ from accounts.models import AreaMaster
 import json
 
 def dashboard(request):
-    # Assume user has a related field `area` pointing to AreaMaster
-    user_areas = getattr(request.user, 'area', None)
+    # Assuming user is linked to an area (e.g., request.user.area_name)
+    user_area_name = getattr(request.user, 'area_name', None)
 
-    # If user_areas is a single object, wrap it in a list
-    if user_areas is None:
-        areas = AreaMaster.objects.none()  # No areas for user
-    elif isinstance(user_areas, AreaMaster):
-        areas = [user_areas]
+    # Filter areas based on the current user
+    if user_area_name:
+        areas = AreaMaster.objects.filter(area_name=user_area_name).order_by('area_name')
     else:
-        # Assume ManyToMany
-        areas = user_areas.all()
+        # fallback: show all areas if user has no specific area
+        areas = AreaMaster.objects.all().order_by('area_name')
 
     area_data = []
 
@@ -58,9 +55,10 @@ def dashboard(request):
             "trained": trained_count,
             "under_training": under_training_count,
             "total_trainings": total_trainings_count,
-            "total_workers": 0,
+            "total_workers": 0,  # Optional if you have IndependentWorker model
         })
 
+    # Sort by trained count descending
     area_data = sorted(area_data, key=lambda x: x['trained'], reverse=True)
 
     context = {
