@@ -10,9 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='trainingschedule',
-            name='area_name',
-            field=models.CharField(blank=True, max_length=255, null=True),
-        ),
+      
     ]
