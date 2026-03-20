@@ -26,6 +26,8 @@ urlpatterns = [
      path('vtc/', include('vtc.urls')),
      path('aso/', include('aso.urls')),
      path('mm/', include('mm.urls')),
+     path('sub/', include('sub.urls')),
+     path('cil/', include('cil.urls')),
     
 ]
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
