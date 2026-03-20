@@ -6,103 +6,124 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <style>
-table.dataTable thead th{background:#004B87;color:white;}
-table.dataTable tbody tr:hover{background:#f1f7ff;}
-.btn-blue{background:#2563eb;color:white;border:none;padding:6px 14px;border-radius:25px;font-size:13px;}
-.btn-blue:hover{background:#1d4ed8;}
-.btn-grey{background:#64748b;color:white;padding:6px 14px;border-radius:25px;font-size:13px;}
+table.dataTable thead th { background:#004B87 !important; color:white; }
+table.dataTable tbody tr:hover { background:#f1f7ff; }
+.btn-blue { background:#2563eb; color:white; border:none; padding:6px 14px; border-radius:25px; font-size:13px; }
+.btn-blue:hover { background:#1d4ed8; }
+.btn-grey { background:#64748b; color:white; padding:6px 14px; border-radius:25px; font-size:13px; }
 </style>
 
 <div class="grid grid-cols-12 gap-6">
-  <div class="col-span-12 md:col-span-3">{% include 'vtc/sidebar.html' %}</div>
+  <div class="col-span-12 md:col-span-3">
+    {% include 'vtc/sidebar.html' %}
+  </div>
 
   <div class="col-span-12 md:col-span-9">
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+
       <h2 class="text-xl font-semibold text-brand-blue mb-4">
         Attendance & Final Result Entry for {{ training.worker.name }}
       </h2>
 
       {% include 'common/message.html' %}
 
-      <!-- ================= ATTENDANCE TABLE ================= -->
-      <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <!-- ATTENDANCE TABLE -->
       <table id="attendanceTable" class="display w-full text-sm">
         <thead>
-          <tr><th>Date</th><th>In Time</th><th>Out Time</th><th>Status</th></tr>
+          <tr>
+            <th>Date</th>
+            <th>In Time</th>
+            <th>Out Time</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
         </thead>
         <tbody>
           {% for day in date_range %}
-          <tr>
-            <td>{{ day }}</td>
             {% if existing_attendance|get_item:day %}
               {% with att=existing_attendance|get_item:day %}
-              <td>{{ att.in_time }}</td>
-              <td>{{ att.out_time }}</td>
-              <td>{{ att.present }}</td>
+              <tr>
+                <td>{{ day }}</td>
+                <td>{{ att.in_time }}</td>
+                <td>{{ att.out_time }}</td>
+                <td>{{ att.present }}</td>
+                <td><span class="text-green-600 font-semibold">Saved</span></td>
+              </tr>
               {% endwith %}
             {% elif day > today %}
-              <td>—</td><td>—</td><td class="text-gray-400">Future</td>
+              <tr>
+                <td>{{ day }}</td>
+                <td>—</td>
+                <td>—</td>
+                <td class="text-gray-400">Future</td>
+                <td>—</td>
+              </tr>
             {% else %}
-              <td><input type="time" name="in_time_{{ day }}" required></td>
-              <td><input type="time" name="out_time_{{ day }}" required></td>
-              <td>
-                <select name="status_{{ day }}" required>
-                  <option value="">Select</option>
-                  <option value="Present">Present</option>
-                  <option value="Absent">Absent</option>
-                  <option value="Holiday">Holiday</option>
-                </select>
-              </td>
+              <tr>
+                <form method="post">{% csrf_token %}
+                  <td>
+                    {{ day }}
+                    <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
+                  </td>
+                  <td><input type="time" name="in_time" class="border rounded px-2 py-1 text-sm" required></td>
+                  <td><input type="time" name="out_time" class="border rounded px-2 py-1 text-sm" required></td>
+                  <td>
+                    <select name="status" class="border rounded px-2 py-1 text-sm" required>
+                      <option value="">Select</option>
+                      <option value="Present">Present</option>
+                      <option value="Absent">Absent</option>
+                      <option value="Holiday">Holiday</option>
+                    </select>
+                  </td>
+                  <td><button type="submit" name="action" value="save_attendance" class="btn-blue">Save</button></td>
+                </form>
+              </tr>
             {% endif %}
-          </tr>
           {% endfor %}
         </tbody>
       </table>
 
-      <div class="mt-4 flex gap-3">
-        <button type="submit" name="action" value="save_attendance" class="btn-blue">Save Attendance</button>
-      </div>
-
-      <!-- ================= FINAL RESULT ================= -->
+      <!-- FINAL RESULT -->
       {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
-      <hr class="my-6">
+        <hr class="my-6">
+        <form method="post" enctype="multipart/form-data">{% csrf_token %}
+          {% if not training.attendance_field_file %}
+            <div class="mb-4">
+              <label class="block mb-2 font-medium">Upload Attendance File</label>
+              <input type="file" name="attendance_field_file" class="border rounded w-full p-2" required>
+            </div>
+          {% else %}
+            <div class="bg-green-50 border border-green-200 p-3 rounded mb-4">
+              Attendance file uploaded:
+              <a href="{{ training.attendance_field_file.url }}" target="_blank" class="text-blue-600 underline">
+                {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+              </a>
+            </div>
+          {% endif %}
 
-      {% if not training.attendance_field_file %}
-      <div class="mb-4">
-        <label class="block mb-2 font-medium">Upload Attendance File</label>
-        <input type="file" name="attendance_field_file" class="border rounded w-full p-2" required>
-      </div>
-      {% else %}
-      <div class="bg-green-50 border border-green-200 p-3 rounded mb-4">
-        Attendance file uploaded:
-        <a href="{{ training.attendance_field_file.url }}" target="_blank" class="text-blue-600 underline">
-          {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
-        </a>
-      </div>
+          <div class="mb-4">
+            <label class="block mb-2 font-medium">Performance Appraisal</label>
+            <select name="performance_appraisal" class="border rounded w-full p-2" required>
+              <option value="">Select</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Good">Good</option>
+              <option value="Average">Average</option>
+              <option value="Poor">Poor</option>
+            </select>
+          </div>
+
+          <div class="mb-4">
+            <label class="block mb-2 font-medium">Remarks</label>
+            <textarea name="remarks" class="border rounded w-full p-2" rows="3"></textarea>
+          </div>
+
+          <div class="flex gap-3">
+            <button type="submit" name="action" value="submit_final" class="btn-blue">Forward for Approval</button>
+            <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Cancel</a>
+          </div>
+        </form>
       {% endif %}
 
-      <div class="mb-4">
-        <label class="block mb-2 font-medium">Performance Appraisal</label>
-        <select name="performance_appraisal" class="border rounded w-full p-2" required>
-          <option value="">Select</option>
-          <option value="Excellent">Excellent</option>
-          <option value="Good">Good</option>
-          <option value="Average">Average</option>
-          <option value="Poor">Poor</option>
-        </select>
-      </div>
-
-      <div class="mb-4">
-        <label class="block mb-2 font-medium">Remarks</label>
-        <textarea name="remarks" class="border rounded w-full p-2" rows="3"></textarea>
-      </div>
-
-      <div class="flex gap-3">
-        <button type="submit" name="action" value="submit_final" class="btn-blue">Forward for Approval</button>
-        <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Cancel</a>
-      </div>
-      {% endif %}
-      </form>
     </div>
   </div>
 </div>
@@ -111,7 +132,8 @@ table.dataTable tbody tr:hover{background:#f1f7ff;}
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
 $(document).ready(function(){
-  $('#attendanceTable').DataTable({pageLength:10, order:[]});
+  $('#attendanceTable').DataTable({ pageLength:10, order:[] });
 });
 </script>
+
 {% endblock %}
