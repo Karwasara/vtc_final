@@ -61,26 +61,33 @@
 Contractual Worker Training Dashboard
 </h2>
 
+<!-- 🔙 BACK BUTTON -->
+{% if level == "area" %}
+<a href="{% url 'cil:dashboard' %}" class="btn btn-secondary mb-3">
+    ← Back to Subsidiaries
+</a>
+{% endif %}
+
 <!-- TILES -->
 <div class="tiles-row">
 
 <div class="dashboard-tile card text-center tile-trained active-tile" data-type="trained">
     <div class="card-body">
-        <h2>{{ total_trained }}</h2>
+        <h2 id="trainedTotal"></h2>
         <p>Workers Trained</p>
     </div>
 </div>
 
 <div class="dashboard-tile card text-center tile-under-training" data-type="under_training">
     <div class="card-body">
-        <h2>{{ total_under_training }}</h2>
+        <h2 id="underTrainingTotal"></h2>
         <p>Workers Under Training</p>
     </div>
 </div>
 
-<div class="dashboard-tile card text-center tile-total-trainings" data-type="total_trainings">
+<div class="dashboard-tile card text-center tile-total-trainings" data-type="total">
     <div class="card-body">
-        <h2>{{ total_trainings }}</h2>
+        <h2 id="totalTrainingTotal"></h2>
         <p>Total Trainings Scheduled</p>
     </div>
 </div>
@@ -100,33 +107,49 @@ Contractual Worker Training Dashboard
 <script src="{% static 'chart.umd.js' %}"></script>
 
 <script>
-const areaLabels = JSON.parse('{{ area_labels|escapejs }}');
-const trainedCounts = JSON.parse('{{ trained_counts|escapejs }}');
-const underTrainingCounts = JSON.parse('{{ under_training_counts|escapejs }}');
-const totalTrainingsCounts = JSON.parse('{{ total_trainings_counts|escapejs }}');
+
+// 🔹 DATA FROM BACKEND
+const labels = JSON.parse('{{ labels|escapejs }}');
+const trainedCounts = JSON.parse('{{ trained|escapejs }}');
+const underTrainingCounts = JSON.parse('{{ under_training|escapejs }}');
+const totalCounts = JSON.parse('{{ total|escapejs }}');
+
+const level = "{{ level }}";
 
 let chart=null;
+
+function updateTiles(type){
+    const datasetsMap={
+        'trained':trainedCounts,
+        'under_training':underTrainingCounts,
+        'total':totalCounts
+    };
+
+    const dataArray=datasetsMap[type];
+
+    document.getElementById('trainedTotal').innerText =
+        trainedCounts.reduce((a,b)=>a+b,0);
+
+    document.getElementById('underTrainingTotal').innerText =
+        underTrainingCounts.reduce((a,b)=>a+b,0);
+
+    document.getElementById('totalTrainingTotal').innerText =
+        totalCounts.reduce((a,b)=>a+b,0);
+}
 
 function renderChart(type){
 
 const datasetsMap={
 'trained':trainedCounts,
 'under_training':underTrainingCounts,
-'total_trainings':totalTrainingsCounts
+'total':totalCounts
 };
 
 const colorsMap={
 'trained':'rgba(0,123,255,0.7)',
 'under_training':'rgba(40,167,69,0.7)',
-'total_trainings':'rgba(255,193,7,0.7)'
+'total':'rgba(255,193,7,0.7)'
 };
-
-const dataArray=[...datasetsMap[type]];
-const total=dataArray.reduce((a,b)=>a+b,0);
-dataArray.push(total);
-
-const labelsArray=[...areaLabels];
-labelsArray.push("Total");
 
 if(chart) chart.destroy();
 
@@ -135,9 +158,9 @@ const ctx=document.getElementById('areaChart').getContext('2d');
 chart=new Chart(ctx,{
 type:'bar',
 data:{
-labels:labelsArray,
+labels:labels,
 datasets:[{
-data:dataArray,
+data:datasetsMap[type],
 backgroundColor:colorsMap[type]
 }]
 },
@@ -147,8 +170,19 @@ plugins:{
 legend:{display:false},
 title:{
 display:true,
-text:type.replace('_',' ').toUpperCase()+" AREA WISE"
+text: (level === "subsidiary" ? "SUBSIDIARY WISE" : "AREA WISE")
 }
+},
+onClick: function(evt, elements){
+    if(elements.length > 0){
+        const index = elements[0].index;
+
+        // 🔥 Drill-down only from subsidiary level
+        if(level === "subsidiary"){
+            const selected = labels[index];
+            window.location.href = "?subsidiary=" + selected;
+        }
+    }
 },
 scales:{
 y:{
@@ -165,15 +199,19 @@ tile.classList.remove('active-tile');
 
 document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
 
+updateTiles(type);
 }
 
+// 🔥 INITIAL LOAD
 renderChart('trained');
 
+// 🔥 TILE CLICK
 document.querySelectorAll('.dashboard-tile').forEach(tile=>{
 tile.addEventListener('click',()=>{
 renderChart(tile.dataset.type);
 });
 });
+
 </script>
 
 {% endblock %}
