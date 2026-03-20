@@ -42,8 +42,7 @@ INSTALLED_APPS = [
     'aso',
     'mm',
     'mysite',
-    'sub',
-    'cil',
+    
 ]
 
 MIDDLEWARE = [
