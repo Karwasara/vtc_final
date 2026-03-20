@@ -16,12 +16,22 @@ def dashboard(request):
         subsidiaries = AreaMaster.objects.values_list('subsidiary', flat=True).distinct()
         data = []
 
+        labels = []  # this will contain subsidiary codes
+
         for sub in subsidiaries:
             # Get all areas for this subsidiary
             areas = AreaMaster.objects.filter(subsidiary=sub)
             area_names = list(areas.values_list('area_name', flat=True))
 
-            # Count schedules only if there are areas, else zero
+            # Get subsidiary code: pick first area's code (or define a proper field)
+            if areas.exists() and hasattr(areas.first(), 'subsidiary_code'):
+                code = areas.first().subsidiary_code
+            else:
+                code = sub  # fallback to name if code not present
+
+            labels.append(code)
+
+            # Count schedules
             if area_names:
                 schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
                 trained = schedules.filter(mm_status='approved').count()
@@ -41,7 +51,7 @@ def dashboard(request):
 
         context = {
             "level": "subsidiary",
-            "labels": json.dumps([d["name"] for d in data]),
+            "labels": json.dumps(labels),  # use codes on X-axis
             "trained": json.dumps([d["trained"] for d in data]),
             "under_training": json.dumps([d["under_training"] for d in data]),
             "total": json.dumps([d["total"] for d in data]),
@@ -58,8 +68,11 @@ def dashboard(request):
         schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
 
         data = []
+        labels = []  # area codes or names
+
         for area in areas:
             area_name = area.area_name
+            labels.append(area_name)  # for area view, can use name or code if available
 
             trained = schedules.filter(mm_status='approved', area_name=area_name).count()
             under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending'), area_name=area_name).count()
@@ -75,7 +88,7 @@ def dashboard(request):
         context = {
             "level": "area",
             "selected_subsidiary": selected_subsidiary,
-            "labels": json.dumps([d["name"] for d in data]),
+            "labels": json.dumps(labels),  # area names or codes
             "trained": json.dumps([d["trained"] for d in data]),
             "under_training": json.dumps([d["under_training"] for d in data]),
             "total": json.dumps([d["total"] for d in data]),
