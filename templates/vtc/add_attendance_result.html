@@ -48,7 +48,7 @@ table.dataTable tbody tr:hover{
 
 {% include 'common/message.html' %}
 
-<!-- ✅ UPDATED TABLE -->
+<!-- ================= TABLE ================= -->
 
 <table id="attendanceTable" class="display w-full text-sm">
 
@@ -65,32 +65,44 @@ table.dataTable tbody tr:hover{
 <tbody>
 
 {% for day in date_range %}
-<tr>
-
-<td>{{ day }}</td>
 
 {% if existing_attendance|get_item:day %}
 
-    {% with att=existing_attendance|get_item:day %}
-        <td>{{ att.in_time }}</td>
-        <td>{{ att.out_time }}</td>
-        <td>{{ att.present }}</td>
-        <td>
-            <span class="text-green-600 font-semibold">Saved</span>
-        </td>
-    {% endwith %}
+<tr>
+<td>{{ day }}</td>
+
+{% with att=existing_attendance|get_item:day %}
+    <td>{{ att.in_time }}</td>
+    <td>{{ att.out_time }}</td>
+    <td>{{ att.present }}</td>
+    <td>
+        <span class="text-green-600 font-semibold">Saved</span>
+    </td>
+{% endwith %}
+
+</tr>
 
 {% elif day > today %}
 
-    <td colspan="3" class="text-gray-400 text-center">Future</td>
-    <td>—</td>
+<tr>
+<td>{{ day }}</td>
+<td>—</td>
+<td>—</td>
+<td class="text-gray-400">Future</td>
+<td>—</td>
+</tr>
 
 {% else %}
 
 <form method="post">
 {% csrf_token %}
 
-<input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
+<tr>
+
+<td>
+    {{ day }}
+    <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
+</td>
 
 <td>
     <input type="time" name="in_time"
@@ -122,17 +134,18 @@ table.dataTable tbody tr:hover{
     </button>
 </td>
 
+</tr>
+
 </form>
 
 {% endif %}
 
-</tr>
 {% endfor %}
 
 </tbody>
 </table>
 
-<!-- ================= FINAL RESULT SECTION ================= -->
+<!-- ================= FINAL RESULT ================= -->
 
 {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
 
@@ -186,6 +199,8 @@ table.dataTable tbody tr:hover{
 </div>
 </div>
 </div>
+
+<!-- ================= JS ================= -->
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
