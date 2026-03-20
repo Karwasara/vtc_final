@@ -44,6 +44,10 @@ def login_view(request):
                     return redirect('mm:dashboard')
                 elif user.user_type == 'aso':
                     return redirect('aso:dashboard')
+                elif user.user_type == 'sub':
+                    return redirect('sub:dashboard')
+                elif user.user_type == 'cil':
+                    return redirect('cil:dashboard')
                 elif user.is_superuser:
                     return redirect('/admin/')
                 else:
