@@ -104,6 +104,11 @@ from datetime import datetime, date
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils.dateparse import parse_date
+from datetime import date
+
 def schedule_training(request, pk):
     worker = get_object_or_404(IndependentWorker, pk=pk)
 
