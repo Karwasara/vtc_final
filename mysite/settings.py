@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'aso',
     'mm',
     'mysite',
-  
     
 ]
 
