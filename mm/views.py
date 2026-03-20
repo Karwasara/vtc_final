@@ -35,7 +35,7 @@ def dashboard(request):
 
         # Count trainings per status
         trained_count = TrainingSchedule.objects.filter(mm_status='approved', area_name=area_name).count()
-        under_training_count = TrainingSchedule.objects.filter(mm_status='pending', area_name=area_name).count()
+        under_training_count = TrainingSchedule.objects.filter(mm_status='Pending', area_name=area_name).count()
         total_trainings_count = TrainingSchedule.objects.filter(area_name=area_name).count()
 
         area_data.append({
