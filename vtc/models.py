@@ -155,9 +155,8 @@ class TrainingAttendance(models.Model):
     training = models.ForeignKey(TrainingSchedule, on_delete=models.CASCADE, related_name='attendances')
     # ✅ NEW FIELDS
     # ✅ Set default time
-    in_time = models.TimeField(default=datetime.time(0, 0, 0))
-    out_time = models.TimeField(default=datetime.time(0, 0, 0))
-    
+    in_time = models.TimeField(null=True, blank=True) 
+    out_time = models.TimeField(null=True, blank=True)
     date = models.DateField()
     present = models.CharField(max_length=10, choices=STATUS_CHOICES)
     class Meta:
