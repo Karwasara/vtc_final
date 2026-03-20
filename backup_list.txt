@@ -1,0 +1,145 @@
+;
+; Archive created at 2026-03-13 12:21:38 UTC
+;     dbname: VTC
+;     TOC Entries: 134
+;     Compression: gzip
+;     Dump Version: 1.16-0
+;     Format: CUSTOM
+;     Integer: 4 bytes
+;     Offset: 8 bytes
+;     Dumped from database version: 17.5
+;     Dumped by pg_dump version: 17.5
+;
+;
+; Selected TOC Entries:
+;
+;228; 1259 58330 TABLE public accounts_areamaster vtc
+;227; 1259 58329 SEQUENCE public accounts_areamaster_id_seq vtc
+;230; 1259 58340 TABLE public accounts_customuser vtc
+;232; 1259 58350 TABLE public accounts_customuser_groups vtc
+;231; 1259 58349 SEQUENCE public accounts_customuser_groups_id_seq vtc
+229; 1259 58339 SEQUENCE public accounts_customuser_id_seq vtc
+234; 1259 58356 TABLE public accounts_customuser_user_permissions vtc
+233; 1259 58355 SEQUENCE public accounts_customuser_user_permissions_id_seq vtc
+224; 1259 58290 TABLE public auth_group vtc
+223; 1259 58289 SEQUENCE public auth_group_id_seq vtc
+226; 1259 58298 TABLE public auth_group_permissions vtc
+225; 1259 58297 SEQUENCE public auth_group_permissions_id_seq vtc
+222; 1259 58284 TABLE public auth_permission vtc
+221; 1259 58283 SEQUENCE public auth_permission_id_seq vtc
+236; 1259 58399 TABLE public django_admin_log vtc
+235; 1259 58398 SEQUENCE public django_admin_log_id_seq vtc
+220; 1259 58276 TABLE public django_content_type vtc
+219; 1259 58275 SEQUENCE public django_content_type_id_seq vtc
+218; 1259 58268 TABLE public django_migrations vtc
+217; 1259 58267 SEQUENCE public django_migrations_id_seq vtc
+237; 1259 58419 TABLE public django_session vtc
+239; 1259 58429 TABLE public vtc_independentworker vtc
+238; 1259 58428 SEQUENCE public vtc_independentworker_id_seq vtc
+245; 1259 58467 TABLE public vtc_trainingattendance vtc
+244; 1259 58466 SEQUENCE public vtc_trainingattendance_id_seq vtc
+243; 1259 58457 TABLE public vtc_trainingresult vtc
+242; 1259 58456 SEQUENCE public vtc_trainingresult_id_seq vtc
+241; 1259 58449 TABLE public vtc_trainingschedule vtc
+240; 1259 58448 SEQUENCE public vtc_trainingschedule_id_seq vtc
+5068; 0 58330 TABLE DATA public accounts_areamaster vtc
+5070; 0 58340 TABLE DATA public accounts_customuser vtc
+5072; 0 58350 TABLE DATA public accounts_customuser_groups vtc
+5074; 0 58356 TABLE DATA public accounts_customuser_user_permissions vtc
+5064; 0 58290 TABLE DATA public auth_group vtc
+5066; 0 58298 TABLE DATA public auth_group_permissions vtc
+5062; 0 58284 TABLE DATA public auth_permission vtc
+5076; 0 58399 TABLE DATA public django_admin_log vtc
+5060; 0 58276 TABLE DATA public django_content_type vtc
+5058; 0 58268 TABLE DATA public django_migrations vtc
+5077; 0 58419 TABLE DATA public django_session vtc
+5079; 0 58429 TABLE DATA public vtc_independentworker vtc
+5085; 0 58467 TABLE DATA public vtc_trainingattendance vtc
+5083; 0 58457 TABLE DATA public vtc_trainingresult vtc
+5081; 0 58449 TABLE DATA public vtc_trainingschedule vtc
+5092; 0 0 SEQUENCE SET public accounts_areamaster_id_seq vtc
+5093; 0 0 SEQUENCE SET public accounts_customuser_groups_id_seq vtc
+5094; 0 0 SEQUENCE SET public accounts_customuser_id_seq vtc
+5095; 0 0 SEQUENCE SET public accounts_customuser_user_permissions_id_seq vtc
+5096; 0 0 SEQUENCE SET public auth_group_id_seq vtc
+5097; 0 0 SEQUENCE SET public auth_group_permissions_id_seq vtc
+5098; 0 0 SEQUENCE SET public auth_permission_id_seq vtc
+5099; 0 0 SEQUENCE SET public django_admin_log_id_seq vtc
+5100; 0 0 SEQUENCE SET public django_content_type_id_seq vtc
+5101; 0 0 SEQUENCE SET public django_migrations_id_seq vtc
+5102; 0 0 SEQUENCE SET public vtc_independentworker_id_seq vtc
+5103; 0 0 SEQUENCE SET public vtc_trainingattendance_id_seq vtc
+5104; 0 0 SEQUENCE SET public vtc_trainingresult_id_seq vtc
+5105; 0 0 SEQUENCE SET public vtc_trainingschedule_id_seq vtc
+4836; 2606 58336 CONSTRAINT public accounts_areamaster accounts_areamaster_area_code_key vtc
+4839; 2606 58338 CONSTRAINT public accounts_areamaster accounts_areamaster_area_name_key vtc
+4841; 2606 58334 CONSTRAINT public accounts_areamaster accounts_areamaster_pkey vtc
+4850; 2606 58371 CONSTRAINT public accounts_customuser_groups accounts_customuser_groups_customuser_id_group_id_c074bdcb_uniq vtc
+4853; 2606 58354 CONSTRAINT public accounts_customuser_groups accounts_customuser_groups_pkey vtc
+4844; 2606 58346 CONSTRAINT public accounts_customuser accounts_customuser_pkey vtc
+4855; 2606 58385 CONSTRAINT public accounts_customuser_user_permissions accounts_customuser_user_customuser_id_permission_9632a709_uniq vtc
+4859; 2606 58360 CONSTRAINT public accounts_customuser_user_permissions accounts_customuser_user_permissions_pkey vtc
+4847; 2606 58348 CONSTRAINT public accounts_customuser accounts_customuser_username_key vtc
+4825; 2606 58327 CONSTRAINT public auth_group auth_group_name_key vtc
+4830; 2606 58313 CONSTRAINT public auth_group_permissions auth_group_permissions_group_id_permission_id_0cd325b0_uniq vtc
+4833; 2606 58302 CONSTRAINT public auth_group_permissions auth_group_permissions_pkey vtc
+4827; 2606 58294 CONSTRAINT public auth_group auth_group_pkey vtc
+4820; 2606 58304 CONSTRAINT public auth_permission auth_permission_content_type_id_codename_01ab375a_uniq vtc
+4822; 2606 58288 CONSTRAINT public auth_permission auth_permission_pkey vtc
+4862; 2606 58406 CONSTRAINT public django_admin_log django_admin_log_pkey vtc
+4815; 2606 58282 CONSTRAINT public django_content_type django_content_type_app_label_model_76bd3d3b_uniq vtc
+4817; 2606 58280 CONSTRAINT public django_content_type django_content_type_pkey vtc
+4813; 2606 58274 CONSTRAINT public django_migrations django_migrations_pkey vtc
+4866; 2606 58425 CONSTRAINT public django_session django_session_pkey vtc
+4870; 2606 58437 CONSTRAINT public vtc_independentworker vtc_independentworker_aadhar_number_key vtc
+4872; 2606 58435 CONSTRAINT public vtc_independentworker vtc_independentworker_pkey vtc
+4889; 2606 58471 CONSTRAINT public vtc_trainingattendance vtc_trainingattendance_pkey vtc
+4892; 2606 58484 CONSTRAINT public vtc_trainingattendance vtc_trainingattendance_training_id_date_b0843dbb_uniq vtc
+4885; 2606 58463 CONSTRAINT public vtc_trainingresult vtc_trainingresult_pkey vtc
+4887; 2606 58465 CONSTRAINT public vtc_trainingresult vtc_trainingresult_training_id_key vtc
+4876; 2606 58504 CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_certificate_serial_number_key vtc
+4881; 2606 58453 CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_pkey vtc
+4834; 1259 58361 INDEX public accounts_areamaster_area_code_e16d9ce1_like vtc
+4837; 1259 58362 INDEX public accounts_areamaster_area_name_cf751883_like vtc
+4842; 1259 58369 INDEX public accounts_customuser_area_id_7b9462e6 vtc
+4848; 1259 58382 INDEX public accounts_customuser_groups_customuser_id_bc55088e vtc
+4851; 1259 58383 INDEX public accounts_customuser_groups_group_id_86ba5f9e vtc
+4856; 1259 58396 INDEX public accounts_customuser_user_permissions_customuser_id_0deaefae vtc
+4857; 1259 58397 INDEX public accounts_customuser_user_permissions_permission_id_aea3d0e5 vtc
+4845; 1259 58368 INDEX public accounts_customuser_username_722f3555_like vtc
+4823; 1259 58328 INDEX public auth_group_name_a6ea08ec_like vtc
+4828; 1259 58324 INDEX public auth_group_permissions_group_id_b120cbf9 vtc
+4831; 1259 58325 INDEX public auth_group_permissions_permission_id_84c5c92e vtc
+4818; 1259 58310 INDEX public auth_permission_content_type_id_2f476e4b vtc
+4860; 1259 58417 INDEX public django_admin_log_content_type_id_c4bce8eb vtc
+4863; 1259 58418 INDEX public django_admin_log_user_id_c564eba6 vtc
+4864; 1259 58427 INDEX public django_session_expire_date_a5c62663 vtc
+4867; 1259 58426 INDEX public django_session_session_key_c0390e0f_like vtc
+4868; 1259 58438 INDEX public vtc_independentworker_aadhar_number_8e894397_like vtc
+4873; 1259 58518 INDEX public vtc_independentworker_user_id_e9b39ac5 vtc
+4890; 1259 58490 INDEX public vtc_trainingattendance_training_id_d0147121 vtc
+4874; 1259 58552 INDEX public vtc_trainingschedule_aso_approved_by_id_eb1dcab6 vtc
+4877; 1259 58535 INDEX public vtc_trainingschedule_created_by_id_56e5cf38 vtc
+4878; 1259 58553 INDEX public vtc_trainingschedule_mm_approved_by_id_7da423f2 vtc
+4879; 1259 58536 INDEX public vtc_trainingschedule_modified_by_id_dbce2fea vtc
+4882; 1259 58554 INDEX public vtc_trainingschedule_vtc_approved_by_id_f9c548d8 vtc
+4883; 1259 58477 INDEX public vtc_trainingschedule_worker_id_1aa06f50 vtc
+4899; 2606 58386 FK CONSTRAINT public accounts_customuser_user_permissions accounts_customuser__customuser_id_0deaefae_fk_accounts_ vtc
+4897; 2606 58372 FK CONSTRAINT public accounts_customuser_groups accounts_customuser__customuser_id_bc55088e_fk_accounts_ vtc
+4900; 2606 58391 FK CONSTRAINT public accounts_customuser_user_permissions accounts_customuser__permission_id_aea3d0e5_fk_auth_perm vtc
+4896; 2606 58363 FK CONSTRAINT public accounts_customuser accounts_customuser_area_id_7b9462e6_fk_accounts_areamaster_id vtc
+4898; 2606 58377 FK CONSTRAINT public accounts_customuser_groups accounts_customuser_groups_group_id_86ba5f9e_fk_auth_group_id vtc
+4894; 2606 58319 FK CONSTRAINT public auth_group_permissions auth_group_permissio_permission_id_84c5c92e_fk_auth_perm vtc
+4895; 2606 58314 FK CONSTRAINT public auth_group_permissions auth_group_permissions_group_id_b120cbf9_fk_auth_group_id vtc
+4893; 2606 58305 FK CONSTRAINT public auth_permission auth_permission_content_type_id_2f476e4b_fk_django_co vtc
+4901; 2606 58407 FK CONSTRAINT public django_admin_log django_admin_log_content_type_id_c4bce8eb_fk_django_co vtc
+4902; 2606 58412 FK CONSTRAINT public django_admin_log django_admin_log_user_id_c564eba6_fk_accounts_customuser_id vtc
+4903; 2606 58519 FK CONSTRAINT public vtc_independentworker vtc_independentworke_created_by_id_dad84c03_fk_accounts_ vtc
+4911; 2606 58485 FK CONSTRAINT public vtc_trainingattendance vtc_trainingattendan_training_id_d0147121_fk_vtc_train vtc
+4910; 2606 58478 FK CONSTRAINT public vtc_trainingresult vtc_trainingresult_training_id_c1cf806e_fk_vtc_train vtc
+4904; 2606 58537 FK CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_aso_approved_by_id_eb1dcab6_fk_accounts_ vtc
+4905; 2606 58524 FK CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_created_by_id_56e5cf38_fk_accounts_ vtc
+4906; 2606 58542 FK CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_mm_approved_by_id_7da423f2_fk_accounts_ vtc
+4907; 2606 58530 FK CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_modified_by_id_dbce2fea_fk_accounts_ vtc
+4908; 2606 58547 FK CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_vtc_approved_by_id_f9c548d8_fk_accounts_ vtc
+4909; 2606 58472 FK CONSTRAINT public vtc_trainingschedule vtc_trainingschedule_worker_id_1aa06f50_fk_vtc_indep vtc
