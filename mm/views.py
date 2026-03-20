@@ -1,36 +1,31 @@
-from django.shortcuts import render
-
-# Create your views here.
-from django.shortcuts import get_object_or_404, redirect, render
-
-from vtc.models import TrainingSchedule
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-
-# Create your views here.
 from django.utils import timezone
-from django.db.models import Count, Q
-
-from django.shortcuts import render
-from django.db.models import Q
-from vtc.models import TrainingSchedule
-from accounts.models import AreaMaster
-from django.shortcuts import render
-from django.db.models import Q
-from vtc.models import TrainingSchedule
-from accounts.models import AreaMaster
-import json
 from django.db.models import Q, Count
+from django.http import HttpResponse
 
+from vtc.models import TrainingSchedule, IndependentWorker
+from accounts.models import AreaMaster
+
+import json
+import os
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.platypus import Paragraph, Frame
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import enums
+import random
+
+
+# ---------------- Dashboard ----------------
 def dashboard(request):
-    # Assuming user is linked to an area (e.g., request.user.area_name)
-    # User-specific area filter
     user_area_name = getattr(request.user, 'area_name', None)
 
     # Filter areas based on the current user
     if user_area_name:
         areas = AreaMaster.objects.filter(area_name=user_area_name).order_by('area_name')
     else:
-        # fallback: show all areas if user has no specific area
         areas = AreaMaster.objects.all().order_by('area_name')
 
     area_data = []
@@ -39,16 +34,18 @@ def dashboard(request):
         area_name = area.area_name
 
         # Count trainings per status
-        trained_count = TrainingSchedule.objects.filter(
-            mm_status='approved',
-            area_name=area_name
+        trained_count = TrainingSchedule.objects.filter(mm_status='approved', area_name=area_name).count()
+        under_training_count = TrainingSchedule.objects.filter(mm_status='pending', area_name=area_name).count()
+        total_trainings_count = TrainingSchedule.objects.filter(area_name=area_name).count()
+
+        area_data.append({
+            "name": area_name,
             "trained": trained_count,
             "under_training": under_training_count,
             "total_trainings": total_trainings_count,
             "total_workers": 0,  # Optional if you have IndependentWorker model
         })
 
-    # Sort by trained count descending
     # Sort descending by trained count
     area_data = sorted(area_data, key=lambda x: x['trained'], reverse=True)
 
@@ -71,38 +68,17 @@ def dashboard(request):
     return render(request, "mm/dashboard.html", context)
 
 
-# def hod_forwarded_workers_list(request):
-#     workers =WorkerID.objects.filter(hod_approval_status='approved',mm_approval_status='pending')
-#     return render(request, 'mm/forwarded_worker_list.html', {'workers': workers})
-
-# def mm_forwarded_workers_list(request):
-#     workers =WorkerID.objects.filter(hod_approval_status='approved',mm_approval_status='approved')
-#     return render(request, 'mm/mm_forwarded_worker_list.html', {'workers': workers})
-
-# from django.shortcuts import redirect, get_object_or_404
-# from django.contrib import messages
-# from vtc.models import IndependentWorker
-
-# def forward_to_vtc(request, pk):
-#     worker = get_object_or_404(WorkerID, pk=pk)
-#     # Update status or logic to forward to VTC
-#     worker.mm_approval_status = 'approved'
-#     worker.save()
-#     messages.success(request, f'{worker.name} has been forwarded to VTC.')
-#     return redirect('mm:forwarded_workers')
-
-
-
-
-
+# ---------------- ASO Forwarded Training ----------------
 def aso_forwarded_training_list(request):
     user_areas = request.user.areas.all()
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
-        area_name__in=[a.area_name for a in request.user.areas.all()]
-        )
+        area_name__in=[a.area_name for a in user_areas]
+    )
     return render(request, 'mm/forwarded_training_list.html', {'trainings': trainings})
 
+
+# ---------------- Approved Worker Detail ----------------
 def approved_worker_detail(request, pk):
     training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
@@ -121,7 +97,6 @@ def approved_worker_detail(request, pk):
             training.aso_status = 'Pending'
             messages.success(request, f"Training for {training.worker.name} has been sent back to ASO for review.")
             training.save()
-            
         return redirect('mm:approved_worker_detail', pk=pk)
 
     return render(request, 'mm/approved_worker_detail.html', {
@@ -130,71 +105,29 @@ def approved_worker_detail(request, pk):
         'result': result
     })
 
-import random
-from django.http import HttpResponse
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from django.shortcuts import get_object_or_404
-from vtc.models import IndependentWorker
-from vtc.models import TrainingSchedule
 
+# ---------------- Generate Unique Serial Number ----------------
 def generate_unique_serial_number():
     last_number = TrainingSchedule.objects.filter(certificate_serial_number__isnull=False).order_by('-certificate_serial_number').first()
     if last_number:
         return last_number.certificate_serial_number + 1
     else:
         return 10000000  # Start from an 8-digit number
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from vtc.models import IndependentWorker
-from vtc.models import TrainingSchedule
-from reportlab.platypus import Paragraph, Frame
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib import enums
-import os
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from django.utils import timezone
 
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
-from reportlab.lib.utils import ImageReader
-from reportlab.platypus import Paragraph, Frame
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import enums
 
+# ---------------- Generate Form A PDF ----------------
 def generate_form_a_pdf(request, training_id):
-
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
 
-    # ---------- Area & Subsidiary ----------
     user_area = request.user.areas.first()
-
     area_code = user_area.area_code if user_area else "UNKNOWN"
     area_name = user_area.area_name if user_area else "Unknown"
+    subsidiary_name = user_area.subsidiary.subsidiary_name if user_area and user_area.subsidiary else "Unknown"
+    subsidiary_code = user_area.subsidiary.subsidiary_code if user_area and user_area.subsidiary else "NCL"
 
-    subsidiary_name = (
-        user_area.subsidiary.subsidiary_name
-        if user_area and user_area.subsidiary
-        else "Unknown"
-    )
-
-    subsidiary_code = (
-        user_area.subsidiary.subsidiary_code
-        if user_area and user_area.subsidiary
-        else "NCL"
-    )
-
-    # ---------- Serial Number ----------
     if not training.certificate_serial_number:
-
         new_serial = generate_unique_serial_number()
-
         training.certificate_serial_number = new_serial
         training.certificate_serial_number_final = f"VTC{area_code}{new_serial}"
         training.certificate_created_date = timezone.now()
@@ -202,15 +135,11 @@ def generate_form_a_pdf(request, training_id):
 
     serial_number = training.certificate_serial_number_final
 
-    # ---------- PDF Response ----------
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=VTC_certificate_{worker.name}.pdf'
 
     c = canvas.Canvas(response, pagesize=A4)
-
     width, height = A4
-
-    # ---------- Logo ----------
     logo_path = "E:/VTC training/mysite/static/ncl_logo.jpeg"
 
     if os.path.exists(logo_path):
@@ -220,61 +149,42 @@ def generate_form_a_pdf(request, training_id):
     y = height - 50
     line_gap = 16
 
-    # ---------- Header ----------
+    # Header
     c.setFont("Helvetica-Bold", 15)
     c.drawCentredString(width / 2, y, subsidiary_name)
-
     y -= 20
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, f"{area_name} MINE")
-
     y -= 25
-
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, "Certificate of Vocational Training")
-
     y -= 15
     c.line(50, y, width - 50, y)
-
     y -= 15
     c.setFont("Helvetica", 10)
     c.drawCentredString(width / 2, y, "Mines Vocation Training Rules, 1966")
-
     y -= 15
-
     form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
     c.drawCentredString(width / 2, y, form_type)
-
     y -= 15
     c.setFont("Helvetica-Bold", 10)
     c.drawCentredString(width / 2, y, "{Rule 28(1)}")
-
     y -= 15
     c.setFont("Helvetica", 10)
-
     description = (
         "Certificate of Training for employment in mine on surface and in opencast working"
         if training.type_of_training == "Basic"
         else "Certificate of Refresher Training / Training of special categories of workmen"
     )
-
     c.drawCentredString(width / 2, y, description)
-
     y -= 20
 
     date_only = training.certificate_created_date.strftime('%d/%m/%Y')
-
-    c.drawString(
-        50,
-        y,
-        f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}"
-    )
-
+    c.drawString(50, y, f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}")
     y -= 50
 
-    # ---------- Paragraph ----------
+    # Paragraph
     styles = getSampleStyleSheet()
-
     justified_style = ParagraphStyle(
         name='Justified',
         parent=styles['Normal'],
@@ -286,7 +196,6 @@ def generate_form_a_pdf(request, training_id):
 
     from_date = training.from_date.strftime("%d-%m-%Y")
     to_date = training.to_date.strftime("%d-%m-%Y")
-
     chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV / Chapter V"
 
     para_text = f"""
@@ -300,143 +209,91 @@ def generate_form_a_pdf(request, training_id):
     """
 
     paragraph = Paragraph(para_text, justified_style)
-
     frame = Frame(50, y - 80, width - 100, 120, showBoundary=0)
     frame.addFromList([paragraph], c)
-
     y -= line_gap * 4
 
-    # ---------- Training Info ----------
+    # Training info
     c.setFont("Helvetica", 10)
-
     c.drawString(50, y, "Type of Training: ")
     label_width = c.stringWidth("Type of Training :", "Helvetica", 10)
     c.drawString(50 + label_width + 5, y, f"{training.type_of_training} Training")
 
     y -= line_gap
-
     c.drawString(50, y, "Training For:")
     label_width = c.stringWidth("Training For:", "Helvetica", 10)
     c.drawString(50 + label_width + 5, y, f"{training.nature_of_training}")
-
     c.drawRightString(width - 50, y, "Signed...................................................")
 
     y -= line_gap
-
-    present_days = training.attendances.filter(
-        Q(present=True) | Q(present='Present') | Q(present='present')
-    ).count()
-
-    c.drawString(
-        50,
-        y,
-        f"Period of training: {from_date} to {to_date} (Days Present: {present_days})"
-    )
-
+    present_days = training.attendances.filter(Q(present=True) | Q(present='Present') | Q(present='present')).count()
+    c.drawString(50, y, f"Period of training: {from_date} to {to_date} (Days Present: {present_days})")
     y -= line_gap * 2
-
     c.drawRightString(width - 50, y, "Training Officer..........................................")
 
     right_x = width / 2 + 50
     right_y = y - 20
-
     c.drawString(right_x, right_y, f"Mine/Training Center: {area_name}")
-
     y -= line_gap
-
     right_y = y - 20
     c.drawString(right_x, right_y, "Registration No. of the Training Centre: .......")
 
-    # ---------- Photo ----------
+    # Photo
     photo_x = 50
     photo_y = y - 120
-
     if worker.photo and os.path.exists(worker.photo.path):
         c.drawImage(worker.photo.path, photo_x, photo_y, width=100, height=120)
     else:
         c.rect(photo_x, photo_y, 100, 120)
         c.drawString(photo_x + 20, photo_y + 60, "No Photo")
 
-    # ---------- Counter Signature ----------
+    # Counter Signature
     right_x = width / 2 + 50
     right_y = photo_y + 40
-
     c.drawString(right_x, right_y, "Counter Signature of")
     right_y -= line_gap
     c.drawString(right_x, right_y, "The Agent or Manager.............")
 
     y -= 200
-
-    # ---------- Footer ----------
+    # Footer
     c.line(50, y, width - 50, y)
-
     y -= line_gap
     c.drawString(50, y, "Personal Details of Trainee")
-
     y -= line_gap
 
     full_aadhar = worker.aadhar_number or ""
     masked_aadhar = "XXXX-XXXX-" + full_aadhar[-4:] if len(full_aadhar) >= 4 else "Invalid"
-
     c.drawString(50, y, f"* Aadhaar No. - {masked_aadhar}")
-
     y -= line_gap
 
     dob = worker.dob.strftime("%d-%m-%Y") if worker.dob else "Not Available"
     c.drawString(50, y, f"* Date of Birth - {dob}")
-
     y -= line_gap
 
     blood = worker.blood_group if worker.blood_group else "Not Available"
     c.drawString(50, y, f"* Blood Group - {blood}")
-
     y -= line_gap * 2
 
     c.setFont("Helvetica-BoldOblique", 10)
-
-    c.drawString(
-        50,
-        y,
-        f"* This certificate will have no claim for employment in {subsidiary_code}."
-    )
-
+    c.drawString(50, y, f"* This certificate will have no claim for employment in {subsidiary_code}.")
     y -= line_gap
 
-    validity_years = {
-        "Basic": "5",
-        "Refresher": "5"
-    }.get(training.type_of_training, "....")
-
-    c.drawString(
-        50,
-        y,
-        f"* This certificate is valid for {validity_years} years from date of issue of certificate."
-    )
+    validity_years = {"Basic": "5", "Refresher": "5"}.get(training.type_of_training, "....")
+    c.drawString(50, y, f"* This certificate is valid for {validity_years} years from date of issue of certificate.")
 
     c.showPage()
     c.save()
-
     return response
 
 
-
-
-
-
-
+# ---------------- Verify Certificate ----------------
 def verify_certificate(request, serial_number):
     training = get_object_or_404(TrainingSchedule, certificate_serial_number=serial_number)
     worker = training.worker
     return render(request, 'mm/verify.html', {'training': training, 'worker': worker})
 
 
-from django.shortcuts import render
-
-# Create your views here.
-
-from django.shortcuts import render, get_object_or_404
-from vtc.models import TrainingSchedule
-
+# ---------------- Certificate Verification ----------------
 def certificate_verification(request):
     serial_number = request.GET.get('serial_number')
     aadhar_number = request.GET.get('aadhar_number')
@@ -451,14 +308,11 @@ def certificate_verification(request):
                 training = TrainingSchedule.objects.select_related('worker').get(
                     certificate_serial_number_final=serial_number
                 )
-            
         except TrainingSchedule.DoesNotExist:
             training = None
 
     if training:
-        present_days = training.attendances.filter(
-            Q(present=True) | Q(present='Present') | Q(present='present')
-            ).count()
+        present_days = training.attendances.filter(Q(present=True) | Q(present='Present') | Q(present='present')).count()
 
     return render(request, 'mm/certificate_verification.html', {
         'training': training,
@@ -466,13 +320,8 @@ def certificate_verification(request):
         'searched': searched
     })
 
-from django.shortcuts import render, get_object_or_404
-from vtc.models import TrainingSchedule
 
-
-from django.shortcuts import render
-from vtc.models import TrainingSchedule
-from accounts.models import AreaMaster
+# ---------------- Certificate Detail ----------------
 def certificate_detail(request):
     serial_number = request.GET.get('serial_number')
     training = None
@@ -483,41 +332,25 @@ def certificate_detail(request):
         searched = True
         try:
             training = TrainingSchedule.objects.select_related('worker').get(certificate_serial_number_final=serial_number)
-            # Extract area code from 4th to 6th char (0-based index: 3 to 6 exclusive)
             area_code = serial_number[3:6]
-
-            # Lookup area name by area code
-            from accounts.models import AreaMaster  # replace with your actual app/model
             area = AreaMaster.objects.filter(area_code=area_code).first()
             if area:
                 area_name = area.area_name
-				
         except TrainingSchedule.DoesNotExist:
             training = None
 
-    # Prepare context if training is found
     if training:
         worker = training.worker
         from_date_str = training.from_date.strftime("%d-%m-%Y")
         to_date_str = training.to_date.strftime("%d-%m-%Y")
         present_days = training.attendances.filter(present="Present").count()
-        area_name = area_name
-        schedule_number = (
-            "First" if training.type_of_training == "Basic"
-            else "Fourth" if training.type_of_training == "Refresher"
-            else ""
-        )
+        schedule_number = "First" if training.type_of_training == "Basic" else "Fourth" if training.type_of_training == "Refresher" else ""
         chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV/Chapter V"
         form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
-        validity_years = {
-            "Basic": "5",
-            "Refresher": "3"
-        }.get(training.type_of_training, "....")
-
-        # Mask Aadhaar
+        validity_years = {"Basic": "5", "Refresher": "3"}.get(training.type_of_training, "....")
         full_adhar = worker.aadhar_number or ""
         masked_adhar = "XXXX-XXXX-" + full_adhar[-4:] if len(full_adhar) >= 4 else "Invalid"
-        
+
         context = {
             "training": training,
             "worker": worker,
@@ -527,7 +360,6 @@ def certificate_detail(request):
             "to_date": to_date_str,
             "present_days": present_days,
             "area_name": area_name,
-			
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
@@ -536,10 +368,6 @@ def certificate_detail(request):
             "searched": searched,
         }
     else:
-        context = {
-            "training": None,
-            "worker": None,
-            "searched": searched,
-        }
+        context = {"training": None, "worker": None, "searched": searched}
 
     return render(request, 'mm/certificate_detail.html', context)
