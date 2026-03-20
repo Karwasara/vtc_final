@@ -74,5 +74,5 @@ def dashboard(request):
 #        "total_workers": sum(a['total_workers'] for a in area_data),
     }
 
-    return render(request, "mm/dashboard.html", context)
+    return render(request, "sub/dashboard.html", context)
 
