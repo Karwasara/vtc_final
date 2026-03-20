@@ -8,21 +8,26 @@ import json
 def dashboard(request):
     user = request.user
 
-    # 🔹 Adjust this line based on your actual model
-    # Example: user.profile.subsidiary OR user.subsidiary
+    # 🔹 FIX THIS based on your user model
     user_subsidiary = user.subsidiary  
 
-    # 🔹 Superuser can see all data
+    # 🔹 Get only areas of this subsidiary
     if user.is_superuser:
         areas = AreaMaster.objects.all().order_by('area_name')
-        schedules = TrainingSchedule.objects.all()
     else:
         areas = AreaMaster.objects.filter(
             subsidiary=user_subsidiary
         ).order_by('area_name')
 
+    # 🔹 Extract area names list
+    area_names = list(areas.values_list('area_name', flat=True))
+
+    # 🔹 Filter schedules USING area_name (IMPORTANT FIX)
+    if user.is_superuser:
+        schedules = TrainingSchedule.objects.all()
+    else:
         schedules = TrainingSchedule.objects.filter(
-            subsidiary=user_subsidiary
+            area_name__in=area_names
         )
 
     area_data = []
@@ -52,7 +57,7 @@ def dashboard(request):
             "total_workers": 0,
         })
 
-    # 🔹 Sort by trained count
+    # 🔹 Sort
     area_data = sorted(area_data, key=lambda x: x['trained'], reverse=True)
 
     context = {
