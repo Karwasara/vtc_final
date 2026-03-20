@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'vtc',
     'aso',
     'mm',
-    'mysite'
+    'mysite',
+    'sub',
+    'cil'
 ]
 
 MIDDLEWARE = [
