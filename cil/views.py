@@ -1,9 +1,8 @@
 from django.shortcuts import render
-from django.db.models import Q, Count
+from django.db.models import Q
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
 import json
-
 
 def dashboard(request):
     selected_subsidiary = request.GET.get('subsidiary')
@@ -13,26 +12,25 @@ def dashboard(request):
     # =========================
     if not selected_subsidiary:
 
-        # Get all subsidiaries from AreaMaster
-        subsidiaries = AreaMaster.objects.values_list(
-            'subsidiary', flat=True
-        ).distinct()
-
+        # Get all distinct subsidiaries
+        subsidiaries = AreaMaster.objects.values_list('subsidiary', flat=True).distinct()
         data = []
 
         for sub in subsidiaries:
+            # Get all areas for this subsidiary
             areas = AreaMaster.objects.filter(subsidiary=sub)
-            area_names = areas.values_list('area_name', flat=True)
+            area_names = list(areas.values_list('area_name', flat=True))
 
-            schedules = TrainingSchedule.objects.filter(
-                area_name__in=area_names
-            )
-
-            trained = schedules.filter(mm_status='approved').count()
-            under_training = schedules.filter(
-                Q(mm_status__isnull=True) | Q(mm_status='Pending')
-            ).count()
-            total = schedules.count()
+            # Count schedules only if there are areas, else zero
+            if area_names:
+                schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
+                trained = schedules.filter(mm_status='approved').count()
+                under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending')).count()
+                total = schedules.count()
+            else:
+                trained = 0
+                under_training = 0
+                total = 0
 
             data.append({
                 "name": sub,
@@ -55,34 +53,17 @@ def dashboard(request):
     # 🟢 LEVEL 2: AREA VIEW
     # =========================
     else:
-        areas = AreaMaster.objects.filter(
-            subsidiary=selected_subsidiary
-        ).order_by('area_name')
-
-        area_names = areas.values_list('area_name', flat=True)
-
-        schedules = TrainingSchedule.objects.filter(
-            area_name__in=area_names
-        )
+        areas = AreaMaster.objects.filter(subsidiary=selected_subsidiary).order_by('area_name')
+        area_names = list(areas.values_list('area_name', flat=True))
+        schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
 
         data = []
-
         for area in areas:
             area_name = area.area_name
 
-            trained = schedules.filter(
-                mm_status='approved',
-                area_name=area_name
-            ).count()
-
-            under_training = schedules.filter(
-                Q(mm_status__isnull=True) | Q(mm_status='Pending'),
-                area_name=area_name
-            ).count()
-
-            total = schedules.filter(
-                area_name=area_name
-            ).count()
+            trained = schedules.filter(mm_status='approved', area_name=area_name).count()
+            under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending'), area_name=area_name).count()
+            total = schedules.filter(area_name=area_name).count()
 
             data.append({
                 "name": area_name,
