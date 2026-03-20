@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'mm',
     'mysite',
     'sub',
-    'cil'
+    'cil',
 ]
 
 MIDDLEWARE = [
