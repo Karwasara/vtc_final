@@ -1,75 +1,103 @@
 from django.shortcuts import render
-from django.db.models import Q
+from django.db.models import Q, Count
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
 import json
 
 
 def dashboard(request):
-    user = request.user
+    selected_subsidiary = request.GET.get('subsidiary')
 
-    # 🔹 FIX THIS based on your user model
-    user_subsidiary = user.subsidiary  
+    # =========================
+    # 🔵 LEVEL 1: SUBSIDIARY VIEW
+    # =========================
+    if not selected_subsidiary:
 
-    # 🔹 Get only areas of this subsidiary
-    if user.is_superuser:
-        areas = AreaMaster.objects.all().order_by('area_name')
+        # Get all subsidiaries from AreaMaster
+        subsidiaries = AreaMaster.objects.values_list(
+            'subsidiary', flat=True
+        ).distinct()
+
+        data = []
+
+        for sub in subsidiaries:
+            areas = AreaMaster.objects.filter(subsidiary=sub)
+            area_names = areas.values_list('area_name', flat=True)
+
+            schedules = TrainingSchedule.objects.filter(
+                area_name__in=area_names
+            )
+
+            trained = schedules.filter(mm_status='approved').count()
+            under_training = schedules.filter(
+                Q(mm_status__isnull=True) | Q(mm_status='Pending')
+            ).count()
+            total = schedules.count()
+
+            data.append({
+                "name": sub,
+                "trained": trained,
+                "under_training": under_training,
+                "total": total,
+            })
+
+        context = {
+            "level": "subsidiary",
+            "labels": json.dumps([d["name"] for d in data]),
+            "trained": json.dumps([d["trained"] for d in data]),
+            "under_training": json.dumps([d["under_training"] for d in data]),
+            "total": json.dumps([d["total"] for d in data]),
+        }
+
+        return render(request, "cil/dashboard.html", context)
+
+    # =========================
+    # 🟢 LEVEL 2: AREA VIEW
+    # =========================
     else:
         areas = AreaMaster.objects.filter(
-            subsidiary=user_subsidiary
+            subsidiary=selected_subsidiary
         ).order_by('area_name')
 
-    # 🔹 Extract area names list
-    area_names = list(areas.values_list('area_name', flat=True))
+        area_names = areas.values_list('area_name', flat=True)
 
-    # 🔹 Filter schedules USING area_name (IMPORTANT FIX)
-    if user.is_superuser:
-        schedules = TrainingSchedule.objects.all()
-    else:
         schedules = TrainingSchedule.objects.filter(
             area_name__in=area_names
         )
 
-    area_data = []
+        data = []
 
-    for area in areas:
-        area_name = area.area_name
+        for area in areas:
+            area_name = area.area_name
 
-        trained_count = schedules.filter(
-            mm_status='approved',
-            area_name=area_name
-        ).count()
+            trained = schedules.filter(
+                mm_status='approved',
+                area_name=area_name
+            ).count()
 
-        under_training_count = schedules.filter(
-            Q(mm_status__isnull=True) | Q(mm_status='Pending'),
-            area_name=area_name
-        ).count()
+            under_training = schedules.filter(
+                Q(mm_status__isnull=True) | Q(mm_status='Pending'),
+                area_name=area_name
+            ).count()
 
-        total_trainings_count = schedules.filter(
-            area_name=area_name
-        ).count()
+            total = schedules.filter(
+                area_name=area_name
+            ).count()
 
-        area_data.append({
-            "name": area_name,
-            "trained": trained_count,
-            "under_training": under_training_count,
-            "total_trainings": total_trainings_count,
-            "total_workers": 0,
-        })
+            data.append({
+                "name": area_name,
+                "trained": trained,
+                "under_training": under_training,
+                "total": total,
+            })
 
-    # 🔹 Sort
-    area_data = sorted(area_data, key=lambda x: x['trained'], reverse=True)
+        context = {
+            "level": "area",
+            "selected_subsidiary": selected_subsidiary,
+            "labels": json.dumps([d["name"] for d in data]),
+            "trained": json.dumps([d["trained"] for d in data]),
+            "under_training": json.dumps([d["under_training"] for d in data]),
+            "total": json.dumps([d["total"] for d in data]),
+        }
 
-    context = {
-        "area_data": area_data,
-        "area_labels": json.dumps([a["name"] for a in area_data]),
-        "trained_counts": json.dumps([a["trained"] for a in area_data]),
-        "under_training_counts": json.dumps([a["under_training"] for a in area_data]),
-        "total_trainings_counts": json.dumps([a["total_trainings"] for a in area_data]),
-
-        "total_trained": sum(a['trained'] for a in area_data),
-        "total_under_training": sum(a['under_training'] for a in area_data),
-        "total_trainings": sum(a['total_trainings'] for a in area_data),
-    }
-
-    return render(request, "cil/dashboard.html", context)
+        return render(request, "cil/dashboard.html", context)
