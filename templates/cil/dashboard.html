@@ -40,8 +40,21 @@
 }
 
 #areaChart{height:350px !important;}
+.summary-table{
+    margin-top:30px;
+    width:100%;
+    border-collapse:collapse;
+}
+.summary-table th, .summary-table td{
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:center;
+}
+.summary-table th{
+    background:#004B87;
+    color:white;
+}
 </style>
-
 
 <div class="container-fluid mt-4">
 
@@ -99,34 +112,50 @@ Contractual Worker Training Dashboard
     <canvas id="areaChart"></canvas>
 </div>
 
+<!-- ✅ SUMMARY TABLE BELOW CHART -->
+<div class="card p-4 mt-4">
+<h4 class="mb-3 text-center">{{ level|title }} Summary</h4>
+<table class="summary-table">
+    <thead>
+        <tr>
+            <th>{{ level|title }}</th>
+            <th>Trained</th>
+            <th>Under Training</th>
+            <th>Total Trainings</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for idx in labels|length|make_list %}
+        <tr>
+            <td>{{ labels|slice:forloop.counter0|first }}</td>
+            <td>{{ trained|slice:forloop.counter0|first }}</td>
+            <td>{{ under_training|slice:forloop.counter0|first }}</td>
+            <td>{{ total|slice:forloop.counter0|first }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+
 </div>
 </div>
 </div>
 </div>
 
+<!-- Chart.js + plugin for datalabels -->
 <script src="{% static 'chart.umd.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
 <script>
-
-// 🔹 DATA FROM BACKEND
 const labels = JSON.parse('{{ labels|escapejs }}');
 const trainedCounts = JSON.parse('{{ trained|escapejs }}');
 const underTrainingCounts = JSON.parse('{{ under_training|escapejs }}');
 const totalCounts = JSON.parse('{{ total|escapejs }}');
-
 const level = "{{ level }}";
 
 let chart=null;
 
-function updateTiles(type){
-    const datasetsMap={
-        'trained':trainedCounts,
-        'under_training':underTrainingCounts,
-        'total':totalCounts
-    };
-
-    const dataArray=datasetsMap[type];
-
+function updateTiles(){
     document.getElementById('trainedTotal').innerText =
         trainedCounts.reduce((a,b)=>a+b,0);
 
@@ -171,35 +200,33 @@ legend:{display:false},
 title:{
 display:true,
 text: (level === "subsidiary" ? "SUBSIDIARY WISE" : "AREA WISE")
+},
+datalabels: {
+    anchor: 'end',
+    align: 'end',
+    color: '#000',
+    font: {weight:'bold',size:12},
+    formatter: function(value){ return value; }
 }
 },
 onClick: function(evt, elements){
-    if(elements.length > 0){
+    if(elements.length > 0 && level === "subsidiary"){
         const index = elements[0].index;
-
-        // 🔥 Drill-down only from subsidiary level
-        if(level === "subsidiary"){
-            const selected = labels[index];
-            window.location.href = "?subsidiary=" + selected;
-        }
+        const selected = labels[index];
+        window.location.href = "?subsidiary=" + selected;
     }
 },
-scales:{
-y:{
-beginAtZero:true,
-ticks:{precision:0}
-}
-}
-}
+scales:{y:{beginAtZero:true,ticks:{precision:0}}}
+},
+plugins: [ChartDataLabels]
 });
 
 document.querySelectorAll('.dashboard-tile').forEach(tile=>{
-tile.classList.remove('active-tile');
+    tile.classList.remove('active-tile');
 });
-
 document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
 
-updateTiles(type);
+updateTiles();
 }
 
 // 🔥 INITIAL LOAD
@@ -207,11 +234,10 @@ renderChart('trained');
 
 // 🔥 TILE CLICK
 document.querySelectorAll('.dashboard-tile').forEach(tile=>{
-tile.addEventListener('click',()=>{
-renderChart(tile.dataset.type);
+    tile.addEventListener('click',()=>{
+        renderChart(tile.dataset.type);
+    });
 });
-});
-
 </script>
 
 {% endblock %}
