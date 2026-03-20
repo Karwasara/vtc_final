@@ -266,69 +266,59 @@ def add_training_attendance_and_result(request, pk):
         current += timedelta(days=1)
 
     # Existing attendance as dict keyed by date
-    existing_attendance = {
-        att.attendance_date: att for att in training.attendances.all()
-    }
-
+    existing_attendance = {att.attendance_date: att for att in training.attendances.all()}
     result = getattr(training, 'result', None)
 
     if request.method == 'POST':
         action = request.POST.get('action')
 
-        # ================= SAVE DAILY ATTENDANCE =================
         if action == 'save_attendance':
-            attendance_date_str = request.POST.get("attendance_date")
-            in_time_str = request.POST.get("in_time")
-            out_time_str = request.POST.get("out_time")
-            status = request.POST.get("status")
+            saved_count = 0
+            for day in date_range:
+                day_str = day.isoformat()
+                status = request.POST.get(f'status_{day_str}')
+                in_time_str = request.POST.get(f'in_time_{day_str}')
+                out_time_str = request.POST.get(f'out_time_{day_str}')
 
-            if not attendance_date_str or not status or not in_time_str or not out_time_str:
-                messages.error(request, "Please fill all fields for attendance.")
-                return redirect(request.path)
+                if not status or not in_time_str or not out_time_str:
+                    continue  # skip empty rows
 
-            # Convert date
-            try:
-                attendance_date = date.fromisoformat(attendance_date_str)
-            except ValueError:
-                messages.error(request, "Invalid date format.")
-                return redirect(request.path)
+                attendance_date = day
 
-            # Block future dates
-            if attendance_date > date.today():
-                messages.error(request, "Cannot mark attendance for future dates.")
-                return redirect(request.path)
+                # Block future dates
+                if attendance_date > date.today():
+                    continue
 
-            # Convert times
-            try:
-                in_time = time.fromisoformat(in_time_str)
-                out_time = time.fromisoformat(out_time_str)
-            except ValueError:
-                messages.error(request, "Invalid time format.")
-                return redirect(request.path)
+                try:
+                    in_time = time.fromisoformat(in_time_str)
+                    out_time = time.fromisoformat(out_time_str)
+                except ValueError:
+                    messages.error(request, f"Invalid time format for {attendance_date}.")
+                    continue
 
-            if status == 'Present' and out_time <= in_time:
-                messages.error(request, "Out time must be greater than In time.")
-                return redirect(request.path)
+                if status == 'Present' and out_time <= in_time:
+                    messages.error(request, f"Out time must be greater than In time for {attendance_date}.")
+                    continue
 
-            # Save or update attendance
-            attendance, created = TrainingAttendance.objects.update_or_create(
-                training=training,
-                attendance_date=attendance_date,
-                defaults={
-                    'in_time': in_time,
-                    'out_time': out_time,
-                    'present': status
-                }
-            )
+                # Save or update
+                TrainingAttendance.objects.update_or_create(
+                    training=training,
+                    attendance_date=attendance_date,
+                    defaults={
+                        'present': status,
+                        'in_time': in_time,
+                        'out_time': out_time
+                    }
+                )
+                saved_count += 1
 
-            messages.success(request, f"Attendance for {attendance_date} saved successfully.")
+            messages.success(request, f"{saved_count} days of attendance saved successfully.")
             return redirect(request.path)
 
-        # ================= FINAL RESULT SUBMISSION =================
         elif action == 'submit_final':
             # Ensure all past dates are marked
             past_dates = [d for d in date_range if d <= date.today()]
-            recorded_dates = training.attendances.values_list('attendance_date', flat=True)
+            recorded_dates = list(training.attendances.values_list('attendance_date', flat=True))
 
             if not set(past_dates).issubset(set(recorded_dates)):
                 messages.error(request, "Please mark attendance for all past dates before final submission.")
@@ -356,7 +346,7 @@ def add_training_attendance_and_result(request, pk):
                 }
             )
 
-            # Update training status
+            # Update status
             training.vtc_status = 'approved'
             training.vtc_approved_by = request.user
             training.vtc_approved_at = timezone.now()
@@ -366,14 +356,13 @@ def add_training_attendance_and_result(request, pk):
             messages.success(request, "Attendance and final result submitted successfully.")
             return redirect('vtc:scheduled_training_list')
 
-    context = {
+    return render(request, 'vtc/add_attendance_result.html', {
         'training': training,
         'date_range': date_range,
         'existing_attendance': existing_attendance,
         'result': result,
         'today': date.today(),
-    }
-    return render(request, 'vtc/add_attendance_result.html', context)
+    })
 
 
 
