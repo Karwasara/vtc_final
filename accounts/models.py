@@ -40,6 +40,8 @@ class CustomUser(AbstractUser):
         ('vtc', 'VTC'),
         ('aso', 'ASO'),
         ('mm', 'Mine Manager'),
+        ('sub', 'Subsidiary'),
+        ('cil', 'CIL'),
         ('admin', 'Admin'),
     ]
 
