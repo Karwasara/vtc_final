@@ -58,7 +58,6 @@
 </style>
 
 <div class="container-fluid mt-4">
-
 <div class="dashboard-wrapper">
 
 <!-- SIDEBAR -->
@@ -68,7 +67,6 @@
 
 <!-- CONTENT -->
 <div class="dashboard-content">
-
 <div class="dashboard-card">
 
 <h2 class="text-center mb-4 dashboard-title">
@@ -142,88 +140,86 @@ Contractual Worker Training Dashboard
 </div>
 </div>
 
+<!-- Chart.js + plugin for datalabels -->
 <script src="{% static 'chart.umd.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
 <script>
-const labels = JSON.parse('{{ labels|escapejs }}'); // these are subsidiary/area names
+const labels = JSON.parse('{{ labels|escapejs }}'); // subsidiary codes / area names
 const trainedCounts = JSON.parse('{{ trained|escapejs }}');
 const underTrainingCounts = JSON.parse('{{ under_training|escapejs }}');
 const totalCounts = JSON.parse('{{ total|escapejs }}');
 const level = "{{ level }}";
 
-let chart=null;
+let chart = null;
 
 function updateTiles(){
-    document.getElementById('trainedTotal').innerText =
-        trainedCounts.reduce((a,b)=>a+b,0);
-    document.getElementById('underTrainingTotal').innerText =
-        underTrainingCounts.reduce((a,b)=>a+b,0);
-    document.getElementById('totalTrainingTotal').innerText =
-        totalCounts.reduce((a,b)=>a+b,0);
+    document.getElementById('trainedTotal').innerText = trainedCounts.reduce((a,b)=>a+b,0);
+    document.getElementById('underTrainingTotal').innerText = underTrainingCounts.reduce((a,b)=>a+b,0);
+    document.getElementById('totalTrainingTotal').innerText = totalCounts.reduce((a,b)=>a+b,0);
 }
 
 function renderChart(type){
 
-const datasetsMap={
-'trained':trainedCounts,
-'under_training':underTrainingCounts,
-'total':totalCounts
-};
+    const datasetsMap = {
+        'trained': trainedCounts,
+        'under_training': underTrainingCounts,
+        'total': totalCounts
+    };
 
-const colorsMap={
-'trained':'rgba(0,123,255,0.7)',
-'under_training':'rgba(40,167,69,0.7)',
-'total':'rgba(255,193,7,0.7)'
-};
+    const colorsMap = {
+        'trained':'rgba(0,123,255,0.7)',
+        'under_training':'rgba(40,167,69,0.7)',
+        'total':'rgba(255,193,7,0.7)'
+    };
 
-if(chart) chart.destroy();
+    if(chart) chart.destroy();
 
-const ctx=document.getElementById('areaChart').getContext('2d');
+    const ctx = document.getElementById('areaChart').getContext('2d');
 
-chart=new Chart(ctx,{
-type:'bar',
-data:{
-labels: labels, // ✅ show subsidiary names instead of numbers
-datasets:[{
-data: datasetsMap[type],
-backgroundColor: colorsMap[type]
-}]
-},
-options:{
-responsive:true,
-plugins:{
-legend:{display:false},
-title:{
-display:true,
-text: (level === "subsidiary" ? "SUBSIDIARY WISE" : "AREA WISE")
-},
-datalabels: {
-    anchor: 'end',
-    align: 'end',
-    color: '#000',
-    font: {weight:'bold', size:12},
-    formatter: function(value){ return value; } // show count on bar
-}
-},
-onClick: function(evt, elements){
-    if(elements.length > 0 && level === "subsidiary"){
-        const index = elements[0].index;
-        const selected = labels[index];
-        window.location.href = "?subsidiary=" + selected;
-    }
-},
-scales:{y:{beginAtZero:true,ticks:{precision:0}}}
-},
-plugins: [ChartDataLabels]
-});
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels, // show subsidiary codes
+            datasets: [{
+                data: datasetsMap[type],
+                backgroundColor: colorsMap[type]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: (level === "subsidiary" ? "SUBSIDIARY WISE" : "AREA WISE")
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    color: '#000',
+                    font: { weight: 'bold', size: 12 },
+                    formatter: function(value){ return value; } // show count on top
+                }
+            },
+            onClick: function(evt, elements){
+                if(elements.length > 0 && level === "subsidiary"){
+                    const index = elements[0].index;
+                    const selected = labels[index];
+                    window.location.href = "?subsidiary=" + selected;
+                }
+            },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        },
+        plugins: [ChartDataLabels]
+    });
 
-document.querySelectorAll('.dashboard-tile').forEach(tile=>{
-    tile.classList.remove('active-tile');
-});
-document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
+    document.querySelectorAll('.dashboard-tile').forEach(tile=>{
+        tile.classList.remove('active-tile');
+    });
+    document.querySelector(`[data-type="${type}"]`).classList.add('active-tile');
 
-updateTiles();
+    updateTiles();
 }
 
 // INITIAL LOAD
@@ -231,7 +227,7 @@ renderChart('trained');
 
 // TILE CLICK
 document.querySelectorAll('.dashboard-tile').forEach(tile=>{
-    tile.addEventListener('click',()=>{ renderChart(tile.dataset.type); });
+    tile.addEventListener('click', ()=>{ renderChart(tile.dataset.type); });
 });
 </script>
 
