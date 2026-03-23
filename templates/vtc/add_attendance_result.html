@@ -3,14 +3,16 @@
 {% load custom_filters %}
 
 {% block content %}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
 <style>
-table.dataTable thead th { background:#004B87 !important; color:white; }
-table.dataTable tbody tr:hover { background:#f1f7ff; }
-.btn-blue { background:#2563eb; color:white; border:none; padding:6px 14px; border-radius:25px; font-size:13px; }
+table { width:100%; border-collapse: collapse; margin-bottom:20px; }
+table th, table td { border:1px solid #ccc; padding:8px; text-align:center; }
+table th { background:#004B87; color:white; }
+table tbody tr:hover { background:#f1f7ff; }
+input[type="time"] { width:100px; padding:4px; text-align:center; }
+select { padding:4px; }
+.btn-blue { background:#2563eb; color:white; border:none; padding:6px 14px; border-radius:25px; font-size:13px; cursor:pointer; }
 .btn-blue:hover { background:#1d4ed8; }
-.btn-grey { background:#64748b; color:white; padding:6px 14px; border-radius:25px; font-size:13px; }
+.btn-grey { background:#64748b; color:white; padding:6px 14px; border-radius:25px; font-size:13px; cursor:pointer; }
 </style>
 
 <div class="grid grid-cols-12 gap-6">
@@ -28,7 +30,7 @@ table.dataTable tbody tr:hover { background:#f1f7ff; }
       {% include 'common/message.html' %}
 
       <!-- ATTENDANCE TABLE -->
-      <table id="attendanceTable" class="display w-full text-sm">
+      <table>
         <thead>
           <tr>
             <th>Date</th>
@@ -65,8 +67,8 @@ table.dataTable tbody tr:hover { background:#f1f7ff; }
                     {{ day }}
                     <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
                   </td>
-                  <td><input type="time" name="in_time" class="border rounded px-2 py-1 text-sm" required></td>
-                  <td><input type="time" name="out_time" class="border rounded px-2 py-1 text-sm" required></td>
+                  <td><input type="time" name="in_time" value="00:00" class="border rounded px-2 py-1 text-sm" required></td>
+                  <td><input type="time" name="out_time" value="00:01" class="border rounded px-2 py-1 text-sm" required></td>
                   <td>
                     <select name="status" class="border rounded px-2 py-1 text-sm" required>
                       <option value="">Select</option>
@@ -127,13 +129,4 @@ table.dataTable tbody tr:hover { background:#f1f7ff; }
     </div>
   </div>
 </div>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script>
-$(document).ready(function(){
-  $('#attendanceTable').DataTable({ pageLength:10, order:[] });
-});
-</script>
-
 {% endblock %}
