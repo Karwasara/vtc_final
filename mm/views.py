@@ -20,7 +20,7 @@ import random
 
 # ---------------- Dashboard ----------------
 def dashboard(request):
-    user_area_name = getattr(request.user, 'area_name', None)
+    user_area_name = request.user.areas.first()
 
     # If user has no area assigned, show no data (or handle differently)
     if not user_area_name:
