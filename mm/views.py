@@ -22,32 +22,38 @@ import random
 def dashboard(request):
     user_area_name = getattr(request.user, 'area_name', None)
 
-    # Filter areas based on the current user
-    if user_area_name:
-        areas = AreaMaster.objects.filter(area_name=user_area_name).order_by('area_name')
+    # If user has no area assigned, show no data (or handle differently)
+    if not user_area_name:
+        areas = AreaMaster.objects.none()
     else:
-        areas = AreaMaster.objects.all().order_by('area_name')
+        areas = AreaMaster.objects.filter(area_name=user_area_name).order_by('area_name')
 
     area_data = []
 
     for area in areas:
         area_name = area.area_name
 
-        # Count trainings per status
-        trained_count = TrainingSchedule.objects.filter(mm_status='approved', area_name=area_name).count()
-        under_training_count = TrainingSchedule.objects.filter(mm_status='Pending', area_name=area_name).count()
-        total_trainings_count = TrainingSchedule.objects.filter(area_name=area_name).count()
+        trained_count = TrainingSchedule.objects.filter(
+            mm_status='approved',
+            area_name=area_name
+        ).count()
+
+        under_training_count = TrainingSchedule.objects.filter(
+            mm_status='Pending',
+            area_name=area_name
+        ).count()
+
+        total_trainings_count = TrainingSchedule.objects.filter(
+            area_name=area_name
+        ).count()
 
         area_data.append({
             "name": area_name,
             "trained": trained_count,
             "under_training": under_training_count,
             "total_trainings": total_trainings_count,
-            "total_workers": 0,  # Optional if you have IndependentWorker model
+            "total_workers": 0,
         })
-
-    # Sort descending by trained count
-    area_data = sorted(area_data, key=lambda x: x['trained'], reverse=True)
 
     context = {
         "area_data": area_data,
