@@ -153,7 +153,7 @@ def aso_forwarded_training_list(request):
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
         area_name__in=[a.area_name for a in user_areas]
-    )
+    ).order_by('-to_date')
     return render(request, 'mm/forwarded_training_list.html', {'trainings': trainings})
 
 
