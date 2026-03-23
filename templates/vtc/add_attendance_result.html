@@ -129,6 +129,7 @@ table.dataTable tbody tr:hover {
 
             <!-- Final Result -->
             <h4 class="mt-6 font-semibold">Final Result</h4>
+
             {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
                 <form method="post" enctype="multipart/form-data" class="mt-3">
                     {% csrf_token %}
@@ -146,12 +147,12 @@ table.dataTable tbody tr:hover {
                         </div>
                     {% endif %}
 
-                    <!-- Enhanced Performance Appraisal Dropdown -->
+                    <!-- Performance Appraisal Dropdown -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Performance Appraisal</label>
                         <select name="performance_appraisal"
                                 class="form-select border border-dark rounded shadow-sm px-3 py-2 fs-6"
-                                style="background-color:#f8f9fa; transition:0.3s;"
+                                style="background-color:#f8f9fa;"
                                 required>
                             <option value="">Select</option>
                             <option value="Excellent" class="text-success fw-bold">Excellent</option>
@@ -161,14 +162,13 @@ table.dataTable tbody tr:hover {
                         </select>
                     </div>
 
-                    <!-- Enhanced Remarks Box -->
+                    <!-- Remarks Box -->
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Remarks</label>
                         <textarea name="remarks"
                                   rows="4"
                                   class="form-control border border-dark rounded shadow-sm px-3 py-2"
-                                  placeholder="Enter remarks here..."
-                                  style="background-color:#fdfdfd; font-size:0.95rem; transition:0.3s;"></textarea>
+                                  placeholder="Enter remarks here..."></textarea>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -176,33 +176,38 @@ table.dataTable tbody tr:hover {
                         <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Back to List</a>
                     </div>
                 </form>
-            {% elif training.vtc_status == 'approved' %}
-                {% if training.attendance_field_file %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Attendance File:</label><br>
-                        <a href="{{ training.attendance_field_file.url }}" target="_blank">
-                            {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
-                        </a>
-                    </div>
+
+            {% else %}
+                <!-- Even if attendance or result is not fully saved, Back to List is always enabled -->
+                {% if training.vtc_status == 'approved' %}
+                    {% if training.attendance_field_file %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Attendance File:</label><br>
+                            <a href="{{ training.attendance_field_file.url }}" target="_blank">
+                                {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+                            </a>
+                        </div>
+                    {% endif %}
+                    {% if result %}
+                        <p><strong>Performance Appraisal:</strong> 
+                            <span class="badge rounded-pill 
+                                {% if result.performance_appraisal == 'Excellent' %}bg-success
+                                {% elif result.performance_appraisal == 'Good' %}bg-primary
+                                {% elif result.performance_appraisal == 'Average' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %} px-2 py-1">
+                                {{ result.performance_appraisal }}
+                            </span>
+                        </p>
+                        <p><strong>Remarks:</strong></p>
+                        <div class="border border-dark rounded shadow-sm px-3 py-2" style="background-color:#fdfdfd;">
+                            {{ result.remarks|default:"—" }}
+                        </div>
+                    {% endif %}
+                    <div class="alert alert-info mt-3">✅ Attendance and result are approved and locked for editing.</div>
                 {% endif %}
-                {% if result %}
-                    <p><strong>Performance Appraisal:</strong> 
-                        <span class="badge rounded-pill 
-                            {% if result.performance_appraisal == 'Excellent' %}bg-success
-                            {% elif result.performance_appraisal == 'Good' %}bg-primary
-                            {% elif result.performance_appraisal == 'Average' %}bg-warning text-dark
-                            {% else %}bg-danger{% endif %} px-2 py-1">
-                            {{ result.performance_appraisal }}
-                        </span>
-                    </p>
-                    <p><strong>Remarks:</strong></p>
-                    <div class="border border-dark rounded shadow-sm px-3 py-2" style="background-color:#fdfdfd;">
-                        {{ result.remarks|default:"—" }}
-                    </div>
-                {% endif %}
-                <div class="alert alert-info mt-3">✅ Attendance and result are approved and locked for editing.</div>
-                <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Back to List</a>
+                <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey mt-3">Back to List</a>
             {% endif %}
+
         </div>
 
     </div>
