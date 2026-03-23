@@ -173,7 +173,7 @@ table.dataTable tbody tr:hover {
 
                     <div class="d-flex gap-2">
                         <button type="submit" name="action" value="submit_final" class="btn-blue">✅ Forward for Approval</button>
-                        <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Cancel</a>
+                        <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Back to List</a>
                     </div>
                 </form>
             {% elif training.vtc_status == 'approved' %}
