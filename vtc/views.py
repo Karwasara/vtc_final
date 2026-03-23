@@ -26,17 +26,21 @@ def worker_list(request):
 def add_worker(request):
     if request.method == 'POST':
         form = IndependentWorkerForm(request.POST, request.FILES)
+
         if form.is_valid():
-            # form.save()
-            worker = form.save(commit=False)   # don't save yet
-            worker.created_by = request.user   # ✅ assign logged-in user
+            worker = form.save(commit=False)
+            worker.created_by = request.user
             worker.save()
+
             messages.success(request, "Worker added successfully.")
             return redirect('vtc:worker_list')
-		else:
+
+        else:
+            # ✅ Show all field errors properly
             for field, errors in form.errors.items():
-                        for error in errors:
-                            messages.error(request, error)
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+
     else:
         form = IndependentWorkerForm()
 
