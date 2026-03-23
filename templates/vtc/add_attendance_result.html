@@ -1,202 +1,61 @@
-{% extends 'common/base.html' %}
-{% load static %}
-{% load custom_filters %}
+<!-- Final Result -->
+<h4 class="mt-6 font-semibold">Final Result</h4>
+{% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
+    <form method="post" enctype="multipart/form-data" class="mt-3">
+        {% csrf_token %}
+        
+        {% if not training.attendance_field_file %}
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Upload Attendance File</label>
+                <input type="file" name="attendance_field_file" class="form-control" required>
+            </div>
+        {% else %}
+            <div class="alert alert-success">
+                📎 Attendance file uploaded:
+                <a href="{{ training.attendance_field_file.url }}" target="_blank">
+                    {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+                </a>
+            </div>
+        {% endif %}
 
-{% block content %}
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-
-<style>
-body {
-    background:#f7fafd;
-    font-family:"Segoe UI",sans-serif;
-}
-
-/* DataTable Header */
-table.dataTable thead th {
-    background:#004B87 !important;
-    color:white;
-}
-
-/* Hover */
-table.dataTable tbody tr:hover {
-    background:#f1f7ff;
-}
-
-/* Buttons */
-.btn-blue {
-    background:#2563eb;
-    color:white;
-    border:none;
-    padding:6px 14px;
-    border-radius:25px;
-    font-size:13px;
-}
-.btn-blue:hover { background:#1d4ed8; }
-
-.btn-red {
-    background:#dc3545;
-    color:white;
-    padding:6px 14px;
-    border-radius:25px;
-    font-size:13px;
-}
-
-.btn-grey {
-    background:#64748b;
-    color:white;
-    padding:6px 14px;
-    border-radius:25px;
-    font-size:13px;
-}
-</style>
-
-<div class="grid grid-cols-12 gap-6 mt-4">
-
-    <!-- Sidebar -->
-    <div class="col-span-12 md:col-span-3">
-        {% include 'vtc/sidebar.html' %}
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-span-12 md:col-span-9">
-
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-
-            <h2 class="text-xl font-semibold text-brand-blue mb-4">
-                Attendance & Final Result Entry for {{ training.worker.name }}
-            </h2>
-
-            {% include 'common/message.html' %}
-
-            <!-- Attendance Table -->
-            <h4 class="mb-3 font-semibold">Daily Attendance</h4>
-            <table id="attendanceTable" class="display w-full text-sm">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>In Time</th>
-                        <th>Out Time</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for day in date_range %}
-                        {% if existing_attendance|get_item:day %}
-                            {% with att=existing_attendance|get_item:day %}
-                            <tr>
-                                <td>{{ day }}</td>
-                                <td>{{ att.in_time }}</td>
-                                <td>{{ att.out_time }}</td>
-                                <td>{{ att.present }}</td>
-                                <td><span class="badge bg-success">✔ Saved</span></td>
-                            </tr>
-                            {% endwith %}
-                        {% elif day > today %}
-                            <tr>
-                                <td>{{ day }}</td>
-                                <td>—</td>
-                                <td>—</td>
-                                <td class="text-muted">Future</td>
-                                <td><span class="badge bg-secondary">⏳</span></td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <form method="post" class="d-flex gap-1 align-items-center">
-                                    {% csrf_token %}
-                                    <td>{{ day }}
-                                        <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
-                                    </td>
-                                    <td><input type="time" name="in_time" value="00:00" class="form-control form-control-sm" required></td>
-                                    <td><input type="time" name="out_time" value="00:01" class="form-control form-control-sm" required></td>
-                                    <td>
-                                        <select name="status" class="form-select form-select-sm" required>
-                                            <option value="">Select</option>
-                                            <option value="Present">Present</option>
-                                            <option value="Absent">Absent</option>
-                                            <option value="Holiday">Holiday</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button type="submit" name="action" value="save_attendance" class="btn-blue btn-sm">Save</button>
-                                    </td>
-                                </form>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-
-            <!-- Final Result -->
-            <h4 class="mt-6 font-semibold">Final Result</h4>
-            {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
-                <form method="post" enctype="multipart/form-data" class="mt-3">
-                    {% csrf_token %}
-                    {% if not training.attendance_field_file %}
-                        <div class="mb-3">
-                            <label class="form-label">Upload Attendance File</label>
-                            <input type="file" name="attendance_field_file" class="form-control" required>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-success">
-                            📎 Attendance file uploaded:
-                            <a href="{{ training.attendance_field_file.url }}" target="_blank">
-                                {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
-                            </a>
-                        </div>
-                    {% endif %}
-
-                    <div class="mb-3">
-                        <label class="form-label">Performance Appraisal</label>
-                        <select name="performance_appraisal" class="form-select" required>
-                            <option value="">Select</option>
-                            <option value="Excellent">Excellent</option>
-                            <option value="Good">Good</option>
-                            <option value="Average">Average</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Remarks</label>
-                        <textarea name="remarks" class="form-control" rows="3"></textarea>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button type="submit" name="action" value="submit_final" class="btn-blue">✅ Forward for Approval</button>
-                        <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Cancel</a>
-                    </div>
-                </form>
-            {% elif training.vtc_status == 'approved' %}
-                {% if training.attendance_field_file %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Attendance File:</label><br>
-                        <a href="{{ training.attendance_field_file.url }}" target="_blank">
-                            {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
-                        </a>
-                    </div>
-                {% endif %}
-                {% if result %}
-                    <p><strong>Performance Appraisal:</strong> {{ result.performance_appraisal }}</p>
-                    <p><strong>Remarks:</strong> {{ result.remarks|default:"—" }}</p>
-                {% endif %}
-                <div class="alert alert-info mt-3">✅ Attendance and result are approved and locked for editing.</div>
-                <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Back to List</a>
-            {% endif %}
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Performance Appraisal</label>
+            <select name="performance_appraisal" class="form-select form-select-lg border border-dark rounded shadow-sm px-3 py-2" required>
+                <option value="">Select</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Good">Good</option>
+                <option value="Average">Average</option>
+                <option value="Poor">Poor</option>
+            </select>
         </div>
 
-    </div>
-</div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Remarks</label>
+            <textarea name="remarks" rows="4"
+                      class="form-control border border-dark rounded shadow-sm px-3 py-2"
+                      placeholder="Enter remarks here..."></textarea>
+        </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script>
-$(document).ready(function(){
-    $('#attendanceTable').DataTable({
-        pageLength:100,
-        order:[]
-    });
-});
-</script>
-
-{% endblock %}
+        <div class="d-flex gap-2">
+            <button type="submit" name="action" value="submit_final" class="btn-blue">✅ Forward for Approval</button>
+            <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Cancel</a>
+        </div>
+    </form>
+{% elif training.vtc_status == 'approved' %}
+    {% if training.attendance_field_file %}
+        <div class="mb-3">
+            <label class="form-label fw-bold">Attendance File:</label><br>
+            <a href="{{ training.attendance_field_file.url }}" target="_blank">
+                {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+            </a>
+        </div>
+    {% endif %}
+    {% if result %}
+        <p><strong>Performance Appraisal:</strong> {{ result.performance_appraisal }}</p>
+        <p><strong>Remarks:</strong> 
+            <span class="border border-dark rounded px-2 py-1 d-block">{{ result.remarks|default:"—" }}</span>
+        </p>
+    {% endif %}
+    <div class="alert alert-info mt-3">✅ Attendance and result are approved and locked for editing.</div>
+    <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Back to List</a>
+{% endif %}
