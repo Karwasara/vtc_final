@@ -19,33 +19,46 @@ import random
 
 
 # ---------------- Dashboard ----------------
+from django.shortcuts import render
+import json
+
 def dashboard(request):
     user_area_name = getattr(request.user, 'area_name', None)
 
+    # If user has no area assigned, show no data
     if not user_area_name:
-        area_data = []
+        areas = AreaMaster.objects.none()
     else:
+        areas = AreaMaster.objects.filter(
+            area_name=user_area_name
+        ).order_by('area_name')
+
+    area_data = []
+
+    for area in areas:
+        area_name = area.area_name
+
         trained_count = TrainingSchedule.objects.filter(
             mm_status='approved',
-            area_name=user_area_name
+            area_name=area_name
         ).count()
 
         under_training_count = TrainingSchedule.objects.filter(
             mm_status='Pending',
-            area_name=user_area_name
+            area_name=area_name
         ).count()
 
         total_trainings_count = TrainingSchedule.objects.filter(
-            area_name=user_area_name
+            area_name=area_name
         ).count()
 
-        area_data = [{
-            "name": user_area_name,
+        area_data.append({
+            "name": area_name,
             "trained": trained_count,
             "under_training": under_training_count,
             "total_trainings": total_trainings_count,
             "total_workers": 0,
-        }]
+        })
 
     context = {
         "area_data": area_data,
@@ -53,9 +66,17 @@ def dashboard(request):
         "trained_counts": json.dumps([a["trained"] for a in area_data]),
         "under_training_counts": json.dumps([a["under_training"] for a in area_data]),
         "total_trainings_counts": json.dumps([a["total_trainings"] for a in area_data]),
+
+        # duplicate keys (can be cleaned later)
+        "labels": json.dumps([a["name"] for a in area_data]),
+        "trained": json.dumps([a["trained"] for a in area_data]),
+        "under_training": json.dumps([a["under_training"] for a in area_data]),
+        "total": json.dumps([a["total_trainings"] for a in area_data]),
+
         "total_trained": sum(a['trained'] for a in area_data),
         "total_under_training": sum(a['under_training'] for a in area_data),
         "total_trainings": sum(a['total_trainings'] for a in area_data),
+
         "level": "area",
     }
 
