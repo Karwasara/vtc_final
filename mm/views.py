@@ -22,7 +22,7 @@ import random
 from django.shortcuts import render
 import json
 
-def dashboard(request):
+def dashboard1(request):
     user_area_name = getattr(request.user, 'area_name', None)
 
     # Filter areas based on the current user
@@ -32,6 +32,67 @@ def dashboard(request):
         ).order_by('area_name')
     else:
         areas = AreaMaster.objects.all().order_by('area_name')
+
+    area_data = []
+
+    for area in areas:
+        area_name = area.area_name
+
+        # Count trainings per status
+        trained_count = TrainingSchedule.objects.filter(
+            mm_status='approved',
+            area_name=area_name
+        ).count()
+
+        under_training_count = TrainingSchedule.objects.filter(
+            mm_status='Pending',
+            area_name=area_name
+        ).count()
+
+        total_trainings_count = TrainingSchedule.objects.filter(
+            area_name=area_name
+        ).count()
+
+        area_data.append({
+            "name": area_name,
+            "trained": trained_count,
+            "under_training": under_training_count,
+            "total_trainings": total_trainings_count,
+            "total_workers": 0,  # Optional if you have IndependentWorker model
+        })
+
+    # Sort descending by trained count
+    area_data = sorted(
+        area_data,
+        key=lambda x: x['trained'],
+        reverse=True
+    )
+
+    context = {
+        "area_data": area_data,
+        "area_labels": json.dumps([a["name"] for a in area_data]),
+        "trained_counts": json.dumps([a["trained"] for a in area_data]),
+        "under_training_counts": json.dumps([a["under_training"] for a in area_data]),
+        "total_trainings_counts": json.dumps([a["total_trainings"] for a in area_data]),
+        "labels": json.dumps([a["name"] for a in area_data]),
+        "trained": json.dumps([a["trained"] for a in area_data]),
+        "under_training": json.dumps([a["under_training"] for a in area_data]),
+        "total": json.dumps([a["total_trainings"] for a in area_data]),
+        "total_trained": sum(a['trained'] for a in area_data),
+        "total_under_training": sum(a['under_training'] for a in area_data),
+        "total_trainings": sum(a['total_trainings'] for a in area_data),
+        "level": "area",
+    }
+
+    return render(request, "mm/dashboard.html", context)
+
+def dashboard(request):
+    # Get all areas assigned to the current user
+    if hasattr(request.user, 'areas'):
+        areas = request.user.areas.all().order_by('area_name')
+    else:
+        # If user has no areas, show nothing
+        areas = AreaMaster.objects.none()
 
     area_data = []
 
