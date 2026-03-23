@@ -105,8 +105,10 @@ const underTrainingCounts = JSON.parse('{{ under_training|escapejs }}');
 const totalCounts = JSON.parse('{{ total|escapejs }}');
 const level = "{{ level }}";
 
+    // Set default active tile from context if needed
+let activeType = "{{ active_type|default:'trained' }}";
 let chart = null;
-let activeType = 'trained';  // default active tile
+//let activeType = 'trained';  // default active tile
 
 function updateTiles(){
     document.getElementById('trainedTotal').innerText = trainedCounts.reduce((a,b)=>a+b,0);
