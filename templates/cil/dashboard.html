@@ -4,7 +4,6 @@
 {% block content %}
 
 <style>
-/* DASHBOARD STYLES */
 .dashboard-wrapper{display:flex;gap:25px;width:100%;}
 .dashboard-sidebar{width:25%;flex-shrink:0;}
 .dashboard-content{width:75%;}
@@ -26,10 +25,10 @@
 .back-btn-wrapper{text-align:center;margin-top:30px;}
 .back-btn{
     display:inline-block;
-    width:50px;
+    min-width:80px;
     height:50px;
-    border-radius:50%;
-    background:#6c757d;
+    border-radius:25px;
+    background:#007bff;  /* same as Trained tile */
     color:white;
     font-weight:bold;
     text-align:center;
@@ -37,7 +36,7 @@
     text-decoration:none;
     transition:0.3s;
 }
-.back-btn:hover{background:#5a6268;}
+.back-btn:hover{background:#0047ab;}
 </style>
 
 <div class="container-fluid mt-4">
@@ -105,10 +104,10 @@ const underTrainingCounts = JSON.parse('{{ under_training|escapejs }}');
 const totalCounts = JSON.parse('{{ total|escapejs }}');
 const level = "{{ level }}";
 
-    // Set default active tile from context if needed
+// Set default active tile from context if needed
 let activeType = "{{ active_type|default:'trained' }}";
+
 let chart = null;
-//let activeType = 'trained';  // default active tile
 
 function updateTiles(){
     document.getElementById('trainedTotal').innerText = trainedCounts.reduce((a,b)=>a+b,0);
