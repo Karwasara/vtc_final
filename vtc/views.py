@@ -33,6 +33,10 @@ def add_worker(request):
             worker.save()
             messages.success(request, "Worker added successfully.")
             return redirect('vtc:worker_list')
+		else:
+            for field, errors in form.errors.items():
+                        for error in errors:
+                            messages.error(request, error)
     else:
         form = IndependentWorkerForm()
 
