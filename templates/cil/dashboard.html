@@ -21,7 +21,23 @@
 .dashboard-tile:hover{transform:scale(1.06);}
 .dashboard-tile.active-tile{transform:scale(1.06);box-shadow:0 5px 15px rgba(0,0,0,0.3);}
 #areaChart{height:350px !important;}
+
+/* BACK BUTTON */
 .back-btn-wrapper{text-align:center;margin-top:30px;}
+.back-btn{
+    display:inline-block;
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#6c757d;
+    color:white;
+    font-weight:bold;
+    text-align:center;
+    line-height:50px;
+    text-decoration:none;
+    transition:0.3s;
+}
+.back-btn:hover{background:#5a6268;}
 </style>
 
 <div class="container-fluid mt-4">
@@ -70,9 +86,7 @@
           {% if level == "area" %}
           <!-- BACK BUTTON AT BOTTOM -->
           <div class="back-btn-wrapper">
-              <a href="{% url 'cil:dashboard' %}" class="btn btn-secondary">
-                  ← Back to Subsidiaries
-              </a>
+              <a href="{% url 'cil:dashboard' %}" class="back-btn" title="Back">Back</a>
           </div>
           {% endif %}
 
@@ -101,7 +115,7 @@ function updateTiles(){
 }
 
 function renderChart(type){
-    activeType = type;  // remember selected type
+    activeType = type;
     const datasetsMap = {
         'trained': trainedCounts,
         'under_training': underTrainingCounts,
