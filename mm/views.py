@@ -25,7 +25,7 @@ import json
 def dashboard(request):
     user_area_name = getattr(request.user, 'area_name', None)
 
-    # If user has no area assigned, show no data
+    # If user has no area assigned, show no data (or handle differently)
     if not user_area_name:
         areas = AreaMaster.objects.none()
     else:
@@ -66,22 +66,17 @@ def dashboard(request):
         "trained_counts": json.dumps([a["trained"] for a in area_data]),
         "under_training_counts": json.dumps([a["under_training"] for a in area_data]),
         "total_trainings_counts": json.dumps([a["total_trainings"] for a in area_data]),
-
-        # duplicate keys (can be cleaned later)
         "labels": json.dumps([a["name"] for a in area_data]),
         "trained": json.dumps([a["trained"] for a in area_data]),
         "under_training": json.dumps([a["under_training"] for a in area_data]),
         "total": json.dumps([a["total_trainings"] for a in area_data]),
-
         "total_trained": sum(a['trained'] for a in area_data),
         "total_under_training": sum(a['under_training'] for a in area_data),
         "total_trainings": sum(a['total_trainings'] for a in area_data),
-
         "level": "area",
     }
 
     return render(request, "mm/dashboard.html", context)
-
 
 # ---------------- ASO Forwarded Training ----------------
 def aso_forwarded_training_list(request):
