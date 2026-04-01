@@ -374,29 +374,84 @@ def verify_certificate(request, serial_number):
 
 
 # ---------------- Certificate Verification ----------------
+# def certificate_verification(request):
+#     serial_number = request.GET.get('serial_number')
+#     aadhar_number = request.GET.get('aadhar_number')
+#     training = None
+#     searched = False
+#     present_days = 0
+
+#     if serial_number or aadhar_number:
+#         searched = True
+#         try:
+#             if serial_number:
+#                 training = TrainingSchedule.objects.select_related('worker').get(
+#                     certificate_serial_number_final=serial_number
+#                 )
+#         except TrainingSchedule.DoesNotExist:
+#             training = None
+
+#     if training:
+#         present_days = training.attendances.filter(Q(present=True) | Q(present='Present') | Q(present='present')).count()
+
+#     return render(request, 'mm/certificate_verification.html', {
+#         'training': training,
+#         'present_days': present_days,
+#         'searched': searched
+#     })
+
+
+from django.shortcuts import render, redirect
+from django.db.models import Q
+from django.contrib import messages
+from django.urls import reverse   # ✅ IMPORTANT
+
 def certificate_verification(request):
     serial_number = request.GET.get('serial_number')
     aadhar_number = request.GET.get('aadhar_number')
+
     training = None
+    trainings = None
     searched = False
-    present_days = 0
 
     if serial_number or aadhar_number:
         searched = True
-        try:
-            if serial_number:
-                training = TrainingSchedule.objects.select_related('worker').get(
+
+        # ❌ Prevent both inputs
+        if serial_number and aadhar_number:
+            messages.error(request, "Use either Serial Number OR Aadhaar")
+            return render(request, 'mm/certificate_verification.html', {
+                'training': None,
+                'trainings': None,
+                'searched': False
+            })
+
+        # 🔥 SERIAL SEARCH → REDIRECT TO DETAIL PAGE
+        if serial_number:
+            try:
+                TrainingSchedule.objects.get(
                     certificate_serial_number_final=serial_number
                 )
-        except TrainingSchedule.DoesNotExist:
-            training = None
 
-    if training:
-        present_days = training.attendances.filter(Q(present=True) | Q(present='Present') | Q(present='present')).count()
+                # ✅ Redirect using reverse
+                url = reverse('mm:certificate_detail')
+                return redirect(f"{url}?serial_number={serial_number}")
+
+            except TrainingSchedule.DoesNotExist:
+                training = None
+
+        # ✅ AADHAAR SEARCH → FILTER ONLY VALID CERTIFICATES
+        elif aadhar_number:
+            trainings = TrainingSchedule.objects.select_related('worker').filter(
+                worker__aadhar_number=aadhar_number
+            ).filter(
+                Q(certificate_serial_number_final__isnull=False) &
+                ~Q(certificate_serial_number_final='')
+            )
 
     return render(request, 'mm/certificate_verification.html', {
         'training': training,
-        'present_days': present_days,
+        'trainings': trainings,
         'searched': searched
     })
 
