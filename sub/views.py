@@ -73,3 +73,113 @@ def dashboard(request):
     }
 
     return render(request, "sub/dashboard.html", context)
+from django.shortcuts import render, redirect
+from django.db.models import Q
+from django.contrib import messages
+from django.urls import reverse   # ✅ IMPORTANT
+
+def certificate_verification(request):
+    serial_number = request.GET.get('serial_number')
+    aadhar_number = request.GET.get('aadhar_number')
+
+    training = None
+    trainings = None
+    searched = False
+
+    if serial_number or aadhar_number:
+        searched = True
+
+        # ❌ Prevent both inputs
+        if serial_number and aadhar_number:
+            messages.error(request, "Use either Serial Number OR Aadhaar")
+            return render(request, 'sub/certificate_verification.html', {
+                'training': None,
+                'trainings': None,
+                'searched': False
+            })
+
+        # 🔥 SERIAL SEARCH → REDIRECT TO DETAIL PAGE
+        if serial_number:
+            try:
+                TrainingSchedule.objects.get(
+                    certificate_serial_number_final=serial_number
+                )
+
+                # ✅ Redirect using reverse
+                url = reverse('sub:certificate_detail')
+                return redirect(f"{url}?serial_number={serial_number}")
+
+            except TrainingSchedule.DoesNotExist:
+                training = None
+
+        # ✅ AADHAAR SEARCH → FILTER ONLY VALID CERTIFICATES
+        elif aadhar_number:
+            trainings = TrainingSchedule.objects.select_related('worker').filter(
+                worker__aadhar_number=aadhar_number
+            ).filter(
+                Q(certificate_serial_number_final__isnull=False) &
+                ~Q(certificate_serial_number_final='')
+            )
+
+    return render(request, 'sub/certificate_verification.html', {
+        'training': training,
+        'trainings': trainings,
+        'searched': searched
+    })
+
+# ---------------- Certificate Detail ----------------
+def certificate_detail(request):
+    serial_number = request.GET.get('serial_number')
+
+    training = None
+    searched = False
+    area_name = "Unknown"
+
+    if serial_number:
+        searched = True
+        try:
+            training = TrainingSchedule.objects.select_related('worker').get(
+                certificate_serial_number_final=serial_number
+            )
+
+            # 🔹 Extract Area Code
+            area_code = serial_number[3:6]
+            area = AreaMaster.objects.filter(area_code=area_code).first()
+
+            if area:
+                area_name = area.area_name
+
+        except TrainingSchedule.DoesNotExist:
+            training = None
+
+    if training:
+        worker = training.worker
+
+        present_days = training.attendances.filter(
+            Q(present=True) | Q(present="Present") | Q(present="present")
+        ).count()
+
+        context = {
+            "training": training,
+            "worker": worker,
+            "serial_number": training.certificate_serial_number_final,
+            "issue_date": training.certificate_created_date.strftime('%d/%m/%Y') if training.certificate_created_date else None,
+            "from_date": training.from_date.strftime("%d-%m-%Y"),
+            "to_date": training.to_date.strftime("%d-%m-%Y"),
+            "present_days": present_days,
+            "area_name": area_name,
+            "schedule_number": "First" if training.type_of_training == "Basic" else "Fourth",
+            "chapter": "Chapter III" if training.type_of_training == "Basic" else "Chapter IV/V",
+            "form_type": "FORM - A" if training.type_of_training == "Basic" else "FORM - B",
+            "validity_years": "5" if training.type_of_training == "Basic" else "3",
+            "masked_adhar": "XXXX-XXXX-" + worker.aadhar_number[-4:] if worker.aadhar_number else "",
+            "searched": searched,
+        }
+    else:
+        context = {
+            "training": None,
+            "worker": None,
+            "searched": searched
+        }
+
+    return render(request, 'sub/certificate_detail.html', context)
