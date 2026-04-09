@@ -121,7 +121,7 @@ body{
                                 <td>{{ t.to_date }}</td>
                                 <td>{{ t.certificate_serial_number_final }}</td>
                                 <td>
-                                    <a href="{% url 'sub:certificate_details' %}?serial_number={{ t.certificate_serial_number_final }}"
+                                    <a href="{% url 'sub:certificate_detail' %}?serial_number={{ t.certificate_serial_number_final }}"
                                        class="btn btn-success btn-sm">
                                         Verify
                                     </a>
