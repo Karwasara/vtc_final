@@ -1,0 +1,161 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+
+<!-- jQuery + DataTables -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<style>
+body{
+    background-color:#f7fafd;
+    font-family:"Segoe UI",sans-serif;
+}
+
+.verify-card{
+    background:white;
+    border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    padding:25px;
+}
+
+.page-title{
+    color:#004B87;
+    font-weight:600;
+}
+
+.btn-search{
+    background:#004B87;
+    color:white;
+    padding:8px 16px;
+    border-radius:6px;
+    border:none;
+}
+
+.btn-search:hover{
+    background:#003766;
+}
+
+.table-box{
+    background:#f9fafb;
+    padding:15px;
+    border-radius:8px;
+}
+</style>
+
+
+<div class="grid grid-cols-12 gap-6">
+
+    <!-- SIDEBAR -->
+    <div class="col-span-12 md:col-span-3">
+        {% include 'sub/sidebar.html' %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="col-span-12 md:col-span-9">
+
+        <div class="verify-card">
+
+            <h2 class="text-xl font-semibold page-title mb-6 text-center">
+                Certificate Verification
+            </h2>
+
+            <!-- 🔍 Search -->
+            <form method="get" class="mb-6">
+                <div class="flex gap-3">
+
+                    <input type="text" name="serial_number"
+                           placeholder="Certificate Serial Number"
+                           value="{{ request.GET.serial_number }}"
+                           class="border rounded px-3 py-2 w-full">
+
+                    <input type="text" name="aadhar_number"
+                           placeholder="Aadhaar Number"
+                           value="{{ request.GET.aadhar_number }}"
+                           class="border rounded px-3 py-2 w-full">
+
+                    <button type="submit" class="btn-search">
+                        Search
+                    </button>
+
+                </div>
+            </form>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="bg-red-100 border border-red-300 text-red-700 p-3 rounded mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- ✅ AADHAAR RESULT -->
+            {% if trainings %}
+                <div class="table-box mt-4">
+
+                    <h4 class="mb-3 font-semibold">Certificates Found</h4>
+
+                    <table id="certificateTable" class="display table table-bordered bg-white">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Training</th>
+                                <th>From</th>
+                                <th>To</th>
+                                <th>Certificate No</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for t in trainings %}
+                            <tr>
+                                <td>{{ t.worker.name }}</td>
+                                <td>{{ t.type_of_training }}</td>
+                                <td>{{ t.from_date }}</td>
+                                <td>{{ t.to_date }}</td>
+                                <td>{{ t.certificate_serial_number_final }}</td>
+                                <td>
+                                    <a href="{% url 'sub:certificate_details' %}?serial_number={{ t.certificate_serial_number_final }}"
+                                       class="btn btn-success btn-sm">
+                                        Verify
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                </div>
+            {% endif %}
+
+            <!-- ❌ NO RESULT -->
+            {% if searched and not trainings %}
+                <div class="bg-red-100 border border-red-300 text-red-700 p-4 rounded mt-4 text-center">
+                    No certificate found with valid certificate number.
+                </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- DataTable Init -->
+<script>
+$(document).ready(function () {
+    $('#certificateTable').DataTable({
+        "pageLength": 5,
+        "lengthMenu": [5, 10, 25, 50],
+        "ordering": true
+    });
+});
+</script>
+
+{% endblock %}
