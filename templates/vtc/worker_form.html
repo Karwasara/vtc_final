@@ -10,7 +10,6 @@ body{
 }
 
 /* Layout */
-
 .page-wrapper{
   display:flex;
   align-items:flex-start;
@@ -26,8 +25,7 @@ body{
   flex:1;
 }
 
-/* Main Card */
-
+/* Card */
 .form-card{
   background:#ffffff;
   border-radius:14px;
@@ -42,8 +40,7 @@ body{
   color:#0d6efd;
 }
 
-/* Form Fields */
-
+/* Fields */
 .form-card p{
   margin-bottom:14px;
 }
@@ -63,262 +60,151 @@ body{
   border:1px solid #ced4da;
 }
 
-.form-card input[disabled],
-.form-card select[disabled],
-.form-card textarea[disabled]{
-  background-color:#f1f3f5;
-}
-
-/* Scoped Links (ONLY inside this page content) */
-
-.form-card a,
-.certificate-card a{
-  color:#0d6efd;
-  text-decoration:underline;
-  font-weight:500;
-}
-
 /* Buttons */
-
 .btn-pill{
   border-radius:30px;
   padding:6px 18px;
-  font-weight:500;
 }
 
-.btn-save{
-  background:#0d6efd;
-  color:white;
-  border:none;
+.btn-save{background:#0d6efd;color:white;}
+.btn-cancel{background:#6c757d;color:white;}
+.btn-back{background:#17a2b8;color:white;}
+
+.preview-box{
+  margin-top:10px;
+  display:none;
 }
 
-.btn-cancel{
-  background:#6c757d;
-  color:white;
-  border:none;
-}
-
-.btn-back{
-  background:#17a2b8;
-  color:white;
-  border:none;
-}
-
-.btn-verify{
-  background:#198754;
-  color:white;
-  border:none;
-}
-
-/* Certificate Card */
-
-.certificate-card{
-  margin-top:35px;
-  border-radius:14px;
-  border:1px solid #e3e6ea;
-  box-shadow:0 4px 12px rgba(0,0,0,0.05);
-}
-
-.certificate-header{
-  background:linear-gradient(90deg,#0d6efd,#4dabf7);
-  color:white;
-  padding:14px 20px;
-  border-top-left-radius:14px;
-  border-top-right-radius:14px;
-  font-weight:600;
-}
-
-/* Table */
-
-.certificate-table{
+.preview-box iframe,
+.preview-box img{
   width:100%;
-  border-collapse:collapse;
-}
-
-.certificate-table th{
-  background:#e9f2ff;
-  padding:10px;
+  max-height:300px;
   border:1px solid #dee2e6;
-  text-align:center;
-}
-
-.certificate-table td{
-  padding:10px;
-  border:1px solid #dee2e6;
-  text-align:center;
-}
-
-.certificate-table tbody tr:hover{
-  background:#f5f9ff;
+  border-radius:8px;
 }
 
 </style>
 
-
 <div class="container-fluid mt-4">
-
 <div class="page-wrapper">
 
 <!-- Sidebar -->
-
 <div class="sidebar-wrapper">
 {% include 'vtc/sidebar.html' %}
 </div>
 
-
-<!-- Main Content -->
-
+<!-- Content -->
 <div class="content-wrapper">
+
 {% include 'common/message.html' %}
+
 <div class="form-card">
 
 <h3>
-{% if read_only %}
-Worker Details
-{% else %}
-Enter Worker Details
-{% endif %}
+{% if read_only %}Worker Details{% else %}Enter Worker Details{% endif %}
 </h3>
 
 <form method="post" enctype="multipart/form-data">
-
 {% csrf_token %}
 
 {% for field in form %}
-
 <p>
 
 {{ field.label_tag }}
 
-{% if field.field.widget.input_type == "file" and field.value %}
+{% if field.field.widget.input_type == "file" %}
 
-<a href="{{ field.value.url }}" target="_blank">
-View {{ field.label }}
-</a>
+<div class="d-flex align-items-center gap-2 flex-wrap">
+
+    {% if field.value %}
+
+        <!-- 🔵 AFTER SAVE (CLICKABLE LINK OPEN IN NEW TAB) -->
+        <a href="{{ field.value.url }}"
+           target="_blank"
+           class="text-primary fw-semibold"
+           style="text-decoration:underline;">
+            {{ field.value.name|cut:"media/" }}
+        </a>
+
+    {% else %}
+
+        <!-- 🟢 BEFORE SAVE -->
+        <input type="file"
+               id="{{ field.id_for_label }}"
+               name="{{ field.name }}"
+               accept="{% if field.name == 'aadhar_file' %}application/pdf{% else %}image/png,image/jpeg{% endif %}"
+               onchange="handleFile(this)">
+
+        <span id="file-name-{{ field.id_for_label }}" class="text-muted small">
+            No file selected
+        </span>
+
+    {% endif %}
+
+</div>
+
+<!-- INLINE PREVIEW (ONLY BEFORE SAVE) -->
+<div id="preview-{{ field.id_for_label }}" class="preview-box"></div>
 
 {% else %}
-
 {{ field }}
+{% endif %}
 
+{% if field.errors %}
+<div class="text-danger">{{ field.errors }}</div>
 {% endif %}
 
 </p>
-
 {% endfor %}
 
 {% if not read_only %}
-
-<button type="submit" class="btn btn-save btn-pill">
-Save
-</button>
-
-<a href="{% url 'vtc:worker_list' %}" class="btn btn-cancel btn-pill">
-Cancel
-</a>
-
+<button type="submit" class="btn btn-save btn-pill">Save</button>
+<a href="{% url 'vtc:worker_list' %}" class="btn btn-cancel btn-pill">Cancel</a>
 {% else %}
-
-<a href="{% url 'vtc:worker_list' %}" class="btn btn-back btn-pill">
-Back to List
-</a>
-
+<a href="{% url 'vtc:worker_list' %}" class="btn btn-back btn-pill">Back</a>
 {% endif %}
 
 </form>
 
 </div>
-
-
-<!-- Certificates Section -->
-
-{% if read_only %}
-
-<div class="certificate-card">
-
-<div class="certificate-header">
-Generated Certificates
+</div>
+</div>
 </div>
 
-<div class="card-body p-3">
+<!-- ✅ JS (ONLY PREVIEW BEFORE SAVE) -->
+<script>
+function handleFile(input) {
 
-{% if certificates %}
+    const file = input.files[0];
+    const previewBox = document.getElementById("preview-" + input.id);
+    const fileName = document.getElementById("file-name-" + input.id);
 
-<div class="table-responsive">
+    previewBox.innerHTML = "";
+    previewBox.style.display = "none";
 
-<table class="certificate-table">
+    if (!file) return;
 
-<thead>
-<tr>
-<th>Serial Number</th>
-<th>Training Type</th>
-<th>Training Period</th>
-<th>Issue Date</th>
-<th>Action</th>
-</tr>
-</thead>
+    fileName.innerText = file.name;
 
-<tbody>
+    const ext = file.name.split('.').pop().toLowerCase();
 
-{% for training in certificates %}
+    const reader = new FileReader();
 
-<tr>
+    reader.onload = function (e) {
 
-<td>
-<strong>{{ training.certificate_serial_number_final }}</strong>
-</td>
+        if (ext === "pdf") {
+            previewBox.innerHTML =
+                '<iframe src="' + e.target.result + '" height="300px"></iframe>';
+        } else {
+            previewBox.innerHTML =
+                '<img src="' + e.target.result + '">';
+        }
 
-<td>
-{{ training.type_of_training }}
-</td>
+        previewBox.style.display = "block";
+    };
 
-<td>
-{{ training.from_date|date:"d-m-Y" }} to
-{{ training.to_date|date:"d-m-Y" }}
-</td>
-
-<td>
-{{ training.certificate_created_date|date:"d-m-Y" }}
-</td>
-
-<td>
-
-<a href="{% url 'vtc:certificate_detail' %}?serial_number={{ training.certificate_serial_number_final }}"
-class="btn btn-verify btn-pill">
-
-Verify
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-{% else %}
-
-<div class="text-muted">
-No certificates generated for this worker.
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-{% endif %}
-
-</div>
-
-</div>
-
-</div>
+    reader.readAsDataURL(file);
+}
+</script>
 
 {% endblock %}
