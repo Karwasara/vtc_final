@@ -1,10 +1,18 @@
 from django import forms
 from .models import IndependentWorker
 
+from django.core.exceptions import ValidationError
+from .models import IndependentWorker
+from django import forms
+from django.core.exceptions import ValidationError
+from .models import IndependentWorker
+
+
 class IndependentWorkerForm(forms.ModelForm):
+
     class Meta:
         model = IndependentWorker
-        exclude = ['created_by','delete_flag','form_o','ID_Card_number','do_form']
+        exclude = ['created_by', 'delete_flag', 'form_o', 'ID_Card_number', 'do_form']
 
         widgets = {
             'dob': forms.DateInput(attrs={
@@ -13,23 +21,24 @@ class IndependentWorkerForm(forms.ModelForm):
             }),
             'aadhar_file': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
-                'accept': 'application/pdf'   # ✅ Browser shows PDF only
+                'accept': 'application/pdf'
             }),
         }
 
-    # ✅ Server-side validation (IMPORTANT)
     def clean_aadhar_file(self):
         file = self.cleaned_data.get('aadhar_file')
 
         if file:
-            if not file.name.endswith('.pdf'):
-                raise ValidationError("Only PDF files are allowed for Aadhar upload.")
+            if not file.name.lower().endswith('.pdf'):
+                raise ValidationError("Only PDF files are allowed.")
 
             if file.content_type != 'application/pdf':
-                raise ValidationError("File must be a valid PDF.")
+                raise ValidationError("Invalid PDF file.")
 
-        return file 
+            if file.size > 5 * 1024 * 1024:
+                raise ValidationError("File size should not exceed 5MB.")
 
+        return file
 
 from django import forms
 from .models import TrainingSchedule, TrainingResult, TrainingAttendance
