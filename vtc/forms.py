@@ -35,7 +35,7 @@ class IndependentWorkerForm(forms.ModelForm):
             if file.content_type != 'application/pdf':
                 raise ValidationError("Invalid PDF file.")
 
-            if file.size > 5 * 1024 * 1024:
+            if file.size > 1 * 1024 * 1024:
                 raise ValidationError("File size should not exceed 5MB.")
 
         return file
