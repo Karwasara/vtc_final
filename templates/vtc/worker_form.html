@@ -118,7 +118,7 @@ body{
 
     {% if field.value %}
 
-        <!-- 🔵 AFTER SAVE (CLICKABLE LINK OPEN IN NEW TAB) -->
+        <!-- ✅ AFTER SAVE -->
         <a href="{{ field.value.url }}"
            target="_blank"
            class="text-primary fw-semibold"
@@ -128,22 +128,20 @@ body{
 
     {% else %}
 
-        <!-- 🟢 BEFORE SAVE -->
+        <!-- ✅ BEFORE SAVE -->
         <input type="file"
                id="{{ field.id_for_label }}"
                name="{{ field.name }}"
                accept="{% if field.name == 'aadhar_file' %}application/pdf{% else %}image/png,image/jpeg{% endif %}"
-               onchange="handleFile(this)">
+               onchange="handleFile(this, '{{ field.name }}')">
 
-        <span id="file-name-{{ field.id_for_label }}" class="text-muted small">
-            No file selected
-        </span>
+        <span id="file-name-{{ field.id_for_label }}" class="text-muted small"></span>
 
     {% endif %}
 
 </div>
 
-<!-- INLINE PREVIEW (ONLY BEFORE SAVE) -->
+<!-- PREVIEW -->
 <div id="preview-{{ field.id_for_label }}" class="preview-box"></div>
 
 {% else %}
@@ -171,22 +169,51 @@ body{
 </div>
 </div>
 
-<!-- ✅ JS (ONLY PREVIEW BEFORE SAVE) -->
+<!-- ✅ JS -->
 <script>
-function handleFile(input) {
+function handleFile(input, fieldName) {
 
     const file = input.files[0];
     const previewBox = document.getElementById("preview-" + input.id);
     const fileName = document.getElementById("file-name-" + input.id);
 
+    // Reset everything
     previewBox.innerHTML = "";
     previewBox.style.display = "none";
+    fileName.innerText = "";
 
     if (!file) return;
 
-    fileName.innerText = file.name;
-
     const ext = file.name.split('.').pop().toLowerCase();
+    const sizeMB = file.size / (1024 * 1024);
+
+    // ✅ SIZE VALIDATION (5MB)
+    if (sizeMB > 1) {
+        alert("File size must be less than 1 MB");
+        input.value = "";
+        return;
+    }
+
+    // ✅ AADHAR VALIDATION (PDF ONLY)
+    if (fieldName.includes("aadhar")) {
+        if (ext !== "pdf") {
+            alert("Only PDF file allowed for Aadhar");
+            input.value = "";
+            return;
+        }
+    }
+
+    // ✅ PHOTO VALIDATION (JPG, JPEG, PNG)
+    if (fieldName.includes("photo")) {
+        if (!["jpg", "jpeg", "png"].includes(ext)) {
+            alert("Only JPG, JPEG or PNG allowed for Photo");
+            input.value = "";
+            return;
+        }
+    }
+
+    // ✅ SHOW FILE NAME (ONLY IF VALID)
+    fileName.innerText = file.name;
 
     const reader = new FileReader();
 
