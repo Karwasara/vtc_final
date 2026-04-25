@@ -400,9 +400,17 @@ def add_training_attendance_and_result(request, pk):
 from django.shortcuts import render
 from .models import TrainingSchedule
 
+from django.shortcuts import render
+from .models import TrainingSchedule
+
 def scheduled_training_list(request):
-    trainings = TrainingSchedule.objects.filter(created_by_id=request.user).order_by('-from_date')
-    return render(request, 'vtc/scheduled_training_list.html', {'trainings': trainings})
+    trainings = TrainingSchedule.objects.filter(
+        created_by=request.user
+    ).select_related('worker').order_by('-from_date', '-id')
+
+    return render(request, 'vtc/scheduled_training_list.html', {
+        'trainings': trainings
+    })
 
 
 from django.shortcuts import render, get_object_or_404
