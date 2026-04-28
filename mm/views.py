@@ -152,6 +152,8 @@ def dashboard(request):
 
 # ---------------- ASO Forwarded Training ----------------
 def aso_forwarded_training_list(request):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     user_areas = request.user.areas.all()
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
