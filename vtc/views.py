@@ -12,8 +12,8 @@ from .forms import IndependentWorkerForm  # ensure this form exists
 from django.db.models import Max
 
 def dashboard(request):
-	if not request.user.is_authenticated or request.user.user_type != 'vtc':
-        return redirect('accounts:login') 
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     return render(request, 'vtc/dashboard.html')
 
 #List View
