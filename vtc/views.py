@@ -16,6 +16,8 @@ def dashboard(request):
 
 #List View
 def to_schedule_training(request):
+	if not request.user.user_type == 'vtc':
+        return HttpResponseForbidden("Unauthorized")
     workers = IndependentWorker.objects.filter(delete_flag=False)
     return render(request, 'vtc/to_schedule_training.html', {'workers': workers})
 def worker_list(request):
