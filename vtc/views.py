@@ -10,6 +10,7 @@ from django.contrib import messages
 from .models import IndependentWorker
 from .forms import IndependentWorkerForm  # ensure this form exists
 from django.db.models import Max
+from django.contrib.auth.decorators import login_required
 
 def dashboard(request):
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
