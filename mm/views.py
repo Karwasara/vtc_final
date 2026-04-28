@@ -164,6 +164,8 @@ def aso_forwarded_training_list(request):
 
 # ---------------- Approved Worker Detail ----------------
 def approved_worker_detail(request, pk):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
@@ -192,6 +194,8 @@ def approved_worker_detail(request, pk):
 
 # ---------------- Generate Unique Serial Number ----------------
 def generate_unique_serial_number():
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     last_number = TrainingSchedule.objects.filter(certificate_serial_number__isnull=False).order_by('-certificate_serial_number').first()
     if last_number:
         return last_number.certificate_serial_number + 1
@@ -201,6 +205,8 @@ def generate_unique_serial_number():
 
 # ---------------- Generate Form A PDF ----------------
 def generate_form_a_pdf(request, training_id):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
 
@@ -372,6 +378,8 @@ def generate_form_a_pdf(request, training_id):
 
 # ---------------- Verify Certificate ----------------
 def verify_certificate(request, serial_number):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, certificate_serial_number=serial_number)
     worker = training.worker
     return render(request, 'mm/verify.html', {'training': training, 'worker': worker})
@@ -411,6 +419,8 @@ from django.contrib import messages
 from django.urls import reverse   # ✅ IMPORTANT
 
 def certificate_verification(request):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     aadhar_number = request.GET.get('aadhar_number')
 
@@ -462,6 +472,8 @@ def certificate_verification(request):
 
 # ---------------- Certificate Detail ----------------
 def certificate_detail(request):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
