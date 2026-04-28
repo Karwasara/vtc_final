@@ -19,14 +19,20 @@ def dashboard(request):
 
 #List View
 def to_schedule_training(request):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     workers = IndependentWorker.objects.filter(delete_flag=False)
     return render(request, 'vtc/to_schedule_training.html', {'workers': workers})
 def worker_list(request):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     workers = IndependentWorker.objects.filter(delete_flag=False).order_by('-id')
     return render(request, 'vtc/worker_list.html', {'workers': workers})
 
 #Add worker
 def add_worker(request):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     if request.method == 'POST':
         form = IndependentWorkerForm(request.POST, request.FILES)
 
@@ -51,6 +57,8 @@ def add_worker(request):
 
 
 def view_worker(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     worker = get_object_or_404(IndependentWorker, pk=pk)
     form = IndependentWorkerForm(instance=worker)
 
@@ -78,6 +86,8 @@ def view_worker(request, pk):
 
 # Edit worker
 def edit_worker(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     worker = get_object_or_404(IndependentWorker, pk=pk)
     if request.method == 'POST':
         form = IndependentWorkerForm(request.POST, request.FILES, instance=worker)
@@ -91,6 +101,8 @@ def edit_worker(request, pk):
 
 # Logical delete view
 def delete_worker(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     worker = get_object_or_404(IndependentWorker, pk=pk)
     if request.method == 'POST':
         worker.delete_flag = True
@@ -110,6 +122,8 @@ from .models import IndependentWorker   # adjust if needed
 
 
 def schedule_training(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     worker = get_object_or_404(IndependentWorker, pk=pk)
 
     # 🔹 Get user's mapped areas
@@ -196,6 +210,8 @@ from django.contrib import messages
 from .models import TrainingSchedule
 
 def edit_training(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     worker = training.worker
     today = date.today()
@@ -251,6 +267,8 @@ def edit_training(request, pk):
 
 
 def delete_training(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     worker_id = training.worker.id
     if request.method == 'POST':
@@ -279,6 +297,8 @@ from django.utils import timezone
 from .models import TrainingSchedule, TrainingAttendance, TrainingResult
 
 def add_training_attendance_and_result(request, pk):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
 
     # Generate date range from training
@@ -407,6 +427,8 @@ from django.shortcuts import render
 from .models import TrainingSchedule
 
 def scheduled_training_list(request):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     trainings = TrainingSchedule.objects.filter(created_by_id=request.user).order_by('-from_date')
     return render(request, 'vtc/scheduled_training_list.html', {'trainings': trainings})
 
@@ -419,6 +441,8 @@ from django.shortcuts import render
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster , SubsidiaryMaster
 def certificate_detail(request):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
