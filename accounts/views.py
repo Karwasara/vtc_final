@@ -14,6 +14,8 @@ from .forms import LoginForm
 
 
 def home(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
     return render(request, 'accounts/home.html') 
 
 def register_view(request):
