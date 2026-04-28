@@ -18,7 +18,8 @@ from reportlab.lib import enums
 import random
 from django.http import HttpResponseForbidden
 
-
+from django.shortcuts import redirect
+from django.http import HttpResponseForbidden
 # ---------------- Dashboard ----------------
 from django.shortcuts import render
 import json
