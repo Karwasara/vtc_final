@@ -88,6 +88,8 @@ def dashboard1(request):
     return render(request, "mm/dashboard.html", context)
 
 def dashboard(request):
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     # Get all areas assigned to the current user
     if hasattr(request.user, 'areas'):
         areas = request.user.areas.all().order_by('area_name')
