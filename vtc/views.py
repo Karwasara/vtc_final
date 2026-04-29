@@ -123,8 +123,11 @@ from datetime import date
 from vtc.models import TrainingSchedule
 from .models import IndependentWorker   # adjust if needed
 
-
+@login_required(login_url='accounts:login')
 def schedule_training(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     worker = get_object_or_404(IndependentWorker, pk=pk)
 
     # 🔹 Get user's mapped areas
