@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 from vtc.models import TrainingSchedule
-
+@login_required(login_url='accounts:login')
 # Create your views here.
 def dashboard(request):
     # ✅ AUTH + ROLE CHECK
