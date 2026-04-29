@@ -12,12 +12,14 @@ from .forms import IndependentWorkerForm  # ensure this form exists
 from django.db.models import Max
 from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='accounts:login')
 def dashboard(request):
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
         return redirect('accounts:login')
     return render(request, 'vtc/dashboard.html')
 
 #List View
+@login_required(login_url='accounts:login')
 def to_schedule_training(request):
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
         return redirect('accounts:login')
@@ -26,7 +28,7 @@ def to_schedule_training(request):
 	
 @login_required(login_url='accounts:login')
 def worker_list(request):
-    if request.user.user_type != 'vtc':
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
         return redirect('accounts:login')
     workers = IndependentWorker.objects.filter(delete_flag=False).order_by('-id')
     return render(request, 'vtc/worker_list.html', {'workers': workers})
