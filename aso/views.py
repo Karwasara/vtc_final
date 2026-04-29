@@ -8,6 +8,9 @@ from vtc.models import TrainingSchedule
 
 # Create your views here.
 def dashboard(request):
+    # ✅ AUTH + ROLE CHECK
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     return render(request, 'aso/dashboard.html')
 
 
