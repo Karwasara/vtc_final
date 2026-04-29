@@ -506,6 +506,9 @@ def certificate_verification(request):
 
 # ---------------- Certificate Detail ----------------
 def certificate_detail(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
