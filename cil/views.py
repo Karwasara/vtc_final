@@ -113,6 +113,9 @@ def dashboard1(request):
 
 
 def dashboard(request):
+    # 🔒 Access control
+    if not request.user.is_authenticated or request.user.user_type != 'cil':
+        return redirect('accounts:login')
     selected_sub_code = request.GET.get('subsidiary')  # e.g., 'NCL'
     active_type = request.GET.get('type', 'trained')   # selected tile: trained / under_training / total
     user_area_name = getattr(request.user, 'area_name', None)  # current user area
