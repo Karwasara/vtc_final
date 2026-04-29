@@ -90,12 +90,18 @@ def dashboard1(request):
 
 
 
+from django.shortcuts import render, redirect
+import json
+
 def dashboard(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
+
     # Get all areas assigned to the current user
     if hasattr(request.user, 'areas'):
         areas = request.user.areas.all().order_by('area_name')
     else:
-        # If user has no areas, show nothing
         areas = AreaMaster.objects.none()
 
     area_data = []
@@ -123,7 +129,7 @@ def dashboard(request):
             "trained": trained_count,
             "under_training": under_training_count,
             "total_trainings": total_trainings_count,
-            "total_workers": 0,  # Optional if you have IndependentWorker model
+            "total_workers": 0,
         })
 
     # Sort descending by trained count
@@ -151,37 +157,70 @@ def dashboard(request):
 
     return render(request, "mm/dashboard.html", context)
 
+
 # ---------------- ASO Forwarded Training ----------------
 
+from django.shortcuts import render, redirect
+
 def aso_forwarded_training_list(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
+
     user_areas = request.user.areas.all()
+
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
         area_name__in=[a.area_name for a in user_areas]
     ).order_by('-to_date')
-    return render(request, 'mm/forwarded_training_list.html', {'trainings': trainings})
+
+    return render(request, 'mm/forwarded_training_list.html', {
+        'trainings': trainings
+    })
 
 
 # ---------------- Approved Worker Detail ----------------
 
+from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
+from django.contrib import messages
+
 def approved_worker_detail(request, pk):
-    training = get_object_or_404(TrainingSchedule, pk=pk)
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
+
+    # ✅ Restrict to MM's areas (important)
+    training = get_object_or_404(
+        TrainingSchedule,
+        pk=pk,
+        area__in=request.user.areas.all()
+    )
+
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
 
     if request.method == 'POST':
         action = request.POST.get('action')
+
         if action == 'approve':
             training.mm_status = 'approved'
             training.mm_approved_by = request.user
             training.mm_approved_at = timezone.now()
             training.save()
+
             messages.success(request, 'Training approved successfully.')
+
         elif action == 'reject':
             training.mm_status = 'Pending'
             training.aso_status = 'Pending'
-            messages.success(request, f"Training for {training.worker.name} has been sent back to ASO for review.")
             training.save()
+
+            messages.warning(
+                request,
+                f"Training for {training.worker.name} has been sent back to ASO for review."
+            )
+
         return redirect('mm:approved_worker_detail', pk=pk)
 
     return render(request, 'mm/approved_worker_detail.html', {
@@ -189,7 +228,6 @@ def approved_worker_detail(request, pk):
         'attendances': attendances,
         'result': result
     })
-
 
 # ---------------- Generate Unique Serial Number ----------------
 def generate_unique_serial_number():
