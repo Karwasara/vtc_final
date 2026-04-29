@@ -5,6 +5,10 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
 from vtc.models import TrainingSchedule
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from django.shortcuts import render
+
 @login_required(login_url='accounts:login')
 # Create your views here.
 def dashboard(request):
