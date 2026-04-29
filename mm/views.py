@@ -186,17 +186,11 @@ from django.utils import timezone
 from django.contrib import messages
 
 def approved_worker_detail(request, pk):
-    # ✅ AUTH + ROLE CHECK (must be first)
+    # ✅ AUTH + ROLE CHECK
     if not request.user.is_authenticated or request.user.user_type != 'mm':
         return redirect('accounts:login')
 
-    # ✅ Restrict to MM's areas (important)
-    training = get_object_or_404(
-        TrainingSchedule,
-        pk=pk,
-        area__in=request.user.areas.all()
-    )
-
+    training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
 
@@ -208,18 +202,16 @@ def approved_worker_detail(request, pk):
             training.mm_approved_by = request.user
             training.mm_approved_at = timezone.now()
             training.save()
-
             messages.success(request, 'Training approved successfully.')
 
         elif action == 'reject':
             training.mm_status = 'Pending'
             training.aso_status = 'Pending'
-            training.save()
-
-            messages.warning(
+            messages.success(
                 request,
                 f"Training for {training.worker.name} has been sent back to ASO for review."
             )
+            training.save()
 
         return redirect('mm:approved_worker_detail', pk=pk)
 
@@ -228,6 +220,7 @@ def approved_worker_detail(request, pk):
         'attendances': attendances,
         'result': result
     })
+
 
 # ---------------- Generate Unique Serial Number ----------------
 def generate_unique_serial_number():
