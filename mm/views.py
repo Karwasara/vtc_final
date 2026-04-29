@@ -447,11 +447,14 @@ def verify_certificate(request, serial_number):
 
 
 from django.shortcuts import render, redirect
-from django.db.models import Q
+from django.urls import reverse
 from django.contrib import messages
-from django.urls import reverse   # ✅ IMPORTANT
-@login_required(login_url='accounts:login')
+from django.db.models import Q
+
 def certificate_verification(request):
+    # ✅ AUTH + ROLE CHECK (add this)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     aadhar_number = request.GET.get('aadhar_number')
 
