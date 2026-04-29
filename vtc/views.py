@@ -298,7 +298,7 @@ from django.contrib import messages
 from datetime import date, timedelta, time
 from django.utils import timezone
 from .models import TrainingSchedule, TrainingAttendance, TrainingResult
-
+@login_required(login_url='accounts:login')
 def add_training_attendance_and_result(request, pk):
     # ✅ AUTH + ROLE CHECK (must be first)
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
@@ -450,7 +450,11 @@ from vtc.models import TrainingSchedule
 from django.shortcuts import render
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster , SubsidiaryMaster
+@login_required(login_url='accounts:login')
 def certificate_detail(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
