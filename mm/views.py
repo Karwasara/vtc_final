@@ -88,7 +88,12 @@ def dashboard1(request):
 
     return render(request, "mm/dashboard.html", context)
 
+
+@login_required(login_url='accounts:login')
 def dashboard(request):
+    # ✅ AUTH + ROLE CHECK
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     # Get all areas assigned to the current user
     if hasattr(request.user, 'areas'):
         areas = request.user.areas.all().order_by('area_name')
@@ -150,7 +155,11 @@ def dashboard(request):
     return render(request, "mm/dashboard.html", context)
 
 # ---------------- ASO Forwarded Training ----------------
+@login_required(login_url='accounts:login')
 def aso_forwarded_training_list(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     user_areas = request.user.areas.all()
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
@@ -160,7 +169,11 @@ def aso_forwarded_training_list(request):
 
 
 # ---------------- Approved Worker Detail ----------------
+@login_required(login_url='accounts:login')
 def approved_worker_detail(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
@@ -197,7 +210,11 @@ def generate_unique_serial_number():
 
 
 # ---------------- Generate Form A PDF ----------------
+@login_required(login_url='accounts:login')
 def generate_form_a_pdf(request, training_id):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
 
@@ -368,7 +385,11 @@ def generate_form_a_pdf(request, training_id):
 
 
 # ---------------- Verify Certificate ----------------
+@login_required(login_url='accounts:login')
 def verify_certificate(request, serial_number):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, certificate_serial_number=serial_number)
     worker = training.worker
     return render(request, 'mm/verify.html', {'training': training, 'worker': worker})
@@ -406,8 +427,11 @@ from django.shortcuts import render, redirect
 from django.db.models import Q
 from django.contrib import messages
 from django.urls import reverse   # ✅ IMPORTANT
-
+@login_required(login_url='accounts:login')
 def certificate_verification(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     aadhar_number = request.GET.get('aadhar_number')
 
@@ -458,7 +482,11 @@ def certificate_verification(request):
 
 
 # ---------------- Certificate Detail ----------------
+@login_required(login_url='accounts:login')
 def certificate_detail(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
