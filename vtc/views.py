@@ -61,8 +61,11 @@ def add_worker(request):
 
     return render(request, 'vtc/worker_form.html', {'form': form})
 
-
+@login_required(login_url='accounts:login')
 def view_worker(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     worker = get_object_or_404(IndependentWorker, pk=pk)
     form = IndependentWorkerForm(instance=worker)
 
