@@ -214,6 +214,9 @@ from django.contrib import messages
 from .models import TrainingSchedule
 
 def edit_training(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     worker = training.worker
     today = date.today()
