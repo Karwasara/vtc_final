@@ -18,8 +18,11 @@ def dashboard(request):
     return render(request, 'aso/dashboard.html')
 
 
-
+@login_required(login_url='accounts:login')
 def vtc_forwarded_training_list(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     user_areas = request.user.areas.all()
     
     trainings = TrainingSchedule.objects.filter(
@@ -28,7 +31,12 @@ def vtc_forwarded_training_list(request):
         area_name__in=[a.area_name for a in user_areas]
     ).order_by('-vtc_approved_at')
     return render(request, 'aso/received_training_list.html', {'trainings': trainings})
+
+@login_required(login_url='accounts:login')
 def aso_forwarded_training_list(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     user_areas = request.user.areas.all() 
     trainings = TrainingSchedule.objects.filter(
         aso_status__iexact='approved',
@@ -37,16 +45,22 @@ def aso_forwarded_training_list(request):
     return render(request, 'aso/forwarded_training_list.html', {'trainings': trainings})
 
 
-
+@login_required(login_url='accounts:login')
 def forward_to_mm(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     training.aso_status = 'forwarded_to_mm'
     training.save()
     messages.success(request, f"Training for {training.worker.name} forwarded to MM for final approval.")
     return redirect('aso:forwarded_training_list')
 
-
+@login_required(login_url='accounts:login')
 def reject_training(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     training.aso_status = 'rejected'
     training.save()
@@ -59,7 +73,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from vtc.models import TrainingSchedule
 from django.utils import timezone
+@login_required(login_url='accounts:login')
 def training_detail(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
@@ -87,7 +105,11 @@ def training_detail(request, pk):
     })
 
 
+@login_required(login_url='accounts:login')
 def approved_worker_detail(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
@@ -105,7 +127,11 @@ from vtc.models import TrainingSchedule
 from django.shortcuts import render
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
+@login_required(login_url='accounts:login')
 def certificate_detail(request):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'aso':
+        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
