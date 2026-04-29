@@ -34,7 +34,11 @@ def worker_list(request):
     return render(request, 'vtc/worker_list.html', {'workers': workers})
 
 #Add worker
+@login_required(login_url='accounts:login')
 def add_worker(request):
+    # ✅ AUTH + ROLE CHECK
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     if request.method == 'POST':
         form = IndependentWorkerForm(request.POST, request.FILES)
 
