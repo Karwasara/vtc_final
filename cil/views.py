@@ -112,46 +112,44 @@ def dashboard1(request):
 
 
 
+from django.shortcuts import redirect, render
+from django.db.models import Q
+import json
+
 def dashboard(request):
     # 🔒 Access control
-    if not request.user.is_authenticated or request.user.user_type != 'cil':
+    if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'cil':
         return redirect('accounts:login')
-    selected_sub_code = request.GET.get('subsidiary')  # e.g., 'NCL'
-    active_type = request.GET.get('type', 'trained')   # selected tile: trained / under_training / total
-    user_area_name = getattr(request.user, 'area_name', None)  # current user area
+
+    selected_sub_code = request.GET.get('subsidiary')
+    active_type = request.GET.get('type', 'trained')
+    user_area_name = getattr(request.user, 'area_name', None)
 
     # =========================
     # 🔵 LEVEL 1: SUBSIDIARY VIEW
     # =========================
     if not selected_sub_code:
 
-        subsidiaries = AreaMaster.objects.values_list('subsidiary_id', flat=True).distinct()
+        subsidiaries = SubsidiaryMaster.objects.all()
         data = []
         labels = []
 
-        for sub_id in subsidiaries:
-            try:
-                sub_obj = SubsidiaryMaster.objects.get(id=sub_id)
-                code = sub_obj.subsidiary_code
-                name = sub_obj.subsidiary_name
-            except SubsidiaryMaster.DoesNotExist:
-                code = str(sub_id)
-                name = str(sub_id)
+        for sub in subsidiaries:
+            labels.append(sub.subsidiary_code)
 
-            labels.append(code)
-            areas = AreaMaster.objects.filter(subsidiary_id=sub_id)
+            areas = AreaMaster.objects.filter(subsidiary_id=sub.id)
             area_names = list(areas.values_list('area_name', flat=True))
 
-            if area_names:
-                schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
-                trained = schedules.filter(mm_status='approved').count()
-                under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending')).count()
-                total = schedules.count()
-            else:
-                trained = under_training = total = 0
+            schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
+
+            trained = schedules.filter(mm_status='approved').count()
+            under_training = schedules.filter(
+                Q(mm_status__isnull=True) | Q(mm_status='Pending')
+            ).count()
+            total = schedules.count()
 
             data.append({
-                "name": name,
+                "name": sub.subsidiary_name,
                 "trained": trained,
                 "under_training": under_training,
                 "total": total,
@@ -172,13 +170,11 @@ def dashboard(request):
     # 🟢 LEVEL 2: AREA VIEW
     # =========================
     else:
-        try:
-            sub_obj = SubsidiaryMaster.objects.get(subsidiary_code=selected_sub_code)
-            sub_id = sub_obj.id
-        except SubsidiaryMaster.DoesNotExist:
-            sub_id = None
+        sub_obj = SubsidiaryMaster.objects.filter(
+            subsidiary_code=selected_sub_code
+        ).first()
 
-        if not sub_id:
+        if not sub_obj:
             return render(request, "cil/dashboard.html", {
                 "level": "area",
                 "labels": [],
@@ -188,15 +184,15 @@ def dashboard(request):
                 "active_type": active_type,
             })
 
-        # Fetch areas under this subsidiary
-        areas = AreaMaster.objects.filter(subsidiary_id=sub_id)
+        areas = AreaMaster.objects.filter(subsidiary_id=sub_obj.id)
 
-        # 🔹 Restrict to current user's area if set
+        # 🔹 Restrict to user area
         if user_area_name:
             areas = areas.filter(area_name=user_area_name)
 
         areas = areas.order_by('area_name')
         area_names = list(areas.values_list('area_name', flat=True))
+
         schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
 
         data = []
@@ -204,8 +200,17 @@ def dashboard(request):
 
         for area in areas:
             labels.append(area.area_name)
-            trained = schedules.filter(mm_status='approved', area_name=area.area_name).count()
-            under_training = schedules.filter(Q(mm_status__isnull=True) | Q(mm_status='Pending'), area_name=area.area_name).count()
+
+            trained = schedules.filter(
+                mm_status='approved',
+                area_name=area.area_name
+            ).count()
+
+            under_training = schedules.filter(
+                Q(mm_status__isnull=True) | Q(mm_status='Pending'),
+                area_name=area.area_name
+            ).count()
+
             total = schedules.filter(area_name=area.area_name).count()
 
             data.append({
