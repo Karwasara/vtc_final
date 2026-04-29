@@ -12,31 +12,27 @@ from accounts.models import AreaMaster
 import json
 
 def dashboard(request):
+    # 🔒 Access control
+    if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'sub':
+        return redirect('accounts:login')
+
     user = request.user
 
-    # ✅ STEP 1: Get areas based on user's subsidiary
     if user.is_superuser:
         areas = AreaMaster.objects.all()
     else:
-        areas = AreaMaster.objects.filter(
-            subsidiary=user.subsidiary
-        )
+        areas = AreaMaster.objects.filter(subsidiary=user.subsidiary)
 
-    # ✅ STEP 2: Extract area names
     area_names = list(areas.values_list('area_name', flat=True))
 
-    # ✅ STEP 3: Filter schedules
     if user.is_superuser:
         schedules = TrainingSchedule.objects.all()
     else:
-        schedules = TrainingSchedule.objects.filter(
-            area_name__in=area_names
-        )
+        schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
 
-    # ✅ STEP 4: GROUP BY created_by AND area_name
     vtc_data = schedules.values(
         'created_by__id',
-        'area_name'   # 🔥 THIS IS WHAT YOU WANT
+        'area_name'
     ).annotate(
         trained=Count('id', filter=Q(mm_status='approved')),
         under_training=Count(
@@ -46,7 +42,6 @@ def dashboard(request):
         total_trainings=Count('id')
     ).order_by('-trained')
 
-    # ✅ STEP 5: Use area_name as label
     labels = [v['area_name'] for v in vtc_data]
     trained_counts = [v['trained'] for v in vtc_data]
     under_training_counts = [v['under_training'] for v in vtc_data]
@@ -54,12 +49,10 @@ def dashboard(request):
 
     context = {
         "area_data": vtc_data,
-
         "area_labels": json.dumps(labels),
         "trained_counts": json.dumps(trained_counts),
         "under_training_counts": json.dumps(under_training_counts),
         "total_trainings_counts": json.dumps(total_trainings_counts),
-
         "total_trained": sum(trained_counts),
         "total_under_training": sum(under_training_counts),
         "total_trainings": sum(total_trainings_counts),
