@@ -25,6 +25,8 @@ def to_schedule_training(request):
     return render(request, 'vtc/to_schedule_training.html', {'workers': workers})
 	
 def worker_list(request):
+	if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     workers = IndependentWorker.objects.filter(delete_flag=False).order_by('-id')
     return render(request, 'vtc/worker_list.html', {'workers': workers})
 
