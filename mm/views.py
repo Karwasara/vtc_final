@@ -89,8 +89,11 @@ def dashboard1(request):
     return render(request, "mm/dashboard.html", context)
 
 
-
+@login_required(login_url='accounts:login')
 def dashboard(request):
+    # ✅ AUTH + ROLE CHECK
+    if not request.user.is_authenticated or request.user.user_type != 'mm':
+        return redirect('accounts:login')
     # Get all areas assigned to the current user
     if hasattr(request.user, 'areas'):
         areas = request.user.areas.all().order_by('area_name')
@@ -207,11 +210,8 @@ def generate_unique_serial_number():
 
 
 # ---------------- Generate Form A PDF ----------------
-@login_required(login_url='accounts:login')
+
 def generate_form_a_pdf(request, training_id):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
-        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
 
