@@ -157,9 +157,6 @@ def dashboard(request):
 # ---------------- ASO Forwarded Training ----------------
 @login_required(login_url='accounts:login')
 def aso_forwarded_training_list(request):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
-        return redirect('accounts:login')
     user_areas = request.user.areas.all()
     trainings = TrainingSchedule.objects.filter(
         aso_status='approved',
@@ -171,9 +168,6 @@ def aso_forwarded_training_list(request):
 # ---------------- Approved Worker Detail ----------------
 @login_required(login_url='accounts:login')
 def approved_worker_detail(request, pk):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
-        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
     attendances = training.attendances.all()
     result = getattr(training, 'result', None)
@@ -384,9 +378,6 @@ def generate_form_a_pdf(request, training_id):
 # ---------------- Verify Certificate ----------------
 @login_required(login_url='accounts:login')
 def verify_certificate(request, serial_number):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
-        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, certificate_serial_number=serial_number)
     worker = training.worker
     return render(request, 'mm/verify.html', {'training': training, 'worker': worker})
@@ -426,9 +417,6 @@ from django.contrib import messages
 from django.urls import reverse   # ✅ IMPORTANT
 @login_required(login_url='accounts:login')
 def certificate_verification(request):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
-        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     aadhar_number = request.GET.get('aadhar_number')
 
@@ -481,9 +469,6 @@ def certificate_verification(request):
 # ---------------- Certificate Detail ----------------
 @login_required(login_url='accounts:login')
 def certificate_detail(request):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
-        return redirect('accounts:login')
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
