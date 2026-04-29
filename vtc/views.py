@@ -212,7 +212,7 @@ from datetime import datetime, date
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
 from .models import TrainingSchedule
-
+@login_required(login_url='accounts:login')
 def edit_training(request, pk):
     # ✅ AUTH + ROLE CHECK (must be first)
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
@@ -300,6 +300,9 @@ from django.utils import timezone
 from .models import TrainingSchedule, TrainingAttendance, TrainingResult
 
 def add_training_attendance_and_result(request, pk):
+    # ✅ AUTH + ROLE CHECK (must be first)
+    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+        return redirect('accounts:login')
     training = get_object_or_404(TrainingSchedule, pk=pk)
 
     # Generate date range from training
@@ -426,7 +429,7 @@ from .models import TrainingSchedule
 
 from django.shortcuts import render
 from .models import TrainingSchedule
-
+@login_required(login_url='accounts:login')
 def scheduled_training_list(request):
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
         return redirect('accounts:login')
