@@ -121,31 +121,56 @@ def dashboard(request):
     if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'cil':
         return redirect('accounts:login')
 
+        # =====================================================
+    # 🔒 ACCESS CONTROL
+    # =====================================================
+    if (
+        not request.user.is_authenticated or
+        getattr(request.user, 'user_type', None) != 'cil'
+    ):
+        return redirect('accounts:login')
+
     selected_sub_code = request.GET.get('subsidiary')
     active_type = request.GET.get('type', 'trained')
     user_area_name = getattr(request.user, 'area_name', None)
 
-    # =========================
+    back_url = None
+
+    # =====================================================
     # 🔵 LEVEL 1: SUBSIDIARY VIEW
-    # =========================
+    # =====================================================
     if not selected_sub_code:
 
         subsidiaries = SubsidiaryMaster.objects.all()
+
         data = []
         labels = []
 
         for sub in subsidiaries:
+
             labels.append(sub.subsidiary_code)
 
-            areas = AreaMaster.objects.filter(subsidiary_id=sub.id)
-            area_names = list(areas.values_list('area_name', flat=True))
+            areas = AreaMaster.objects.filter(
+                subsidiary_id=sub.id
+            )
 
-            schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
+            area_names = list(
+                areas.values_list('area_name', flat=True)
+            )
 
-            trained = schedules.filter(mm_status='approved').count()
-            under_training = schedules.filter(
-                Q(mm_status__isnull=True) | Q(mm_status='Pending')
+            schedules = TrainingSchedule.objects.filter(
+                area_name__in=area_names
+            )
+
+            trained = schedules.filter(
+                mm_status='approved'
             ).count()
+
+            under_training = schedules.filter(
+                Q(mm_status__isnull=True) |
+                Q(mm_status='Pending')
+            ).count()
+
             total = schedules.count()
 
             data.append({
@@ -163,13 +188,16 @@ def dashboard(request):
             "total": json.dumps([d["total"] for d in data]),
             "table_names": json.dumps([d["name"] for d in data]),
             "active_type": active_type,
+            "back_url": None
         }
+
         return render(request, "cil/dashboard.html", context)
 
-    # =========================
+    # =====================================================
     # 🟢 LEVEL 2: AREA VIEW
-    # =========================
+    # =====================================================
     else:
+
         sub_obj = SubsidiaryMaster.objects.filter(
             subsidiary_code=selected_sub_code
         ).first()
@@ -182,23 +210,32 @@ def dashboard(request):
                 "under_training": [],
                 "total": [],
                 "active_type": active_type,
+                "back_url": "/cil/dashboard/"
             })
 
-        areas = AreaMaster.objects.filter(subsidiary_id=sub_obj.id)
+        areas = AreaMaster.objects.filter(
+            subsidiary_id=sub_obj.id
+        )
 
-        # 🔹 Restrict to user area
+        # 🔹 Restrict to user area if exists
         if user_area_name:
             areas = areas.filter(area_name=user_area_name)
 
         areas = areas.order_by('area_name')
-        area_names = list(areas.values_list('area_name', flat=True))
 
-        schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
+        area_names = list(
+            areas.values_list('area_name', flat=True)
+        )
+
+        schedules = TrainingSchedule.objects.filter(
+            area_name__in=area_names
+        )
 
         data = []
         labels = []
 
         for area in areas:
+
             labels.append(area.area_name)
 
             trained = schedules.filter(
@@ -207,11 +244,14 @@ def dashboard(request):
             ).count()
 
             under_training = schedules.filter(
-                Q(mm_status__isnull=True) | Q(mm_status='Pending'),
+                Q(mm_status__isnull=True) |
+                Q(mm_status='Pending'),
                 area_name=area.area_name
             ).count()
 
-            total = schedules.filter(area_name=area.area_name).count()
+            total = schedules.filter(
+                area_name=area.area_name
+            ).count()
 
             data.append({
                 "name": area.area_name,
@@ -219,6 +259,8 @@ def dashboard(request):
                 "under_training": under_training,
                 "total": total,
             })
+
+        back_url = "/cil/dashboard/"
 
         context = {
             "level": "area",
@@ -228,6 +270,92 @@ def dashboard(request):
             "under_training": json.dumps([d["under_training"] for d in data]),
             "total": json.dumps([d["total"] for d in data]),
             "active_type": active_type,
+            "back_url": back_url
         }
 
         return render(request, "cil/dashboard.html", context)
+
+
+    # =====================================================
+    # 🟣 LEVEL 3: VTC WISE VIEW (CREATED BY USER)
+    # =====================================================
+
+    sub_obj = SubsidiaryMaster.objects.filter(
+        subsidiary_code=selected_sub_code
+    ).first()
+
+    if not sub_obj:
+        return render(request, "cil/dashboard.html", {
+            "level": "vtc",
+            "labels": [],
+            "trained": [],
+            "under_training": [],
+            "total": [],
+            "active_type": active_type,
+            "back_url": "/cil/dashboard/"
+        })
+
+    areas = AreaMaster.objects.filter(
+        subsidiary_id=sub_obj.id
+    )
+
+    if user_area_name:
+        areas = areas.filter(area_name=user_area_name)
+
+    area_names = list(
+        areas.values_list('area_name', flat=True)
+    )
+
+    schedules = TrainingSchedule.objects.filter(
+        area_name__in=area_names
+    )
+
+    vtc_data = schedules.values(
+        'created_by',
+        'created_by__first_name'
+    ).annotate(
+
+        # ✅ VTC NAME (first name else user id)
+        vtc_name=Coalesce(
+            F('created_by__first_name'),
+            Cast(F('created_by'), CharField()),
+            Value('Unknown'),
+            output_field=CharField()
+        ),
+
+        trained=Count(
+            'id',
+            filter=Q(mm_status='approved')
+        ),
+
+        under_training=Count(
+            'id',
+            filter=Q(mm_status__isnull=True) |
+                   Q(mm_status='Pending')
+        ),
+
+        total=Count('id')
+
+    ).order_by('-trained')
+
+    labels = [v['vtc_name'] for v in vtc_data]
+    trained_counts = [v['trained'] for v in vtc_data]
+    under_training_counts = [v['under_training'] for v in vtc_data]
+    total_counts = [v['total'] for v in vtc_data]
+
+    back_url = f"/cil/dashboard/?subsidiary={selected_sub_code}"
+
+    context = {
+        "level": "vtc",
+        "selected_subsidiary": selected_sub_code,
+        "labels": json.dumps(labels),
+        "trained": json.dumps(trained_counts),
+        "under_training": json.dumps(under_training_counts),
+        "total": json.dumps(total_counts),
+        "table_names": json.dumps(labels),
+        "vtc_data": vtc_data,
+        "active_type": active_type,
+        "back_url": back_url
+    }
+
+    return render(request, "cil/dashboard.html", context)
