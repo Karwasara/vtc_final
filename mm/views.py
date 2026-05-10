@@ -276,7 +276,7 @@ def generate_form_a_pdf(request, training_id):
     c.drawCentredString(width / 2, y, subsidiary_name)
     y -= 20
     c.setFont("Helvetica-Bold", 12)
-    c.drawCentredString(width / 2, y, f"{created_first_name} MINE")
+    c.drawCentredString(width / 2, y, f"{created_first_name}")
     y -= 25
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, "Certificate of Vocational Training")
