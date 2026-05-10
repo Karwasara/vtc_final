@@ -236,6 +236,11 @@ def generate_unique_serial_number():
 def generate_form_a_pdf(request, training_id):
     training = get_object_or_404(TrainingSchedule, pk=training_id)
     worker = training.worker
+    # Get creator user from TrainingSchedule
+    created_user = training.created_by
+
+    # Get first name of creator
+    created_first_name = created_user.first_name if created_user else "Unknown"
 
     user_area = request.user.areas.first()
     area_code = user_area.area_code if user_area else "UNKNOWN"
@@ -271,7 +276,7 @@ def generate_form_a_pdf(request, training_id):
     c.drawCentredString(width / 2, y, subsidiary_name)
     y -= 20
     c.setFont("Helvetica-Bold", 12)
-    c.drawCentredString(width / 2, y, f"{area_name} MINE")
+    c.drawCentredString(width / 2, y, f"{created_first_name} MINE")
     y -= 25
     c.setFont("Helvetica-Bold", 12)
     c.drawCentredString(width / 2, y, "Certificate of Vocational Training")
