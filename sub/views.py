@@ -11,54 +11,117 @@ from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster
 import json
 
-def dashboard(request):
-    # 🔒 Access control
-    if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'sub':
-        return redirect('accounts:login')
+from django.shortcuts import render
+from django.db.models import Q, Count, F, Value, CharField
+from django.db.models.functions import Coalesce, Cast
+from vtc.models import TrainingSchedule
+from accounts.models import AreaMaster
+import json
 
+
+def dashboard(request):
     user = request.user
 
+    # ✅ STEP 1: Get areas based on user's subsidiary
     if user.is_superuser:
         areas = AreaMaster.objects.all()
     else:
-        areas = AreaMaster.objects.filter(subsidiary=user.subsidiary)
+        areas = AreaMaster.objects.filter(
+            subsidiary=user.subsidiary
+        )
 
-    area_names = list(areas.values_list('area_name', flat=True))
+    # ✅ STEP 2: Extract area names
+    area_names = list(
+        areas.values_list('area_name', flat=True)
+    )
 
+    # ✅ STEP 3: Filter schedules
     if user.is_superuser:
         schedules = TrainingSchedule.objects.all()
     else:
-        schedules = TrainingSchedule.objects.filter(area_name__in=area_names)
+        schedules = TrainingSchedule.objects.filter(
+            area_name__in=area_names
+        )
 
+    # ✅ STEP 4: GROUP BY created_by
     vtc_data = schedules.values(
-        'created_by__id',
-        'area_name'
+        'created_by',
+        'created_by__first_name'
     ).annotate(
-        trained=Count('id', filter=Q(mm_status='approved')),
+
+        # ✅ VTC NAME
+        # first_name → if empty then user id
+        vtc_name=Coalesce(
+            F('created_by__first_name'),
+            Cast(F('created_by'), CharField()),
+            Value('Unknown'),
+            output_field=CharField()
+        ),
+
+        trained=Count(
+            'id',
+            filter=Q(mm_status='approved')
+        ),
+
         under_training=Count(
             'id',
-            filter=Q(mm_status__isnull=True) | Q(mm_status='Pending')
+            filter=Q(mm_status__isnull=True) |
+                   Q(mm_status='Pending')
         ),
+
         total_trainings=Count('id')
+
     ).order_by('-trained')
 
-    labels = [v['area_name'] for v in vtc_data]
-    trained_counts = [v['trained'] for v in vtc_data]
-    under_training_counts = [v['under_training'] for v in vtc_data]
-    total_trainings_counts = [v['total_trainings'] for v in vtc_data]
+    # ✅ STEP 5: Use vtc_name as label
+    labels = [v['vtc_name'] for v in vtc_data]
+
+    trained_counts = [
+        v['trained'] for v in vtc_data
+    ]
+
+    under_training_counts = [
+        v['under_training'] for v in vtc_data
+    ]
+
+    total_trainings_counts = [
+        v['total_trainings'] for v in vtc_data
+    ]
 
     context = {
         "area_data": vtc_data,
+
         "area_labels": json.dumps(labels),
-        "trained_counts": json.dumps(trained_counts),
-        "under_training_counts": json.dumps(under_training_counts),
-        "total_trainings_counts": json.dumps(total_trainings_counts),
+
+        "trained_counts": json.dumps(
+            trained_counts
+        ),
+
+        "under_training_counts": json.dumps(
+            under_training_counts
+        ),
+
+        "total_trainings_counts": json.dumps(
+            total_trainings_counts
+        ),
+
         "total_trained": sum(trained_counts),
-        "total_under_training": sum(under_training_counts),
-        "total_trainings": sum(total_trainings_counts),
+
+        "total_under_training": sum(
+            under_training_counts
+        ),
+
+        "total_trainings": sum(
+            total_trainings_counts
+        ),
     }
 
-    return render(request, "sub/dashboard.html", context)
+    return render(
+        request,
+        "sub/dashboard.html",
+        context
+    )
+
 
 from django.shortcuts import render, redirect
 from django.db.models import Q
