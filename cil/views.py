@@ -120,16 +120,6 @@ def dashboard(request):
     # 🔒 Access control
     if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'cil':
         return redirect('accounts:login')
-
-        # =====================================================
-    # 🔒 ACCESS CONTROL
-    # =====================================================
-    if (
-        not request.user.is_authenticated or
-        getattr(request.user, 'user_type', None) != 'cil'
-    ):
-        return redirect('accounts:login')
-
     selected_sub_code = request.GET.get('subsidiary')
     active_type = request.GET.get('type', 'trained')
     user_area_name = getattr(request.user, 'area_name', None)
