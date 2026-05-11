@@ -355,7 +355,7 @@ def generate_form_a_pdf(request, training_id):
 
     right_x = width / 2 + 50
     right_y = y - 20
-    c.drawString(right_x, right_y, f"Mine/Training Center: {area_name}")
+    c.drawString(right_x, right_y, f"Mine/Training Center: {created_first_name}")
     y -= line_gap
     right_y = y - 20
     c.drawString(right_x, right_y, "Registration No. of the Training Centre: .......")
