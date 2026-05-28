@@ -6,91 +6,156 @@
 <style>
 
 body{
-  background-color:#f4f7fb;
+    background-color:#f4f7fb;
 }
 
 /* Layout */
 .page-wrapper{
-  display:flex;
-  align-items:flex-start;
-  gap:20px;
+    display:flex;
+    align-items:flex-start;
+    gap:20px;
 }
 
 .sidebar-wrapper{
-  flex:0 0 260px;
-  max-width:260px;
+    flex:0 0 260px;
+    max-width:260px;
 }
 
 .content-wrapper{
-  flex:1;
+    flex:1;
 }
 
 /* Card */
 .form-card{
-  background:#ffffff;
-  border-radius:14px;
-  border:1px solid #e3e6ea;
-  box-shadow:0 4px 12px rgba(0,0,0,0.05);
-  padding:30px;
+    background:#ffffff;
+    border-radius:14px;
+    border:1px solid #e3e6ea;
+    box-shadow:0 4px 12px rgba(0,0,0,0.05);
+    padding:30px;
 }
 
 .form-card h3{
-  font-weight:600;
-  margin-bottom:25px;
-  color:#0d6efd;
+    font-weight:600;
+    margin-bottom:25px;
+    color:#0d6efd;
 }
 
 /* Fields */
 .form-card p{
-  margin-bottom:14px;
+    margin-bottom:14px;
 }
 
 .form-card label{
-  font-weight:500;
-  margin-bottom:4px;
-  display:block;
+    font-weight:500;
+    margin-bottom:4px;
+    display:block;
 }
 
 .form-card input,
 .form-card select,
 .form-card textarea{
-  width:100%;
-  padding:8px 10px;
-  border-radius:6px;
-  border:1px solid #ced4da;
+    width:100%;
+    padding:8px 10px;
+    border-radius:6px;
+    border:1px solid #ced4da;
 }
 
 /* Buttons */
 .btn-pill{
-  border-radius:30px;
-  padding:6px 18px;
+    border-radius:30px;
+    padding:6px 18px;
 }
 
-.btn-save{background:#0d6efd;color:white;}
-.btn-cancel{background:#6c757d;color:white;}
-.btn-back{background:#17a2b8;color:white;}
+.btn-save{
+    background:#0d6efd;
+    color:white;
+}
 
+.btn-cancel{
+    background:#6c757d;
+    color:white;
+}
+
+.btn-back{
+    background:#17a2b8;
+    color:white;
+}
+
+.btn-preview{
+    background:#198754;
+    color:white;
+}
+
+/* File Preview */
 .preview-box{
-  margin-top:10px;
-  display:none;
+    margin-top:10px;
+    display:none;
 }
 
 .preview-box iframe,
 .preview-box img{
-  width:100%;
-  max-height:300px;
-  border:1px solid #dee2e6;
-  border-radius:8px;
+    width:100%;
+    max-height:300px;
+    border:1px solid #dee2e6;
+    border-radius:8px;
+}
+
+/* PDF Preview Modal */
+#pdfPreviewModal{
+    display:none;
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.7);
+    z-index:9999;
+}
+
+.preview-modal-content{
+    background:white;
+    width:90%;
+    height:90%;
+    margin:2% auto;
+    border-radius:10px;
+    overflow:hidden;
+    position:relative;
+}
+
+.preview-modal-content iframe{
+    width:100%;
+    height:100%;
+    border:none;
+}
+
+.close-preview{
+    position:absolute;
+    top:10px;
+    right:15px;
+    font-size:28px;
+    cursor:pointer;
+    z-index:10;
+    color:red;
+    font-weight:bold;
+}
+
+.preview-title{
+    padding:12px 20px;
+    background:#0d6efd;
+    color:white;
+    font-size:18px;
+    font-weight:600;
 }
 
 </style>
 
 <div class="container-fluid mt-4">
+
 <div class="page-wrapper">
 
 <!-- Sidebar -->
 <div class="sidebar-wrapper">
-{% include 'vtc/sidebar.html' %}
+    {% include 'vtc/sidebar.html' %}
 </div>
 
 <!-- Content -->
@@ -101,13 +166,21 @@ body{
 <div class="form-card">
 
 <h3>
-{% if read_only %}Worker Details{% else %}Enter Worker Details{% endif %}
+{% if read_only %}
+    Worker Details
+{% else %}
+    Enter Worker Details
+{% endif %}
 </h3>
 
-<form method="post" enctype="multipart/form-data">
+<form method="post"
+      enctype="multipart/form-data"
+      id="workerForm">
+
 {% csrf_token %}
 
 {% for field in form %}
+
 <p>
 
 {{ field.label_tag }}
@@ -118,48 +191,80 @@ body{
 
     {% if field.value %}
 
-        <!-- ✅ AFTER SAVE -->
+        <!-- AFTER SAVE -->
+
         <a href="{{ field.value.url }}"
            target="_blank"
            class="text-primary fw-semibold"
            style="text-decoration:underline;">
+
             {{ field.value.name|cut:"media/" }}
+
         </a>
 
     {% else %}
 
-        <!-- ✅ BEFORE SAVE -->
+        <!-- BEFORE SAVE -->
+
         <input type="file"
                id="{{ field.id_for_label }}"
                name="{{ field.name }}"
                accept="{% if field.name == 'aadhar_file' %}application/pdf{% else %}image/png,image/jpeg{% endif %}"
                onchange="handleFile(this, '{{ field.name }}')">
 
-        <span id="file-name-{{ field.id_for_label }}" class="text-muted small"></span>
+        <span id="file-name-{{ field.id_for_label }}"
+              class="text-muted small"></span>
 
     {% endif %}
 
 </div>
 
-<!-- PREVIEW -->
-<div id="preview-{{ field.id_for_label }}" class="preview-box"></div>
+<!-- FILE PREVIEW -->
+
+<div id="preview-{{ field.id_for_label }}"
+     class="preview-box"></div>
 
 {% else %}
-{{ field }}
+
+    {{ field }}
+
 {% endif %}
 
 {% if field.errors %}
-<div class="text-danger">{{ field.errors }}</div>
+<div class="text-danger">
+    {{ field.errors }}
+</div>
 {% endif %}
 
 </p>
+
 {% endfor %}
 
 {% if not read_only %}
-<button type="submit" class="btn btn-save btn-pill">Save</button>
-<a href="{% url 'vtc:worker_list' %}" class="btn btn-cancel btn-pill">Cancel</a>
+
+<button type="submit"
+        class="btn btn-save btn-pill">
+    Save
+</button>
+
+<button type="button"
+        class="btn btn-preview btn-pill"
+        onclick="generatePDFPreview()">
+    Preview PDF
+</button>
+
+<a href="{% url 'vtc:worker_list' %}"
+   class="btn btn-cancel btn-pill">
+    Cancel
+</a>
+
 {% else %}
-<a href="{% url 'vtc:worker_list' %}" class="btn btn-back btn-pill">Back</a>
+
+<a href="{% url 'vtc:worker_list' %}"
+   class="btn btn-back btn-pill">
+    Back
+</a>
+
 {% endif %}
 
 </form>
@@ -169,62 +274,122 @@ body{
 </div>
 </div>
 
-<!-- ✅ JS -->
+<!-- PDF Preview Modal -->
+
+<div id="pdfPreviewModal">
+
+<div class="preview-modal-content">
+
+<span class="close-preview"
+      onclick="closePreview()">
+    &times;
+</span>
+
+<div class="preview-title">
+    Worker Form PDF Preview
+</div>
+
+<iframe id="pdfFrame"></iframe>
+
+</div>
+</div>
+
+<!-- JS -->
+
 <script>
+
+/* ===================================
+   FILE VALIDATION + PREVIEW
+=================================== */
+
 function handleFile(input, fieldName) {
 
     const file = input.files[0];
-    const previewBox = document.getElementById("preview-" + input.id);
-    const fileName = document.getElementById("file-name-" + input.id);
 
-    // Reset everything
+    const previewBox =
+        document.getElementById("preview-" + input.id);
+
+    const fileName =
+        document.getElementById("file-name-" + input.id);
+
+    // Reset
+
     previewBox.innerHTML = "";
     previewBox.style.display = "none";
     fileName.innerText = "";
 
     if (!file) return;
 
-    const ext = file.name.split('.').pop().toLowerCase();
-    const sizeMB = file.size / (1024 * 1024);
+    const ext =
+        file.name.split('.').pop().toLowerCase();
 
-    // ✅ SIZE VALIDATION (5MB)
+    const sizeMB =
+        file.size / (1024 * 1024);
+
+    // Size Validation
+
     if (sizeMB > 1) {
+
         alert("File size must be less than 1 MB");
+
         input.value = "";
+
         return;
     }
 
-    // ✅ AADHAR VALIDATION (PDF ONLY)
+    // Aadhar PDF Validation
+
     if (fieldName.includes("aadhar")) {
+
         if (ext !== "pdf") {
-            alert("Only PDF file allowed for Aadhar");
+
+            alert("Only PDF allowed for Aadhar");
+
             input.value = "";
+
             return;
         }
     }
 
-    // ✅ PHOTO VALIDATION (JPG, JPEG, PNG)
+    // Photo Validation
+
     if (fieldName.includes("photo")) {
+
         if (!["jpg", "jpeg", "png"].includes(ext)) {
-            alert("Only JPG, JPEG or PNG allowed for Photo");
+
+            alert("Only JPG, JPEG, PNG allowed");
+
             input.value = "";
+
             return;
         }
     }
 
-    // ✅ SHOW FILE NAME (ONLY IF VALID)
+    // Show File Name
+
     fileName.innerText = file.name;
 
     const reader = new FileReader();
 
     reader.onload = function (e) {
 
+        // PDF
+
         if (ext === "pdf") {
-            previewBox.innerHTML =
-                '<iframe src="' + e.target.result + '" height="300px"></iframe>';
-        } else {
-            previewBox.innerHTML =
-                '<img src="' + e.target.result + '">';
+
+            previewBox.innerHTML = `
+                <iframe src="${e.target.result}"
+                        height="300px"></iframe>
+            `;
+        }
+
+        // IMAGE
+
+        else {
+
+            previewBox.innerHTML = `
+                <img src="${e.target.result}">
+            `;
         }
 
         previewBox.style.display = "block";
@@ -232,6 +397,262 @@ function handleFile(input, fieldName) {
 
     reader.readAsDataURL(file);
 }
+
+/* ===================================
+   PDF PREVIEW BEFORE SAVE
+=================================== */
+
+function generatePDFPreview() {
+
+    const form =
+        document.getElementById("workerForm");
+
+    let content = `
+    <html>
+
+    <head>
+
+    <title>Worker Preview</title>
+
+    <style>
+
+        body{
+            font-family:Arial;
+            padding:25px;
+        }
+
+        h2{
+            text-align:center;
+            color:#0d6efd;
+            margin-bottom:25px;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+        }
+
+        td{
+            border:1px solid #ccc;
+            padding:10px;
+            vertical-align:top;
+        }
+
+        td:first-child{
+            width:30%;
+            font-weight:bold;
+            background:#f8f9fa;
+        }
+
+        img{
+            max-width:180px;
+            max-height:180px;
+            border:1px solid #ddd;
+            border-radius:6px;
+            padding:4px;
+        }
+
+        iframe{
+            width:100%;
+            height:400px;
+            border:none;
+        }
+
+    </style>
+
+    </head>
+
+    <body>
+
+    <h2>Worker Form Preview</h2>
+
+    <table id="previewTable"></table>
+
+    </body>
+
+    </html>
+    `;
+
+    // Open Preview Modal
+
+    finalizePreview(content);
+
+    const iframe =
+        document.getElementById("pdfFrame");
+
+    iframe.onload = function () {
+
+        const doc =
+            iframe.contentWindow.document;
+
+        const table =
+            doc.getElementById("previewTable");
+
+        const fields =
+            form.querySelectorAll(
+                "input, select, textarea"
+            );
+
+        fields.forEach(field => {
+
+            // Skip Hidden
+
+            if (
+                field.type === "hidden" ||
+                field.name === "csrfmiddlewaretoken"
+            ) {
+                return;
+            }
+
+            let label = "";
+
+            const labelTag =
+                form.querySelector(
+                    `label[for="${field.id}"]`
+                );
+
+            if (labelTag) {
+                label = labelTag.innerText;
+            }
+
+            // Create Row
+
+            const row =
+                doc.createElement("tr");
+
+            const tdLabel =
+                doc.createElement("td");
+
+            tdLabel.innerHTML = label;
+
+            const tdValue =
+                doc.createElement("td");
+
+            /* ==========================
+               FILE FIELD
+            ========================== */
+
+            if (field.type === "file") {
+
+                const file =
+                    field.files[0];
+
+                if (file) {
+
+                    const ext =
+                        file.name
+                        .split('.')
+                        .pop()
+                        .toLowerCase();
+
+                    // IMAGE FILE
+
+                    if (
+                        ["jpg", "jpeg", "png"]
+                        .includes(ext)
+                    ) {
+
+                        const reader =
+                            new FileReader();
+
+                        reader.onload = function(e) {
+
+                            const img =
+                                doc.createElement("img");
+
+                            img.src =
+                                e.target.result;
+
+                            tdValue.appendChild(img);
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+
+                    // PDF FILE
+
+                    else if (ext === "pdf") {
+
+                        const reader =
+                            new FileReader();
+
+                        reader.onload = function(e) {
+
+                            const pdfFrame =
+                                doc.createElement("iframe");
+
+                            pdfFrame.src =
+                                e.target.result;
+
+                            tdValue.appendChild(pdfFrame);
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+
+                    // OTHER FILE
+
+                    else {
+
+                        tdValue.innerHTML =
+                            file.name;
+                    }
+
+                }
+
+                else {
+
+                    tdValue.innerHTML =
+                        "No file selected";
+                }
+            }
+
+            /* ==========================
+               NORMAL FIELD
+            ========================== */
+
+            else {
+
+                tdValue.innerHTML =
+                    field.value || "-";
+            }
+
+            row.appendChild(tdLabel);
+
+            row.appendChild(tdValue);
+
+            table.appendChild(row);
+        });
+    };
+}
+
+/* ===================================
+   OPEN PREVIEW
+=================================== */
+
+function finalizePreview(content) {
+
+    const iframe =
+        document.getElementById("pdfFrame");
+
+    iframe.srcdoc = content;
+
+    document.getElementById(
+        "pdfPreviewModal"
+    ).style.display = "block";
+}
+
+/* ===================================
+   CLOSE PREVIEW
+=================================== */
+
+function closePreview() {
+
+    document.getElementById(
+        "pdfPreviewModal"
+    ).style.display = "none";
+}
+
 </script>
 
 {% endblock %}
