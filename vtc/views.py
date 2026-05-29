@@ -19,12 +19,34 @@ def dashboard(request):
     return render(request, 'vtc/dashboard.html')
 
 #List View
+from django.db.models import Q
+from django.shortcuts import render, redirect
 @login_required(login_url='accounts:login')
 def to_schedule_training(request):
+
+    # AUTH + ROLE CHECK (must be first)
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
         return redirect('accounts:login')
+
+    search_query = request.GET.get('q', '').strip()
+
     workers = IndependentWorker.objects.filter(delete_flag=False)
-    return render(request, 'vtc/to_schedule_training.html', {'workers': workers})
+
+    # Search full database (Name + Aadhaar only)
+    if search_query:
+        workers = workers.filter(
+            Q(name__icontains=search_query) |
+            Q(aadhar_number__icontains=search_query)
+        ).order_by('-id')
+
+    # Default: latest 100 records
+    else:
+        workers = workers.order_by('-id')[:100]
+
+    return render(request, 'vtc/to_schedule_training.html', {
+        'workers': workers,
+        'search_query': search_query
+    })
 	
 from django.db.models import Q
 from django.shortcuts import redirect, render
