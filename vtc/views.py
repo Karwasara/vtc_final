@@ -26,12 +26,32 @@ def to_schedule_training(request):
     workers = IndependentWorker.objects.filter(delete_flag=False)
     return render(request, 'vtc/to_schedule_training.html', {'workers': workers})
 	
+from django.db.models import Q
+from django.shortcuts import redirect, render
 @login_required(login_url='accounts:login')
 def worker_list(request):
+
+    # Authentication + role check
     if not request.user.is_authenticated or request.user.user_type != 'vtc':
         return redirect('accounts:login')
-    workers = IndependentWorker.objects.filter(delete_flag=False).order_by('-id')
-    return render(request, 'vtc/worker_list.html', {'workers': workers})
+
+    search_query = request.GET.get('q', '').strip()
+
+    workers = IndependentWorker.objects.filter(delete_flag=False)
+
+    if search_query:
+        workers = workers.filter(
+            Q(name__icontains=search_query) |
+            Q(aadhar_number__icontains=search_query)
+        ).order_by('-id')
+
+    else:
+        workers = workers.order_by('-id')[:100]  # fixed to 100 records
+
+    return render(request, 'vtc/worker_list.html', {
+        'workers': workers,
+        'search_query': search_query
+    })
 
 #Add worker
 @login_required(login_url='accounts:login')
