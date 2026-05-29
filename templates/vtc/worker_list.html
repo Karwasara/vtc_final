@@ -15,6 +15,7 @@ table.dataTable thead th {
 table.dataTable tbody tr:hover {
     background-color: #f1f7ff;
 }
+
 #workerTable{
     display:none;
 }
@@ -32,6 +33,7 @@ table.dataTable tbody tr:hover {
 
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
 
+            <!-- Header -->
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-semibold text-brand-blue">
                     Registered Worker List
@@ -42,9 +44,46 @@ table.dataTable tbody tr:hover {
                    + New Worker
                 </a>
             </div>
+
+            <!-- Search Form -->
+            <form method="GET" class="mb-5 flex gap-3">
+
+                <input type="text"
+                       name="q"
+                       value="{{ search_query }}"
+                       placeholder="Search by name, mobile, aadhaar..."
+                       class="border border-slate-300 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+                    Search
+                </button>
+
+                {% if search_query %}
+                <a href="{% url 'vtc:worker_list' %}"
+                   class="bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-lg">
+                    Clear
+                </a>
+                {% endif %}
+
+            </form>
+
+            <!-- Info Message -->
+            <div class="mb-4 text-sm text-gray-600">
+                {% if search_query %}
+                    Showing search results for:
+                    <strong>"{{ search_query }}"</strong>
+                {% else %}
+                    Showing latest 100 workers
+                {% endif %}
+            </div>
+
+            <!-- Loader -->
             <div id="tableLoader" style="text-align:center;padding:20px;">
                 Loading workers...
             </div>
+
+            <!-- Table -->
             <table id="workerTable" class="display w-full text-sm">
 
                 <thead>
@@ -73,6 +112,12 @@ table.dataTable tbody tr:hover {
                             </a>
                         </td>
                     </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            No workers found
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
 
@@ -84,25 +129,25 @@ table.dataTable tbody tr:hover {
 
 </div>
 
-
-<!-- DataTables JS -->
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <script>
 $(document).ready(function() {
+
     $('#workerTable').DataTable({
         pageLength: 10,
+        ordering: true,
+        searching: false, // disable frontend search
         order: []
     });
+
     $('#tableLoader').hide();
     $('#workerTable').show();
 });
-    
 </script>
 
 {% endblock %}
-
-
-
-
