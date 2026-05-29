@@ -3,7 +3,6 @@
 
 {% block content %}
 
-<!-- DataTables CSS -->
 <link rel="stylesheet"
 href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
@@ -14,18 +13,15 @@ body{
     font-family:"Segoe UI",sans-serif;
 }
 
-/* Table Header */
 table.dataTable thead th{
     background-color:#004B87 !important;
     color:white;
 }
 
-/* Hover effect */
 table.dataTable tbody tr:hover{
     background-color:#f1f7ff;
 }
 
-/* Card styling */
 .worker-card{
     background:white;
     border-radius:12px;
@@ -33,7 +29,6 @@ table.dataTable tbody tr:hover{
     padding:25px;
 }
 
-/* Button */
 .btn-schedule{
     background:#ffc107;
     color:black;
@@ -46,40 +41,69 @@ table.dataTable tbody tr:hover{
 .btn-schedule:hover{
     background:#ffca2c;
 }
+
 #workersTable{
     display:none;
 }
 
 </style>
 
-
 <div class="grid grid-cols-12 gap-6">
 
     <!-- SIDEBAR -->
     <div class="col-span-12 md:col-span-3">
-
         {% include 'vtc/sidebar.html' %}
-
     </div>
-
 
     <!-- MAIN CONTENT -->
     <div class="col-span-12 md:col-span-9">
 
         <div class="worker-card">
 
-            <div class="flex justify-between items-center mb-6">
-
+            <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-brand-blue">
                     Workers Available for Training
                 </h2>
+            </div>
 
+            <!-- SEARCH -->
+            <form method="GET" class="mb-4 flex gap-2">
+
+                <input type="text"
+                       name="q"
+                       value="{{ search_query }}"
+                       placeholder="Search by name or Aadhaar..."
+                       class="border border-gray-300 rounded-lg px-4 py-2 w-full">
+
+                <button type="submit"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    Search
+                </button>
+
+                {% if search_query %}
+                <a href="{% url 'vtc:to_schedule_training' %}"
+                   class="bg-gray-500 text-white px-4 py-2 rounded-lg">
+                    Clear
+                </a>
+                {% endif %}
+
+            </form>
+
+            <!-- INFO -->
+            <div class="mb-3 text-sm text-gray-600">
+                {% if search_query %}
+                    Search result for: <b>{{ search_query }}</b>
+                {% else %}
+                    Showing latest 100 workers
+                {% endif %}
             </div>
 
             {% if workers %}
+
             <div id="tableLoader" style="text-align:center;padding:20px;">
                 Loading workers...
             </div>
+
             <table id="workersTable" class="display w-full text-sm">
 
                 <thead>
@@ -96,27 +120,19 @@ table.dataTable tbody tr:hover{
                 <tbody>
 
                     {% for worker in workers %}
-
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         <td>{{ worker.name }}</td>
                         <td>{{ worker.aadhar_number }}</td>
                         <td>{{ worker.dob }}</td>
                         <td>{{ worker.mobile }}</td>
-
                         <td>
-
                             <a href="{% url 'vtc:schedule_training' worker.pk %}"
                                class="btn-schedule">
-
                                Schedule
-
                             </a>
-
                         </td>
-
                     </tr>
-
                     {% endfor %}
 
                 </tbody>
@@ -124,11 +140,9 @@ table.dataTable tbody tr:hover{
             </table>
 
             {% else %}
-
-            <div class="text-center text-red-600 p-4">
-                No workers available for training.
-            </div>
-
+                <div class="text-center text-red-600 p-4">
+                    No workers available for training.
+                </div>
             {% endif %}
 
         </div>
@@ -137,11 +151,7 @@ table.dataTable tbody tr:hover{
 
 </div>
 
-
-<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- DataTables -->
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <script>
@@ -149,20 +159,17 @@ table.dataTable tbody tr:hover{
 $(document).ready(function(){
 
     $('#workersTable').DataTable({
-
-        pageLength:10,
-        order:[],
-        responsive:true
-
+        pageLength: 10,
+        order: [],
+        searching: false,   // IMPORTANT: backend search only
+        responsive: true
     });
-      $('#tableLoader').hide();
-      $('#workersTable').show();
+
+    $('#tableLoader').hide();
+    $('#workersTable').show();
 
 });
 
 </script>
 
 {% endblock %}
-
-
-
