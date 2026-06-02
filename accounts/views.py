@@ -13,11 +13,17 @@ from django.contrib.auth import authenticate, login
 from .forms import LoginForm
 
 
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+@login_required(login_url='accounts:login')
+@never_cache
 def home(request):
-    if not request.user.is_authenticated:
-        return redirect('accounts:login')
-    return render(request, 'accounts/home.html') 
-
+    if request.user.is_authenticated:
+        logout(request)  # 👤 Force logout of active sessions
+        
+    # Serves the public hero/landing template
+    return render(request, 'accounts/home.html')
+    
 def register_view(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
