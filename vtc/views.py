@@ -678,7 +678,7 @@ def fetch_biometric_data(from_date, to_date, employee_code=""):
 from django.http import HttpResponseForbidden, JsonResponse
 from datetime import date
 
-from vtc.models import BiometricAttendanceRaw
+from .models import BiometricAttendanceRaw
 def biometric_api_test(request):
     try:
         today = date.today()
