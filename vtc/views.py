@@ -719,12 +719,14 @@ def biometric_api_test(request):
             "message": str(e)
         })
 
-from datetime import datetime
-
+from datetime import datetime, timezone as datetime_timezone, timedelta
 def parse_datetime(dt_str):
     if not dt_str:
         return None
-    return datetime.strptime(dt_str, "%m/%d/%Y %I:%M:%S %p")
+    naive_dt = datetime.strptime(dt_str, "%m/%d/%Y %I:%M:%S %p")
+    # Indian Standard Time (IST) is UTC +5:30 (fixed offset)
+    ist_tz = datetime_timezone(timedelta(hours=5, minutes=30))
+    return naive_dt.replace(tzinfo=ist_tz)
 
 
 def store_biometric_data(api_response):
