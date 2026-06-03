@@ -101,28 +101,53 @@ table.dataTable tbody tr:hover {
                                 <td><span class="badge bg-secondary">⏳</span></td>
                             </tr>
                         {% else %}
-                            <tr>
-                                <form method="post" class="d-flex gap-1 align-items-center">
-                                    {% csrf_token %}
-                                    <td>{{ day }}
-                                        <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
-                                    </td>
-                                    <td><input type="time" name="in_time" value="00:00" class="form-control form-control-sm" required></td>
-                                    <td><input type="time" name="out_time" value="00:01" class="form-control form-control-sm" required></td>
-                                    <td>
-                                        <select name="status" class="form-select form-select-sm" required>
-                                            <option value="">Select</option>
-                                            <option value="Present">Present</option>
-                                            <option value="Absent">Absent</option>
-                                            <option value="Holiday">Holiday</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button type="submit" name="action" value="save_attendance" class="btn-blue btn-sm">Save</button>
-                                    </td>
-                                </form>
-                            </tr>
-                        {% endif %}
+                                        {% with bio=bio_dict|get_item:day %}
+                                        <tr>
+                                            <form method="post" class="d-flex gap-1 align-items-center">
+                                                {% csrf_token %}
+
+                                                <td>
+                                                    {{ day }}
+                                                    <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
+                                                </td>
+
+                                                <!-- ✅ IN TIME -->
+                                                <!-- ✅ IN TIME -->
+                                                <td>
+                                                    {{ bio.in_time|time:'H:i' }}
+                                                    <input type="hidden" name="in_time"
+                                                        value="{{ bio.in_time|time:'H:i' }}">
+                                                </td>
+
+                                                <!-- ✅ OUT TIME -->
+                                                <td>
+                                                    {{ bio.out_time|time:'H:i' }}
+                                                    <input type="hidden" name="out_time"
+                                                        value="{{ bio.out_time|time:'H:i' }}">
+                                                </td>
+
+
+                                                <!-- ✅ STATUS -->
+                                                <td>
+                                                     <select name="status" class="form-select form-select-sm" required> 
+                                                        <option value="">Select</option> 
+                                                        <option value="Present">Present</option> 
+                                                        <option value="Absent">Absent</option> 
+                                                        <option value="Holiday">Holiday</option> </select>
+                                                </td>
+
+                                                <!-- ✅ SAVE -->
+                                                <td>
+                                                    <button type="submit" name="action" value="save_attendance" class="btn-blue btn-sm">
+                                                        Sync
+                                                    </button>
+                                                </td>
+
+                                            </form>
+                                        </tr>
+                                        {% endwith %}
+
+                                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
