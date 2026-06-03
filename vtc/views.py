@@ -639,7 +639,7 @@ def fetch_biometric_data(from_date, to_date, employee_code=""):
         employee_code = ",".join(employee_codes)
 
     # --- API request payload and log creation ---
-    url = "http://172.22.178.254:9003/TimeWatchAPI/NCLAttendance"
+    url = "http://112.133.254.146:41000/TimeWatchAPI/NCLAttendance"
 
     headers = {
         "Content-Type": "application/json",
