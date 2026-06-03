@@ -19,6 +19,9 @@ urlpatterns = [
     path('scheduled-trainings/', views.scheduled_training_list, name='scheduled_training_list'),
     path('to_schedule_training/', views.to_schedule_training, name='to_schedule_training'),
     path('worker/<int:pk>/view/', views.view_worker, name='view_worker'),
+
+    path('biometric/test/', biometric_api_test, name='biometric_test'),
+    path('biometric/sync/', views.sync_biometric_attendance, name='sync_biometric'),
    
     path('certificate-verification/', views.certificate_detail, name='certificate_detail'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
