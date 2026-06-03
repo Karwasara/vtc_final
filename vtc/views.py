@@ -356,7 +356,21 @@ def add_training_attendance_and_result(request, pk):
 
     # Existing attendance keyed by date
     existing_attendance = {att.date: att for att in training.attendances.all()}
+    print(existing_attendance)
+     # ✅ STEP 1: Get worker (linked to training)
+    worker = training.worker
 
+    # 🔗 IMPORTANT: Aadhaar ↔ EmployeeCode mapping
+    employee_code = worker.aadhar_number
+
+    bio_qs = BiometricAttendanceRaw.objects.filter(
+    employee_code=employee_code,
+    attendance_date__range=(training.from_date, training.to_date)
+    )
+
+    bio_dict = {b.attendance_date: b for b in bio_qs}
+
+    # print(bibio_dicto.attendance_date, in_time, out_time)
     # Get training result if exists
     result = getattr(training, 'result', None)
 
@@ -366,11 +380,12 @@ def add_training_attendance_and_result(request, pk):
         # ==================== SAVE DAILY ATTENDANCE ====================
         if action == 'save_attendance':
             attendance_date_str = request.POST.get('attendance_date')
-            in_time_str = request.POST.get('in_time')
-            out_time_str = request.POST.get('out_time')
+            in_time_str = request.POST.get('in_time') or None
+            out_time_str = request.POST.get('out_time') or None
             status = request.POST.get('status')
+            print(status,in_time_str,out_time_str,attendance_date_str)
 
-            if not all([attendance_date_str, in_time_str, out_time_str, status]):
+            if not all([attendance_date_str, status]):
                 messages.error(request, "Please fill all fields for attendance.")
                 return redirect(request.path)
 
@@ -388,15 +403,17 @@ def add_training_attendance_and_result(request, pk):
 
             # Convert times
             try:
-                in_time = time.fromisoformat(in_time_str)
-                out_time = time.fromisoformat(out_time_str)
+                in_time = time.fromisoformat(in_time_str) if in_time_str else None
+                out_time = time.fromisoformat(out_time_str) if out_time_str else None
             except ValueError:
                 messages.error(request, "Invalid time format.")
                 return redirect(request.path)
 
-            if status == 'Present' and out_time <= in_time:
-                messages.error(request, "Out time must be greater than In time.")
-                return redirect(request.path)
+            if status == 'Present':
+                if in_time and out_time:
+                    if out_time <= in_time:
+                        messages.error(request, "Out time must be greater than In time.")
+                        return redirect(request.path)
 
             # Save or update attendance
             attendance, created = TrainingAttendance.objects.update_or_create(
@@ -459,6 +476,7 @@ def add_training_attendance_and_result(request, pk):
         'date_range': date_range,
         'existing_attendance': existing_attendance,
         'result': result,
+        'bio_dict': bio_dict,
         'today': date.today(),
     }
     return render(request, 'vtc/add_attendance_result.html', context)
