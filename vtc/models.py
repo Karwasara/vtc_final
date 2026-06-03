@@ -175,7 +175,7 @@ class TrainingResult(models.Model):
 
 #Biometric
 class BiometricAPILog(models.Model):
-    employee_code = models.CharField(max_length=20)
+    employee_code = models.TextField(blank=True, null=True)
     from_date = models.DateField()
     to_date = models.DateField()
     request_payload = models.JSONField()
