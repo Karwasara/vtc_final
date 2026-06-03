@@ -575,6 +575,210 @@ def certificate_detail(request):
 
 
 
+#biometric NCL
+import requests
+import requests
+from datetime import date
+from .models import TrainingSchedule, BiometricAPILog
+from accounts.models import AreaMaster , SubsidiaryMaster,CustomUser
+
+def fetch_biometric_data(from_date, to_date, employee_code=""):
+    # If no specific employee code is provided, perform the reversed step-by-step lookup
+    if not employee_code:
+        # Step 1: Get all training schedules active today
+        active_schedules = TrainingSchedule.objects.filter(
+            from_date__lte=from_date,
+            to_date__gte=to_date
+        ).select_related('worker')
+
+        # Step 2: Extract unique creator user IDs from today's schedules
+        creator_ids = list(set([
+            schedule.created_by_id 
+            for schedule in active_schedules 
+            if schedule.created_by_id
+        ]))
+
+        if not creator_ids:
+            return []  # No scheduled trainings created by anyone today
+
+        # Step 3: Fetch the user records to map their user ID to their subsidiary ID
+        users = CustomUser.objects.filter(
+            id__in=creator_ids
+        ).values('id', 'subsidiary_id')
+        
+        user_to_subsidiary_map = {
+            user['id']: user['subsidiary_id'] 
+            for user in users 
+            if user['subsidiary_id'] is not None
+        }
+
+        # Step 4: Query the Subsidiary master to filter only those subsidiary IDs whose code is "ncl"
+        unique_subsidiary_ids = list(set(user_to_subsidiary_map.values()))
+        ncl_subsidiary_ids = list(SubsidiaryMaster.objects.filter(
+            id__in=unique_subsidiary_ids,
+            subsidiary_code__iexact="ncl"
+        ).values_list('id', flat=True))
+
+        # Step 5: Filter the schedules down to only those created by users belonging to "ncl"
+        ncl_schedules = []
+        for schedule in active_schedules:
+            creator_id = schedule.created_by_id
+            user_sub_id = user_to_subsidiary_map.get(creator_id)
+            
+            if user_sub_id in ncl_subsidiary_ids:
+                ncl_schedules.append(schedule)
+
+        # Step 6: Extract the unique employee ID card numbers
+        employee_codes = list(set([
+            schedule.worker.aadhar_number 
+            for schedule in ncl_schedules 
+            if schedule.worker and schedule.worker.aadhar_number
+        ]))
+        
+        # Join into a comma-separated string (e.g. "EMP01,EMP02")
+        employee_code = ",".join(employee_codes)
+
+    # --- API request payload and log creation ---
+    url = "http://172.22.178.254:9003/TimeWatchAPI/NCLAttendance"
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-Api-Key": "T!meW@tch#123@"
+    }
+
+    payload = {
+        "FromDate": str(from_date),
+        "ToDate": str(to_date),
+        "EmployeeCode": employee_code
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        response_data = response.json()
+        status_str = 'success' if response.status_code == 200 else 'failed'
+    except Exception as e:
+        response_data = {"error": str(e)}
+        status_str = 'failed'
+
+    # Save transaction log in database
+    BiometricAPILog.objects.create(
+        employee_code=employee_code,
+        from_date=from_date,
+        to_date=to_date,
+        request_payload=payload,
+        response_payload=response_data,
+        status=status_str
+    )
+
+    return response_data
+
+
+
+
+from django.http import HttpResponseForbidden, JsonResponse
+from datetime import date
+
+
+def biometric_api_test(request):
+    try:
+        today = date.today()
+
+        data = fetch_biometric_data(
+            from_date=today,
+            to_date=today,
+            employee_code=""   # empty = all employees
+        )
+       # print(data)
+        return JsonResponse({
+            "status": "success",
+            "count": len(data),
+            "data": data[:5]  # show only first 5 records
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        })
+
+from datetime import datetime
+
+def parse_datetime(dt_str):
+    if not dt_str:
+        return None
+    return datetime.strptime(dt_str, "%m/%d/%Y %I:%M:%S %p")
+
+
+def store_biometric_data(api_response):
+    records = api_response.get("Data", []) # handle both formats
+
+    print("Records received:", len(records))
+
+    for record in records:
+        print(record)
+        try:
+            attendance_date = datetime.strptime(
+                record["AttendanceDate"].split("T")[0],
+                "%Y-%m-%d"
+            ).date()
+
+            in_time = parse_datetime(record.get("IN"))
+            out_time = parse_datetime(record.get("OUT"))
+
+            obj, created = BiometricAttendanceRaw.objects.update_or_create(
+                employee_code=record["EmployeeCode"],
+                attendance_date=attendance_date,
+                defaults={
+                    "employee_name": record.get("EmployeeName"),
+                    "in_time": in_time,
+                    "out_time": out_time,
+                    "status": record.get("Status", "").strip(),
+                }
+            )
+
+            print("Saved:", obj.employee_code, "Created:", created)
+
+        except Exception as e:
+            print("❌ Error:", e)
+
+
+from django.http import JsonResponse
+from datetime import date
+
+from .models import TrainingSchedule
+
+def sync_biometric_attendance(request):
+    try:
+        # ✅ Step 1: Get today's date
+        today = date.today()
+
+        # ✅ Step 2: Call API (bulk fetch)
+        api_response = fetch_biometric_data(today, today, "")
+
+        # ✅ Step 3: Store raw data
+        store_biometric_data(api_response)
+
+        # ✅ Step 4: Process trainings of today
+        # trainings = TrainingSchedule.objects.filter(
+        #     start_date__lte=today,
+        #     end_date__gte=today
+        # )
+
+        # for training in trainings:
+        #     process_attendance(training, today)
+
+        return JsonResponse({
+            "status": "success",
+            "message": "Biometric attendance synced successfully"
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        })
+
+
 
 
 
