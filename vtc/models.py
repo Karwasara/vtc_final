@@ -172,6 +172,32 @@ class TrainingResult(models.Model):
         ('Poor', 'Poor')
     ])
     remarks = models.TextField(blank=True, null=True)
+
+#Biometric
+class BiometricAPILog(models.Model):
+    employee_code = models.CharField(max_length=20)
+    from_date = models.DateField()
+    to_date = models.DateField()
+    request_payload = models.JSONField()
+    response_payload = models.JSONField()
+    status = models.CharField(max_length=20)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class BiometricAttendanceRaw(models.Model):
+    employee_code = models.CharField(max_length=20)
+    employee_name = models.CharField(max_length=255, null=True, blank=True)
+
+    attendance_date = models.DateField()
+
+    in_time = models.DateTimeField(null=True, blank=True)
+    out_time = models.DateTimeField(null=True, blank=True)
+
+    status = models.CharField(max_length=20, null=True, blank=True)
+
+
+    class Meta:
+        unique_together = ('employee_code', 'attendance_date')
    
     
     
