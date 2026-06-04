@@ -702,8 +702,8 @@ def biometric_api_test(request):
         today = date.today()
 
         data = fetch_biometric_data(
-            from_date=today,
-            to_date=today,
+            from_date="03-06-2026",
+            to_date="03-06-2026",
             employee_code=""   # empty = all employees
         )
        # print(data)
