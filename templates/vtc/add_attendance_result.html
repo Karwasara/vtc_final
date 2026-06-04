@@ -1,43 +1,50 @@
 {% extends 'common/base.html' %}
 {% load static %}
 {% load custom_filters %}
+{% load tz %}
 
 {% block content %}
-
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 
 <style>
-body{
+body {
     background:#f7fafd;
     font-family:"Segoe UI",sans-serif;
 }
 
-table.dataTable thead th{
+/* DataTable Header */
+table.dataTable thead th {
     background:#004B87 !important;
-    color:#fff;
+    color:white;
 }
 
-table.dataTable tbody tr:hover{
+/* Hover */
+table.dataTable tbody tr:hover {
     background:#f1f7ff;
 }
 
-.btn-blue{
+/* Buttons */
+.btn-blue {
     background:#2563eb;
-    color:#fff;
+    color:white;
     border:none;
     padding:6px 14px;
     border-radius:25px;
     font-size:13px;
 }
+.btn-blue:hover { background:#1d4ed8; }
 
-.btn-blue:hover{
-    background:#1d4ed8;
+.btn-red {
+    background:#dc3545;
+    color:white;
+    padding:6px 14px;
+    border-radius:25px;
+    font-size:13px;
 }
 
-.btn-grey{
+.btn-grey {
     background:#64748b;
-    color:#fff;
-    border:none;
+    color:white;
     padding:6px 14px;
     border-radius:25px;
     font-size:13px;
@@ -62,12 +69,9 @@ table.dataTable tbody tr:hover{
 
             {% include 'common/message.html' %}
 
-            <h4 class="mb-3 font-semibold">
-                Daily Attendance
-            </h4>
-
+            <!-- Attendance Table -->
+            <h4 class="mb-3 font-semibold">Daily Attendance</h4>
             <table id="attendanceTable" class="display w-full text-sm">
-
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -77,243 +81,172 @@ table.dataTable tbody tr:hover{
                         <th>Action</th>
                     </tr>
                 </thead>
-
                 <tbody>
+                    {% for day in date_range %}
+                        {% if existing_attendance|get_item:day %}
+                            {% with att=existing_attendance|get_item:day %}
+                            <tr>
+                                <td>{{ day }}</td>
+                                <td>{{ att.in_time }}</td>
+                                <td>{{ att.out_time }}</td>
+                                <td>{{ att.present }}</td>
+                                <td><span class="badge bg-success">✔ Saved</span></td>
+                            </tr>
+                            {% endwith %}
+                        {% elif day > today %}
+                            <tr>
+                                <td>{{ day }}</td>
+                                <td>—</td>
+                                <td>—</td>
+                                <td class="text-muted">Future</td>
+                                <td><span class="badge bg-secondary">⏳</span></td>
+                            </tr>
+                        {% else %}
+                                        {% with bio=bio_dict|get_item:day %}
+                                        <tr>
+                                            <form method="post" class="d-flex gap-1 align-items-center">
+                                                {% csrf_token %}
 
-                {% for day in date_range %}
+                                                <td>
+                                                    {{ day }}
+                                                    <input type="hidden" name="attendance_date" value="{{ day|date:'Y-m-d' }}">
+                                                </td>
 
-                    {% if existing_attendance|get_item:day %}
+                                                <!-- ✅ IN TIME -->
+                                                <!-- ✅ IN TIME -->
+                                                <td>
+                                                    {{ bio.in_time|time:'H:i' }}
+                                                    <input type="hidden" name="in_time"
+                                                        value="{{ bio.in_time|time:'H:i' }}">
+                                                </td>
 
-                        {% with att=existing_attendance|get_item:day %}
-                        <tr>
-                            <td>{{ day|date:"d-m-Y" }}</td>
-                            <td>{{ att.in_time|default:"--" }}</td>
-                            <td>{{ att.out_time|default:"--" }}</td>
-                            <td>{{ att.present }}</td>
-                            <td>
-                                <span class="badge bg-success">
-                                    ✔ Saved
-                                </span>
-                            </td>
-                        </tr>
-                        {% endwith %}
+                                                <!-- ✅ OUT TIME -->
+                                                <td>
+                                                    {{ bio.out_time|time:'H:i' }}
+                                                    <input type="hidden" name="out_time"
+                                                        value="{{ bio.out_time|time:'H:i' }}">
+                                                </td>
 
-                    {% elif day > today %}
 
-                        <tr>
-                            <td>{{ day|date:"d-m-Y" }}</td>
-                            <td>--</td>
-                            <td>--</td>
-                            <td>Future</td>
-                            <td>
-                                <span class="badge bg-secondary">
-                                    ⏳
-                                </span>
-                            </td>
-                        </tr>
+                                                <!-- ✅ STATUS -->
+                                                <td>
+                                                     <select name="status" class="form-select form-select-sm" required> 
+                                                        <option value="">Select</option> 
+                                                        <option value="Present">Present</option> 
+                                                        <option value="Absent">Absent</option> 
+                                                        <option value="Holiday">Holiday</option> </select>
+                                                </td>
 
-                    {% else %}
+                                                <!-- ✅ SAVE -->
+                                                <td>
+                                                    <button type="submit" name="action" value="save_attendance" class="btn-blue btn-sm">
+                                                        Sync
+                                                    </button>
+                                                </td>
 
-                        {% with bio=bio_dict|get_item:day %}
+                                            </form>
+                                        </tr>
+                                        {% endwith %}
 
-                        <tr>
-
-                            <form method="post">
-                                {% csrf_token %}
-
-                                <td>
-                                    {{ day|date:"d-m-Y" }}
-
-                                    <input type="hidden"
-                                           name="attendance_date"
-                                           value="{{ day|date:'Y-m-d' }}">
-                                </td>
-
-                                <td>
-
-                                    {% if bio and bio.in_time %}
-                                        {{ bio.in_time }}
-                                    {% else %}
-                                        --
                                     {% endif %}
-
-                                    <input type="hidden"
-                                           name="in_time"
-                                           value="{% if bio %}{{ bio.in_time }}{% endif %}">
-                                </td>
-
-                                <td>
-
-                                    {% if bio and bio.out_time %}
-                                        {{ bio.out_time }}
-                                    {% else %}
-                                        --
-                                    {% endif %}
-
-                                    <input type="hidden"
-                                           name="out_time"
-                                           value="{% if bio %}{{ bio.out_time }}{% endif %}">
-                                </td>
-
-                                <td>
-                                    <select name="status"
-                                            class="form-select form-select-sm"
-                                            required>
-
-                                        <option value="">
-                                            Select
-                                        </option>
-
-                                        <option value="Present">
-                                            Present
-                                        </option>
-
-                                        <option value="Absent">
-                                            Absent
-                                        </option>
-
-                                        <option value="Holiday">
-                                            Holiday
-                                        </option>
-
-                                    </select>
-                                </td>
-
-                                <td>
-                                    <button type="submit"
-                                            name="action"
-                                            value="save_attendance"
-                                            class="btn-blue btn-sm">
-                                        Sync
-                                    </button>
-                                </td>
-
-                            </form>
-
-                        </tr>
-
-                        {% endwith %}
-
-                    {% endif %}
-
-                {% endfor %}
-
+                    {% endfor %}
                 </tbody>
-
             </table>
 
-            <h4 class="mt-6 font-semibold">
-                Final Result
-            </h4>
+            <!-- Final Result -->
+            <h4 class="mt-6 font-semibold">Final Result</h4>
 
             {% if training.attendances.count == date_range|length and training.vtc_status != 'approved' %}
-
                 <form method="post" enctype="multipart/form-data" class="mt-3">
-
                     {% csrf_token %}
-
                     {% if not training.attendance_field_file %}
-
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                Upload Attendance File
-                            </label>
-
-                            <input type="file"
-                                   name="attendance_field_file"
-                                   class="form-control"
-                                   required>
+                            <label class="form-label fw-semibold">Upload Attendance File</label>
+                            <input type="file" name="attendance_field_file" class="form-control" required>
                         </div>
-
                     {% else %}
-
                         <div class="alert alert-success">
-                            Attendance file uploaded:
+                            📎 Attendance file uploaded:
                             <a href="{{ training.attendance_field_file.url }}" target="_blank">
-                                View File
+                                {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
                             </a>
                         </div>
-
                     {% endif %}
 
+                    <!-- Performance Appraisal Dropdown -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            Performance Appraisal
-                        </label>
-
+                        <label class="form-label fw-semibold">Performance Appraisal</label>
                         <select name="performance_appraisal"
-                                class="form-select"
+                                class="form-select border border-dark rounded shadow-sm px-3 py-2 fs-6"
+                                style="background-color:#f8f9fa;"
                                 required>
-
                             <option value="">Select</option>
-                            <option value="Excellent">Excellent</option>
-                            <option value="Good">Good</option>
-                            <option value="Average">Average</option>
-                            <option value="Poor">Poor</option>
-
+                            <option value="Excellent" class="text-success fw-bold">Excellent</option>
+                            <option value="Good" class="text-primary fw-bold">Good</option>
+                            <option value="Average" class="text-warning fw-bold">Average</option>
+                            <option value="Poor" class="text-danger fw-bold">Poor</option>
                         </select>
                     </div>
 
+                    <!-- Remarks Box -->
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            Remarks
-                        </label>
-
+                        <label class="form-label fw-semibold">Remarks</label>
                         <textarea name="remarks"
                                   rows="4"
-                                  class="form-control"></textarea>
+                                  class="form-control border border-dark rounded shadow-sm px-3 py-2"
+                                  placeholder="Enter remarks here..."></textarea>
                     </div>
 
                     <div class="d-flex gap-2">
-
-                        <button type="submit"
-                                name="action"
-                                value="submit_final"
-                                class="btn-blue">
-
-                            Forward for Approval
-
-                        </button>
-
-                        <a href="{% url 'vtc:scheduled_training_list' %}"
-                           class="btn-grey">
-
-                            Back to List
-
-                        </a>
-
+                        <button type="submit" name="action" value="submit_final" class="btn-blue">✅ Forward for Approval</button>
+                        <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey">Back to List</a>
                     </div>
-
                 </form>
 
             {% else %}
-
-                <a href="{% url 'vtc:scheduled_training_list' %}"
-                   class="btn-grey mt-3">
-
-                    Back to List
-
-                </a>
-
+                <!-- Even if attendance or result is not fully saved, Back to List is always enabled -->
+                {% if training.vtc_status == 'approved' %}
+                    {% if training.attendance_field_file %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Attendance File:</label><br>
+                            <a href="{{ training.attendance_field_file.url }}" target="_blank">
+                                {{ training.attendance_field_file.name|cut:"worker_documents/attendancefield/" }}
+                            </a>
+                        </div>
+                    {% endif %}
+                    {% if result %}
+                        <p><strong>Performance Appraisal:</strong> 
+                            <span class="badge rounded-pill 
+                                {% if result.performance_appraisal == 'Excellent' %}bg-success
+                                {% elif result.performance_appraisal == 'Good' %}bg-primary
+                                {% elif result.performance_appraisal == 'Average' %}bg-warning text-dark
+                                {% else %}bg-danger{% endif %} px-2 py-1">
+                                {{ result.performance_appraisal }}
+                            </span>
+                        </p>
+                        <p><strong>Remarks:</strong></p>
+                        <div class="border border-dark rounded shadow-sm px-3 py-2" style="background-color:#fdfdfd;">
+                            {{ result.remarks|default:"—" }}
+                        </div>
+                    {% endif %}
+                    <div class="alert alert-info mt-3">✅ Attendance and result are approved and locked for editing.</div>
+                {% endif %}
+                <a href="{% url 'vtc:scheduled_training_list' %}" class="btn-grey mt-3">Back to List</a>
             {% endif %}
 
         </div>
 
     </div>
-
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
 <script>
-$(document).ready(function () {
-
+$(document).ready(function(){
     $('#attendanceTable').DataTable({
-        pageLength: 100,
-        order: []
+        pageLength:100,
+        order:[]
     });
-
 });
 </script>
 
