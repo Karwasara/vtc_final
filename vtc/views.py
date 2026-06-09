@@ -545,6 +545,7 @@ def certificate_detail(request):
 
                 if subsidiary:
                     subsidiary_name = subsidiary.subsidiary_name
+					subsidiary_code = subsidiary.subsidiary_code
 				
         except TrainingSchedule.DoesNotExist:
             training = None
@@ -564,8 +565,8 @@ def certificate_detail(request):
         chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV/Chapter V"
         form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
         validity_years = {
-            "Basic": "5",
-            "Refresher": "3"
+            "Basic": "4",
+            "Refresher": "4"
         }.get(training.type_of_training, "....")
 
         # Mask Aadhaar
@@ -582,6 +583,7 @@ def certificate_detail(request):
             "present_days": present_days,
             "area_name": area_name,
 			"subsidiary_name": subsidiary_name,
+			"subsidiary_code": subsidiary_code,
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
