@@ -185,7 +185,7 @@ from django.contrib.auth.decorators import login_required
 
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster, SubsidiaryMaster
-
+from accounts.models import CustomUser
 
 @login_required(login_url='accounts:login')
 def certificate_detail(request):
