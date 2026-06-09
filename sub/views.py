@@ -331,6 +331,6 @@ def certificate_detail(request):
 
     return render(
         request,
-        'vtc/certificate_detail.html',
+        'sub/certificate_detail.html',
         context
     )
