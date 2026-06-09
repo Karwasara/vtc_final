@@ -401,7 +401,7 @@ def generate_form_a_pdf(request, training_id):
     y -= line_gap
 
     validity_years = {"Basic": "5", "Refresher": "5"}.get(training.type_of_training, "....")
-    c.drawString(50, y, f"* This certificate is valid for {validity_years} years from date of issue of certificate.")
+    c.drawString(50, y, f"* This certificate is valid for {......} years from date of issue of certificate.")
 
     c.showPage()
     c.save()
