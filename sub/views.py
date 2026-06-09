@@ -230,6 +230,11 @@ def certificate_detail(request):
                 if subsidiary:
                     subsidiary_name = subsidiary.subsidiary_name
                     subsidiary_code = subsidiary.subsidiary_code
+            creator_first_name = ""
+            if training.created_by_id:
+                creator = CustomUser.objects.filter(id=training.created_by_id).first()
+                if creator:
+                    creator_first_name = creator.first_name
 
         except TrainingSchedule.DoesNotExist:
             training = None
@@ -293,6 +298,7 @@ def certificate_detail(request):
             "area_name": area_name,
             "subsidiary_name": subsidiary_name,
             "subsidiary_code": subsidiary_code,
+            "creator_first_name": creator_first_name,
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
