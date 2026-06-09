@@ -53,7 +53,7 @@ body{
     <!-- SIDEBAR (25%) -->
     <div class="col-span-12 md:col-span-3">
 
-        {% include 'sub/sidebar.html' %}
+        {% include 'vtc/sidebar.html' %}
 
     </div>
 
@@ -97,7 +97,7 @@ body{
 
                 <div class="text-center">
 
-                    <h3 class="font-semibold">Northern Coalfields Limited</h3>
+                    <h3 class="font-semibold">{{ subsidiary_name }}</h3>
                     <h5>{{ area_name }} MINE</h5>
 
                     <h4 class="mt-3 font-semibold">
@@ -210,7 +210,7 @@ body{
                         <hr class="mb-4">
 
                         <p><em>
-                        * This certificate will have no claim for employment in NCL.
+                        * This certificate will have no claim for employment in {{ subsidiary_code }}.
                         </em></p>
 
                         <p><em>
@@ -243,4 +243,3 @@ body{
 </div>
 
 {% endblock %}
-
