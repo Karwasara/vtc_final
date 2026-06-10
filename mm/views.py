@@ -294,8 +294,7 @@ def generate_form_a_pdf(request, training_id):
     y -= 15
     c.setFont("Helvetica", 10)
     description = (
-        "Certificate of Training for employment in mine on surface and in opencast working / below ground in gassy 
-        / non-gassy mine"
+        "Certificate of Training for employment in mine on surface and in opencast working/below ground in gassy/non-gassy mine"
         if training.type_of_training == "Basic"
         else "Certificate of Refresher Training / Training of special categories of workmen"
     )
