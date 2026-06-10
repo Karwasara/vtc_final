@@ -518,12 +518,18 @@ from django.contrib.auth.decorators import login_required
 
 from vtc.models import TrainingSchedule
 from accounts.models import AreaMaster, SubsidiaryMaster
+from accounts.models import CustomUser
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+
+from vtc.models import TrainingSchedule
+from accounts.models import AreaMaster, SubsidiaryMaster, CustomUser
 
 
 @login_required(login_url='accounts:login')
 def certificate_detail(request):
     # Authentication and role check
-    if not request.user.is_authenticated or request.user.user_type != 'vtc':
+    if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'vtc':
         return redirect('accounts:login')
 
     serial_number = request.GET.get('serial_number')
@@ -533,6 +539,7 @@ def certificate_detail(request):
     area_name = "Unknown"
     subsidiary_name = ""
     subsidiary_code = ""
+    creator_first_name = ""
 
     if serial_number:
         searched = True
@@ -543,6 +550,15 @@ def certificate_detail(request):
             ).get(
                 certificate_serial_number_final=serial_number
             )
+
+            # Get creator first name
+            if training.created_by_id:
+                creator = CustomUser.objects.filter(
+                    id=training.created_by_id
+                ).first()
+
+                if creator:
+                    creator_first_name = creator.first_name
 
             # Extract area code from serial number
             area_code = serial_number[3:6]
@@ -626,6 +642,7 @@ def certificate_detail(request):
             "area_name": area_name,
             "subsidiary_name": subsidiary_name,
             "subsidiary_code": subsidiary_code,
+            "creator_first_name": creator_first_name,
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
@@ -639,6 +656,10 @@ def certificate_detail(request):
             "training": None,
             "worker": None,
             "searched": searched,
+            "creator_first_name": "",
+            "area_name": "",
+            "subsidiary_name": "",
+            "subsidiary_code": "",
         }
 
     return render(
@@ -646,7 +667,6 @@ def certificate_detail(request):
         'vtc/certificate_detail.html',
         context
     )
-
 
 
 #biometric NCL
