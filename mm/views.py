@@ -293,12 +293,25 @@ def generate_form_a_pdf(request, training_id):
     c.drawCentredString(width / 2, y, "{Rule 28(1)}")
     y -= 15
     c.setFont("Helvetica", 10)
-    description = (
-        "Certificate of Training for employment in mine on surface and in opencast working/below ground in gassy/non-gassy mine"
-        if training.type_of_training == "Basic"
-        else "Certificate of Refresher Training / Training of special categories of workmen"
-    )
-    c.drawCentredString(width / 2, y, description)
+    if training.type_of_training == "Basic":
+        c.drawCentredString(
+            width / 2,
+            y,
+            "Certificate of Training for employment in mine on surface and in opencast working / below ground in gassy /"
+        )
+        y -= 15
+        c.drawCentredString(
+            width / 2,
+            y,
+            "/ non-gassy mine"
+        )
+        y -= 20
+    else:
+        c.drawCentredString(
+            width / 2,
+            y,
+            "Certificate of Refresher Training / Training of special categories of workmen"
+        )
     y -= 20
 
     date_only = training.certificate_created_date.strftime('%d/%m/%Y')
