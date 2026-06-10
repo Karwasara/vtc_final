@@ -503,55 +503,161 @@ def certificate_verification(request):
 
 
 # ---------------- Certificate Detail ----------------
+from django.shortcuts import render, get_object_or_404
+from vtc.models import TrainingSchedule
+
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+
+from vtc.models import TrainingSchedule
+from accounts.models import AreaMaster, SubsidiaryMaster
+from accounts.models import CustomUser
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+
+from vtc.models import TrainingSchedule
+from accounts.models import AreaMaster, SubsidiaryMaster, CustomUser
+
+
+@login_required(login_url='accounts:login')
 def certificate_detail(request):
-    # ✅ AUTH + ROLE CHECK (must be first)
-    if not request.user.is_authenticated or request.user.user_type != 'mm':
+    # Authentication and role check
+    if not request.user.is_authenticated or getattr(request.user, 'user_type', None) != 'mm':
         return redirect('accounts:login')
+
     serial_number = request.GET.get('serial_number')
     training = None
     searched = False
+
     area_name = "Unknown"
+    subsidiary_name = ""
+    subsidiary_code = ""
+    creator_first_name = ""
 
     if serial_number:
         searched = True
+
         try:
-            training = TrainingSchedule.objects.select_related('worker').get(certificate_serial_number_final=serial_number)
+            training = TrainingSchedule.objects.select_related(
+                'worker'
+            ).get(
+                certificate_serial_number_final=serial_number
+            )
+
+            # Get creator first name
+            if training.created_by_id:
+                creator = CustomUser.objects.filter(
+                    id=training.created_by_id
+                ).first()
+
+                if creator:
+                    creator_first_name = creator.first_name
+
+            # Extract area code from serial number
             area_code = serial_number[3:6]
-            area = AreaMaster.objects.filter(area_code=area_code).first()
+
+            # Get Area
+            area = AreaMaster.objects.filter(
+                area_code=area_code
+            ).first()
+
             if area:
                 area_name = area.area_name
+
+                # Get Subsidiary
+                subsidiary = SubsidiaryMaster.objects.filter(
+                    id=area.subsidiary_id
+                ).first()
+
+                if subsidiary:
+                    subsidiary_name = subsidiary.subsidiary_name
+                    subsidiary_code = subsidiary.subsidiary_code
+
         except TrainingSchedule.DoesNotExist:
             training = None
 
+    # Prepare context if training found
     if training:
         worker = training.worker
+
         from_date_str = training.from_date.strftime("%d-%m-%Y")
         to_date_str = training.to_date.strftime("%d-%m-%Y")
-        present_days = training.attendances.filter(present="Present").count()
-        schedule_number = "First" if training.type_of_training == "Basic" else "Fourth" if training.type_of_training == "Refresher" else ""
-        chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV/Chapter V"
-        form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
-        validity_years = {"Basic": "5", "Refresher": "3"}.get(training.type_of_training, "....")
-        full_adhar = worker.aadhar_number or ""
-        masked_adhar = "XXXX-XXXX-" + full_adhar[-4:] if len(full_adhar) >= 4 else "Invalid"
+
+        present_days = training.attendances.filter(
+            present="Present"
+        ).count()
+
+        schedule_number = (
+            "First"
+            if training.type_of_training == "Basic"
+            else "Fourth"
+            if training.type_of_training == "Refresher"
+            else ""
+        )
+
+        chapter = (
+            "Chapter III"
+            if training.type_of_training == "Basic"
+            else "Chapter IV/Chapter V"
+        )
+
+        form_type = (
+            "FORM - A"
+            if training.type_of_training == "Basic"
+            else "FORM - B"
+        )
+
+        validity_years = {
+            "Basic": "4",
+            "Refresher": "4",
+        }.get(training.type_of_training, "....")
+
+        # Mask Aadhaar
+        full_aadhar = worker.aadhar_number or ""
+        masked_aadhar = (
+            "XXXX-XXXX-" + full_aadhar[-4:]
+            if len(full_aadhar) >= 4
+            else "Invalid"
+        )
 
         context = {
             "training": training,
             "worker": worker,
             "serial_number": training.certificate_serial_number_final,
-            "issue_date": training.certificate_created_date.strftime('%d/%m/%Y') if training.certificate_created_date else None,
+            "issue_date": (
+                training.certificate_created_date.strftime('%d/%m/%Y')
+                if training.certificate_created_date
+                else None
+            ),
             "from_date": from_date_str,
             "to_date": to_date_str,
             "present_days": present_days,
             "area_name": area_name,
+            "subsidiary_name": subsidiary_name,
+            "subsidiary_code": subsidiary_code,
+            "creator_first_name": creator_first_name,
             "schedule_number": schedule_number,
             "chapter": chapter,
             "form_type": form_type,
             "validity_years": validity_years,
-            "masked_adhar": masked_adhar,
+            "masked_aadhar": masked_aadhar,
             "searched": searched,
         }
-    else:
-        context = {"training": None, "worker": None, "searched": searched}
 
-    return render(request, 'mm/certificate_detail.html', context)
+    else:
+        context = {
+            "training": None,
+            "worker": None,
+            "searched": searched,
+            "creator_first_name": "",
+            "area_name": "",
+            "subsidiary_name": "",
+            "subsidiary_code": "",
+        }
+
+    return render(
+        request,
+        'mm/certificate_detail.html',
+        context
+    )
