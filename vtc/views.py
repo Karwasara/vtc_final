@@ -279,14 +279,14 @@ def edit_training(request, pk):
             messages.error(request, 'From Date is in the past and cannot be changed.')
 
         # If the original to_date is in the past, it cannot be changed
-        elif training.to_date < today and new_to_date != training.to_date:
+        elif training.to_date <= today and new_to_date != training.to_date:
             messages.error(request, 'To Date is in the past and cannot be changed.')
 
         # If the original dates are today or future, new dates cannot be set in the past
         elif training.from_date >= today and new_from_date < today:
             messages.error(request, 'From Date cannot be set to a past date.')
 
-        elif training.to_date >= today and new_to_date < today:
+        elif training.to_date > today and new_to_date < today:
             messages.error(request, 'To Date cannot be set to a past date.')
 
         elif new_from_date > new_to_date:
@@ -419,7 +419,7 @@ def add_training_attendance_and_result(request, pk):
 
             if status == 'Present':
                 if in_time and out_time:
-                    if out_time <= in_time:
+                    if out_time < in_time:
                         messages.error(request, "Out time must be greater than In time.")
                         return redirect(request.path)
 
@@ -873,6 +873,346 @@ def sync_biometric_attendance(request):
             "status": "error",
             "message": str(e)
         })
+
+
+
+
+
+# ==========================================================
+# MCL BIOMETRIC API
+# ==========================================================
+
+import requests
+from datetime import date, datetime
+from django.http import JsonResponse
+from django.utils import timezone
+
+from .models import (
+    TrainingSchedule,
+    BiometricAPILog,
+    BiometricAttendanceRaw,
+)
+
+from accounts.models import (
+    SubsidiaryMaster,
+    CustomUser,
+)
+
+
+# ==========================================================
+# FETCH MCL BIOMETRIC DATA
+# ==========================================================
+
+def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
+
+    # ------------------------------------------------------
+    # Fetch Employee Codes if not supplied
+    # ------------------------------------------------------
+    if not employee_code:
+
+        active_schedules = TrainingSchedule.objects.filter(
+            from_date__lte=from_date,
+            to_date__gte=to_date
+        ).select_related("worker")
+
+        creator_ids = list(
+            set(
+                schedule.created_by_id
+                for schedule in active_schedules
+                if schedule.created_by_id
+            )
+        )
+
+        if not creator_ids:
+            return []
+
+        users = CustomUser.objects.filter(
+            id__in=creator_ids
+        ).values(
+            "id",
+            "subsidiary_id"
+        )
+
+        user_to_subsidiary = {
+            user["id"]: user["subsidiary_id"]
+            for user in users
+            if user["subsidiary_id"] is not None
+        }
+
+        mcl_subsidiary_ids = list(
+            SubsidiaryMaster.objects.filter(
+                id__in=user_to_subsidiary.values(),
+                subsidiary_code__iexact="MCL"
+            ).values_list("id", flat=True)
+        )
+
+        mcl_schedules = []
+
+        for schedule in active_schedules:
+
+            creator_id = schedule.created_by_id
+            subsidiary_id = user_to_subsidiary.get(creator_id)
+
+            if subsidiary_id in mcl_subsidiary_ids:
+                mcl_schedules.append(schedule)
+
+        employee_codes = list(
+            set(
+                schedule.worker.aadhar_number
+                .replace(" ", "")
+                .replace("-", "")
+                .strip()
+                for schedule in mcl_schedules
+                if schedule.worker
+                and schedule.worker.aadhar_number
+            )
+        )
+
+        employee_code = ",".join(employee_codes)
+
+    # ------------------------------------------------------
+    # API Request
+    # ------------------------------------------------------
+
+    url = "https://dev.mclbiometric.in/notification/api/getAtt"
+
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept": "application/json"
+    }
+
+    params = {
+        "cmpcd": "MCL",
+        "userid": "GetAtt",
+        "password": "welcome123",
+        "fromdt": str(from_date),
+        "todt": str(to_date),
+        "empids": employee_code
+    }
+
+    try:
+
+        response = requests.get(
+            url=url,
+            params=params,
+            headers=headers,
+            timeout=60
+        )
+
+        print("Final URL :", response.url)
+        print("Status    :", response.status_code)
+        print("Response  :", response.text)
+
+        response.raise_for_status()
+
+        response_data = response.json()
+        status = "success"
+
+    except requests.exceptions.HTTPError as e:
+
+        status = "failed"
+
+        response_data = {
+            "error": str(e),
+            "status_code": response.status_code,
+            "response": response.text
+        }
+
+    except requests.exceptions.RequestException as e:
+
+        status = "failed"
+
+        response_data = {
+            "error": str(e)
+        }
+
+    except ValueError:
+
+        status = "failed"
+
+        response_data = {
+            "error": "Invalid JSON response",
+            "response": response.text
+        }
+
+    print("Status :", status)
+    print("Response Data :", response_data)
+
+    BiometricAPILog.objects.create(
+        employee_code=employee_code,
+        from_date=from_date,
+        to_date=to_date,
+        request_payload=params,
+        response_payload=response_data,
+        status=status
+    )
+
+    return response_data
+
+
+# ==========================================================
+# TEST API
+# ==========================================================
+
+def biometric_mcl_api_test(request):
+
+    try:
+
+        today = date.today()
+
+        data = fetch_mcl_biometric_data(
+            from_date=today,
+            to_date=today,
+            employee_code=""
+        )
+
+        if isinstance(data, list):
+            records = data
+        elif isinstance(data, dict):
+            records = data.get("data", [])
+        else:
+            records = []
+
+        return JsonResponse({
+            "status": "success",
+            "count": len(records),
+            "data": records[:5]
+        })
+
+    except Exception as e:
+
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        })
+
+
+# ==========================================================
+# PARSE DATE & TIME
+# ==========================================================
+
+def parse_mcl_datetime(att_date, att_time):
+
+    if not att_time:
+        return None
+
+    datetime_string = f"{att_date} {att_time}"
+
+    for fmt in (
+        "%d.%m.%Y %H:%M:%S",
+        "%d.%m.%Y %H:%M"
+    ):
+
+        try:
+            dt = datetime.strptime(
+                datetime_string,
+                fmt
+            )
+
+            return timezone.make_aware(dt)
+
+        except ValueError:
+            pass
+
+    raise ValueError(
+        f"Invalid datetime format : {datetime_string}"
+    )
+
+
+# ==========================================================
+# STORE BIOMETRIC DATA
+# ==========================================================
+
+def store_mcl_biometric_data(api_response):
+
+    if isinstance(api_response, dict):
+        records = api_response.get("data", [])
+
+    elif isinstance(api_response, list):
+        records = api_response
+
+    else:
+        records = []
+
+    print("Records received :", len(records))
+
+    for record in records:
+
+        try:
+
+            attendance_date = datetime.strptime(
+                record["attDate"],
+                "%d.%m.%Y"
+            ).date()
+
+            in_time = parse_mcl_datetime(
+                record["inDate"],
+                record.get("inTime")
+            )
+
+            out_time = parse_mcl_datetime(
+                record["outDate"],
+                record.get("outTime")
+            )
+
+            obj, created = BiometricAttendanceRaw.objects.update_or_create(
+
+                employee_code=record["empId"],
+                attendance_date=attendance_date,
+
+                defaults={
+                    "employee_name": record.get("empId"),
+                    "in_time": in_time,
+                    "out_time": out_time,
+                    "status": record.get("status", "")
+                }
+
+            )
+
+            print(
+                f"Saved : {obj.employee_code} | Created : {created}"
+            )
+
+        except Exception as e:
+
+            print("Error :", e)
+            print(record)
+
+
+# ==========================================================
+# SYNC BIOMETRIC DATA
+# ==========================================================
+
+def sync_mcl_biometric_attendance(request):
+
+    try:
+
+        today = date.today()
+
+        api_response = fetch_mcl_biometric_data(
+            today,
+            today,
+            ""
+        )
+
+        store_mcl_biometric_data(api_response)
+
+        return JsonResponse({
+
+            "status": "success",
+            "message": "MCL biometric attendance synced successfully"
+
+        })
+
+    except Exception as e:
+
+        return JsonResponse({
+
+            "status": "error",
+            "message": str(e)
+
+        })
+
 
 
 
