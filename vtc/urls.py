@@ -22,6 +22,8 @@ urlpatterns = [
 
     path('biometric/test/', views.biometric_api_test, name='biometric_test'),
     path('biometric/sync/', views.sync_biometric_attendance, name='sync_biometric'),
+    path('biometrics/test/', views.biometric_mcl_api_test, name='biometric_mcl_test'),
+    path('biometrics/sync/', views.sync_mcl_biometric_attendance, name='sync_mcl_biometric'),
    
     path('certificate-verification/', views.certificate_detail, name='certificate_detail'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
