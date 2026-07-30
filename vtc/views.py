@@ -909,12 +909,17 @@ from .models import TrainingSchedule, BiometricAPILog
 from accounts.models import SubsidiaryMaster, CustomUser
 
 
+def chunk_list(lst, size):
+    """Yield successive chunks from list."""
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+
 def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
     # ------------------------------------------------------
-    # Get Employee IDs if not supplied
+    # Fetch Employee Codes
     # ------------------------------------------------------
-
     if not employee_code:
 
         active_schedules = TrainingSchedule.objects.filter(
@@ -935,10 +940,7 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
         users = CustomUser.objects.filter(
             id__in=creator_ids
-        ).values(
-            "id",
-            "subsidiary_id"
-        )
+        ).values("id", "subsidiary_id")
 
         user_sub_map = {
             u["id"]: u["subsidiary_id"]
@@ -959,23 +961,30 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
             sub_id = user_sub_map.get(schedule.created_by_id)
 
-            if sub_id in mcl_sub_ids:
+            if sub_id not in mcl_sub_ids:
+                continue
 
-                if (
-                    schedule.worker
-                    and schedule.worker.aadhar_number
-                ):
+            if not schedule.worker:
+                continue
 
-                    employee_codes.append(
+            code = (schedule.worker.aadhar_number or "").replace(
+                " ", ""
+            ).replace("-", "").strip()
 
-                        schedule.worker.aadhar_number
-                        .replace(" ", "")
-                        .replace("-", "")
-                        .strip()
+            # Accept only numeric IDs
+            if code.isdigit():
+                employee_codes.append(code)
 
-                    )
+        employee_codes = sorted(list(set(employee_codes)))
 
-        employee_code = ",".join(sorted(set(employee_codes)))
+    else:
+        employee_codes = [
+            x.strip()
+            for x in employee_code.split(",")
+            if x.strip()
+        ]
+
+    print("Total Employee IDs :", len(employee_codes))
 
     # ------------------------------------------------------
     # API DETAILS
@@ -983,98 +992,99 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
     url = "https://dev.mclbiometric.in/notification/api/getAtt"
 
-    params = {
-        "cmpcd": "MCL",
-        "userid": "GetAtt",
-        "password": "welcome123",
-        "fromdt": str(from_date),
-        "todt": str(to_date),
-        "empids": employee_code,
-    }
-
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/138.0.0.0 Safari/537.36"
-        ),
+        "User-Agent": "Mozilla/5.0",
         "Accept": "application/json",
-        "Referer": "https://dev.mclbiometric.in/",
-        "Connection": "keep-alive",
+        "Referer": "https://dev.mclbiometric.in/"
     }
 
     session = requests.Session()
 
-    try:
-
-        response = session.get(
-            url=url,
-            params=params,
-            headers=headers,
-            timeout=60,
-            verify=True,
-            allow_redirects=True,
-        )
-
-        print("=" * 80)
-        print("URL          :", response.request.url)
-        print("Method       :", response.request.method)
-        print("Status Code  :", response.status_code)
-        print("Headers Sent :", response.request.headers)
-        print("Response     :", response.text[:1000])
-        print("=" * 80)
-
-        response.raise_for_status()
-
-        response_data = response.json()
-
-        status = "success"
-
-    except requests.exceptions.HTTPError as e:
-
-        status = "failed"
-
-        response_data = {
-            "error": str(e),
-            "status_code": response.status_code if "response" in locals() else None,
-            "response": response.text if "response" in locals() else "",
-        }
-
-    except requests.exceptions.RequestException as e:
-
-        status = "failed"
-
-        response_data = {
-            "error": str(e)
-        }
-
-    except ValueError:
-
-        status = "failed"
-
-        response_data = {
-            "error": "Invalid JSON response",
-            "response": response.text if "response" in locals() else "",
-        }
+    all_records = []
+    log_responses = []
 
     # ------------------------------------------------------
-    # Save API Log
+    # CALL API IN BATCHES
+    # ------------------------------------------------------
+
+    for batch_no, batch in enumerate(chunk_list(employee_codes, 50), start=1):
+
+        params = {
+            "cmpcd": "MCL",
+            "userid": "GetAtt",
+            "password": "welcome123",
+            "fromdt": str(from_date),
+            "todt": str(to_date),
+            "empids": ",".join(batch)
+        }
+
+        try:
+
+            response = session.get(
+                url,
+                params=params,
+                headers=headers,
+                timeout=60,
+                verify=True
+            )
+
+            print("=" * 80)
+            print(f"Batch : {batch_no}")
+            print("Employees :", len(batch))
+            print("Status :", response.status_code)
+            print("URL Length :", len(response.request.url))
+
+            response.raise_for_status()
+
+            batch_data = response.json()
+
+            if isinstance(batch_data, list):
+                all_records.extend(batch_data)
+
+            elif isinstance(batch_data, dict):
+                all_records.extend(batch_data.get("data", []))
+
+            log_responses.append({
+                "batch": batch_no,
+                "status": response.status_code,
+                "employees": len(batch),
+                "records": len(batch_data)
+                if isinstance(batch_data, list)
+                else len(batch_data.get("data", []))
+            })
+
+        except Exception as e:
+
+            print(f"Batch {batch_no} Failed :", e)
+
+            log_responses.append({
+                "batch": batch_no,
+                "employees": len(batch),
+                "error": str(e)
+            })
+
+    # ------------------------------------------------------
+    # SAVE LOG
     # ------------------------------------------------------
 
     BiometricAPILog.objects.create(
-        employee_code=employee_code,
+        employee_code=",".join(employee_codes),
         from_date=from_date,
         to_date=to_date,
         request_payload={
-            "url": url,
-            "params": params,
-            "headers": headers,
+            "total_employee_ids": len(employee_codes),
+            "batch_size": 50
         },
-        response_payload=response_data,
-        status=status,
+        response_payload=log_responses,
+        status="success"
     )
 
-    return response_data
+    print("=" * 80)
+    print("Total Attendance Records :", len(all_records))
+    print("=" * 80)
+
+    return {
+        "data": all_records
 
 
 # ==========================================================
