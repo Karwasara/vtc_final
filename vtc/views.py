@@ -903,11 +903,18 @@ from accounts.models import (
 # FETCH MCL BIOMETRIC DATA
 # ==========================================================
 
+import requests
+
+from .models import TrainingSchedule, BiometricAPILog
+from accounts.models import SubsidiaryMaster, CustomUser
+
+
 def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
     # ------------------------------------------------------
-    # Fetch Employee Codes if not supplied
+    # Get Employee IDs if not supplied
     # ------------------------------------------------------
+
     if not employee_code:
 
         active_schedules = TrainingSchedule.objects.filter(
@@ -917,9 +924,9 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
         creator_ids = list(
             set(
-                schedule.created_by_id
-                for schedule in active_schedules
-                if schedule.created_by_id
+                s.created_by_id
+                for s in active_schedules
+                if s.created_by_id
             )
         )
 
@@ -933,59 +940,48 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
             "subsidiary_id"
         )
 
-        user_to_subsidiary = {
-            user["id"]: user["subsidiary_id"]
-            for user in users
-            if user["subsidiary_id"] is not None
+        user_sub_map = {
+            u["id"]: u["subsidiary_id"]
+            for u in users
+            if u["subsidiary_id"] is not None
         }
 
-        mcl_subsidiary_ids = list(
+        mcl_sub_ids = list(
             SubsidiaryMaster.objects.filter(
-                id__in=user_to_subsidiary.values(),
+                id__in=user_sub_map.values(),
                 subsidiary_code__iexact="MCL"
             ).values_list("id", flat=True)
         )
 
-        mcl_schedules = []
+        employee_codes = []
 
         for schedule in active_schedules:
 
-            creator_id = schedule.created_by_id
-            subsidiary_id = user_to_subsidiary.get(creator_id)
+            sub_id = user_sub_map.get(schedule.created_by_id)
 
-            if subsidiary_id in mcl_subsidiary_ids:
-                mcl_schedules.append(schedule)
+            if sub_id in mcl_sub_ids:
 
-        employee_codes = list(
-            set(
-                schedule.worker.aadhar_number
-                .replace(" ", "")
-                .replace("-", "")
-                .strip()
-                for schedule in mcl_schedules
-                if schedule.worker
-                and schedule.worker.aadhar_number
-            )
-        )
+                if (
+                    schedule.worker
+                    and schedule.worker.aadhar_number
+                ):
 
-        employee_code = ",".join(employee_codes)
+                    employee_codes.append(
+
+                        schedule.worker.aadhar_number
+                        .replace(" ", "")
+                        .replace("-", "")
+                        .strip()
+
+                    )
+
+        employee_code = ",".join(sorted(set(employee_codes)))
 
     # ------------------------------------------------------
-    # API Request
+    # API DETAILS
     # ------------------------------------------------------
 
     url = "https://dev.mclbiometric.in/notification/api/getAtt"
-
-    headers = {
-	    "User-Agent": (
-	        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-	        "AppleWebKit/537.36 (KHTML, like Gecko) "
-	        "Chrome/138.0.0.0 Safari/537.36"
-	    ),
-	    "Accept": "application/json",
-	    "Referer": "https://dev.mclbiometric.in/",
-	    "Connection": "keep-alive",
-	}
 
     params = {
         "cmpcd": "MCL",
@@ -993,25 +989,45 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
         "password": "welcome123",
         "fromdt": str(from_date),
         "todt": str(to_date),
-        "empids": employee_code
+        "empids": employee_code,
     }
+
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/138.0.0.0 Safari/537.36"
+        ),
+        "Accept": "application/json",
+        "Referer": "https://dev.mclbiometric.in/",
+        "Connection": "keep-alive",
+    }
+
+    session = requests.Session()
 
     try:
 
-        response = requests.get(
+        response = session.get(
             url=url,
             params=params,
             headers=headers,
-            timeout=60
+            timeout=60,
+            verify=True,
+            allow_redirects=True,
         )
 
-        print("Final URL :", response.url)
-        print("Status    :", response.status_code)
-        print("Response  :", response.text)
+        print("=" * 80)
+        print("URL          :", response.request.url)
+        print("Method       :", response.request.method)
+        print("Status Code  :", response.status_code)
+        print("Headers Sent :", response.request.headers)
+        print("Response     :", response.text[:1000])
+        print("=" * 80)
 
         response.raise_for_status()
 
         response_data = response.json()
+
         status = "success"
 
     except requests.exceptions.HTTPError as e:
@@ -1020,8 +1036,8 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
         response_data = {
             "error": str(e),
-            "status_code": response.status_code,
-            "response": response.text
+            "status_code": response.status_code if "response" in locals() else None,
+            "response": response.text if "response" in locals() else "",
         }
 
     except requests.exceptions.RequestException as e:
@@ -1038,19 +1054,24 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
         response_data = {
             "error": "Invalid JSON response",
-            "response": response.text
+            "response": response.text if "response" in locals() else "",
         }
 
-    print("Status :", status)
-    print("Response Data :", response_data)
+    # ------------------------------------------------------
+    # Save API Log
+    # ------------------------------------------------------
 
     BiometricAPILog.objects.create(
         employee_code=employee_code,
         from_date=from_date,
         to_date=to_date,
-        request_payload=params,
+        request_payload={
+            "url": url,
+            "params": params,
+            "headers": headers,
+        },
         response_payload=response_data,
-        status=status
+        status=status,
     )
 
     return response_data
