@@ -1085,6 +1085,7 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
 
     return {
         "data": all_records
+    }
 
 
 # ==========================================================
