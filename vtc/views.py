@@ -977,9 +977,15 @@ def fetch_mcl_biometric_data(from_date, to_date, employee_code=""):
     url = "https://dev.mclbiometric.in/notification/api/getAtt"
 
     headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json"
-    }
+	    "User-Agent": (
+	        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+	        "AppleWebKit/537.36 (KHTML, like Gecko) "
+	        "Chrome/138.0.0.0 Safari/537.36"
+	    ),
+	    "Accept": "application/json",
+	    "Referer": "https://dev.mclbiometric.in/",
+	    "Connection": "keep-alive",
+	}
 
     params = {
         "cmpcd": "MCL",
