@@ -1436,49 +1436,53 @@ def fetch_ccl_biometric_data(
 # PARSE CCL DATETIME
 # ==========================================================
 
+from datetime import datetime
+from django.utils import timezone
+
+
 def parse_ccl_datetime(datetime_string):
+    """
+    Converts:
+    31/07/2026 10:38
+    into timezone-aware datetime.
+    """
 
     if not datetime_string:
         return None
 
-    naive_datetime = datetime.strptime(
-        datetime_string,
-        "%m/%d/%Y %I:%M:%S %p",
-    )
+    try:
+        dt = datetime.strptime(
+            datetime_string,
+            "%d/%m/%Y %H:%M"
+        )
 
-    ist_timezone = datetime_timezone(
-        timedelta(hours=5, minutes=30)
-    )
+        return timezone.make_aware(
+            dt,
+            timezone.get_current_timezone()
+        )
 
-    return naive_datetime.replace(
-        tzinfo=ist_timezone
-    )
+    except Exception:
+        return None
 
 
 # ==========================================================
 # STORE CCL BIOMETRIC DATA
 # ==========================================================
-
 def store_ccl_biometric_data(api_response):
 
-    if isinstance(api_response, dict):
-        records = api_response.get("Data", [])
+    records = api_response.get("Data", [])
 
-    elif isinstance(api_response, list):
-        records = api_response
-
-    else:
-        records = []
-
+    print("=" * 80)
     print("Records received :", len(records))
+    print("=" * 80)
 
     for record in records:
 
         try:
 
             attendance_date = datetime.strptime(
-                record["AttendanceDate"].split("T")[0],
-                "%Y-%m-%d",
+                record["AttendanceDate"][:10],
+                "%Y-%m-%d"
             ).date()
 
             in_time = parse_ccl_datetime(
@@ -1489,31 +1493,54 @@ def store_ccl_biometric_data(api_response):
                 record.get("OUT")
             )
 
-            obj, created = (
-                BiometricAttendanceRaw.objects.update_or_create(
-                    employee_code=record["EmployeeCode"],
-                    attendance_date=attendance_date,
-                    defaults={
-                        "employee_name": record.get("EmployeeName"),
-                        "in_time": in_time,
-                        "out_time": out_time,
-                        "status": record.get(
-                            "Status",
-                            "",
-                        ).strip(),
-                    },
-                )
+            obj, created = BiometricAttendanceRaw.objects.update_or_create(
+
+                employee_code=record["EmployeeCode"],
+
+                attendance_date=attendance_date,
+
+                defaults={
+
+                    "employee_name": record.get("EmployeeName", ""),
+
+                    "in_time": in_time,
+
+                    "out_time": out_time,
+
+                    "status": record.get("Status", ""),
+
+                    "department_name": record.get(
+                        "DepartmentName",
+                        ""
+                    ),
+
+                    "location_name": record.get(
+                        "LocationName",
+                        ""
+                    ),
+
+                    "category_name": record.get(
+                        "CategoryName",
+                        ""
+                    ),
+
+                }
+
             )
 
             print(
-                f"Saved : {obj.employee_code} | Created : {created}"
+                f"Saved : {obj.employee_code} | "
+                f"{attendance_date} | "
+                f"Created : {created}"
             )
 
         except Exception as e:
 
-            print("Error :", e)
+            print("=" * 80)
+            print("Error saving record")
+            print(e)
             print(record)
-
+            print("=" * 80)
 
 # ==========================================================
 # SYNC CCL BIOMETRIC ATTENDANCE
