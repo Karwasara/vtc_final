@@ -1468,6 +1468,10 @@ def parse_ccl_datetime(datetime_string):
 # ==========================================================
 # STORE CCL BIOMETRIC DATA
 # ==========================================================
+# ==========================================================
+# STORE CCL BIOMETRIC DATA
+# ==========================================================
+
 def store_ccl_biometric_data(api_response):
 
     records = api_response.get("Data", [])
@@ -1495,34 +1499,25 @@ def store_ccl_biometric_data(api_response):
 
             obj, created = BiometricAttendanceRaw.objects.update_or_create(
 
-                employee_code=record["EmployeeCode"],
+                employee_code=record.get("EmployeeCode", "").strip(),
 
                 attendance_date=attendance_date,
 
                 defaults={
 
-                    "employee_name": record.get("EmployeeName", ""),
+                    "employee_name": record.get(
+                        "EmployeeName",
+                        ""
+                    ).strip(),
 
                     "in_time": in_time,
 
                     "out_time": out_time,
 
-                    "status": record.get("Status", ""),
-
-                    "department_name": record.get(
-                        "DepartmentName",
+                    "status": record.get(
+                        "Status",
                         ""
-                    ),
-
-                    "location_name": record.get(
-                        "LocationName",
-                        ""
-                    ),
-
-                    "category_name": record.get(
-                        "CategoryName",
-                        ""
-                    ),
+                    ).strip(),
 
                 }
 
@@ -1538,7 +1533,7 @@ def store_ccl_biometric_data(api_response):
 
             print("=" * 80)
             print("Error saving record")
-            print(e)
+            print(str(e))
             print(record)
             print("=" * 80)
 
