@@ -373,11 +373,11 @@ def generate_form_a_pdf(request, training_id):
 
         form_description = (
             "The form for the certificate of "
-            "initial/refresher* training"
+            "initial/refresher training"
         )
 
         certificate_description = (
-            "Certificate of Initial/Refresher* Training for "
+            "Certificate of Initial/Refresher Training for "
             "employment in a mine on surface and in opencast "
             "workings/belowground degree I/II/III gassy coal/"
             "belowground metalliferous/oil mine*"
