@@ -233,191 +233,1005 @@ def generate_unique_serial_number():
 
 # ---------------- Generate Form A PDF ----------------
 
+import os
+
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.db.models import Q
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
+
+from reportlab.platypus import Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY
+
+
 def generate_form_a_pdf(request, training_id):
-    training = get_object_or_404(TrainingSchedule, pk=training_id)
-    worker = training.worker
-    # Get creator user from TrainingSchedule
-    created_user = training.created_by
 
-    # Get first name of creator
-    created_first_name = created_user.first_name if created_user else "Unknown"
+    # =========================================================
+    # GET TRAINING
+    # =========================================================
 
-    user_area = request.user.areas.first()
-    area_code = user_area.area_code if user_area else "UNKNOWN"
-    area_name = user_area.area_name if user_area else "Unknown"
-    subsidiary_name = user_area.subsidiary.subsidiary_name if user_area and user_area.subsidiary else "Unknown"
-    subsidiary_code = user_area.subsidiary.subsidiary_code if user_area and user_area.subsidiary else "NCL"
-
-    if not training.certificate_serial_number:
-        new_serial = generate_unique_serial_number()
-        training.certificate_serial_number = new_serial
-        training.certificate_serial_number_final = f"VTC{area_code}{new_serial}"
-        training.certificate_created_date = timezone.now()
-        training.save()
-
-    serial_number = training.certificate_serial_number_final
-
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=VTC_certificate_{worker.name}.pdf'
-
-    c = canvas.Canvas(response, pagesize=A4)
-    width, height = A4
-    logo_path = "E:/VTC training/mysite/static/ncl_logo.jpeg"
-
-    if os.path.exists(logo_path):
-        logo = ImageReader(logo_path)
-        c.drawImage(logo, 40, height - 110, width=120, height=100, preserveAspectRatio=True)
-
-    y = height - 50
-    line_gap = 16
-
-    # Header
-    c.setFont("Helvetica-Bold", 15)
-    c.drawCentredString(width / 2, y, subsidiary_name)
-    y -= 20
-    c.setFont("Helvetica-Bold", 12)
-    c.drawCentredString(width / 2, y, f"{created_first_name}")
-    y -= 25
-    c.setFont("Helvetica-Bold", 12)
-    c.drawCentredString(width / 2, y, "Certificate of Vocational Training")
-    y -= 15
-    c.line(50, y, width - 50, y)
-    y -= 15
-    c.setFont("Helvetica", 10)
-    c.drawCentredString(width / 2, y, "Mines Vocation Training Rules, 1966")
-    y -= 15
-    form_type = "FORM - A" if training.type_of_training == "Basic" else "FORM - B"
-    c.drawCentredString(width / 2, y, form_type)
-    y -= 15
-    c.setFont("Helvetica-Bold", 10)
-    c.drawCentredString(width / 2, y, "{Rule 28(1)}")
-    y -= 15
-    c.setFont("Helvetica", 10)
-    if training.type_of_training == "Basic":
-        c.drawCentredString(
-            width / 2,
-            y,
-            "Certificate of Training for employment in mine on surface and in opencast working / below ground in gassy /"
-        )
-        y -= 15
-        c.drawCentredString(
-            width / 2,
-            y,
-            "/ non-gassy mine"
-        )
-        y -= 20
-    else:
-        c.drawCentredString(
-            width / 2,
-            y,
-            "Certificate of Refresher Training / Training of special categories of workmen"
-        )
-    y -= 20
-
-    date_only = training.certificate_created_date.strftime('%d/%m/%Y')
-    c.drawString(50, y, f"Certificate No.- {serial_number}                                                                                       Issue Date:{date_only}")
-    y -= 50
-
-    # Paragraph
-    styles = getSampleStyleSheet()
-    justified_style = ParagraphStyle(
-        name='Justified',
-        parent=styles['Normal'],
-        alignment=enums.TA_JUSTIFY,
-        fontName='Helvetica',
-        fontSize=10,
-        leading=18,
+    training = get_object_or_404(
+        TrainingSchedule,
+        pk=training_id
     )
 
-    from_date = training.from_date.strftime("%d-%m-%Y")
-    to_date = training.to_date.strftime("%d-%m-%Y")
-    chapter = "Chapter III" if training.type_of_training == "Basic" else "Chapter IV / Chapter V"
+    worker = training.worker
 
-    para_text = f"""
-    I hereby certify that Shri/Shrimati <b>{worker.name}</b>, 
-    S/o/D/o/W/o <b>{worker.father_or_spouse_name}</b>,
-    of Village <b>{worker.village}</b>, Thana <b>{worker.thana}</b>,
-    PO <b>{worker.po}</b>, District <b>{worker.district}</b>,
-    State <b>{worker.state}</b>, has between {from_date} to {to_date}
-    duly undergone the training required under {chapter} of the
-    Mine Vocational Training Rules, 1966.
-    """
+    # =========================================================
+    # CREATOR / TRAINING CENTRE DETAILS
+    # =========================================================
 
-    paragraph = Paragraph(para_text, justified_style)
-    frame = Frame(50, y - 80, width - 100, 120, showBoundary=0)
-    frame.addFromList([paragraph], c)
-    y -= line_gap * 4
+    created_user = training.created_by
 
-    # Training info
-    c.setFont("Helvetica", 10)
-    c.drawString(50, y, "Type of Training: ")
-    label_width = c.stringWidth("Type of Training :", "Helvetica", 10)
-    c.drawString(50 + label_width + 5, y, f"{training.type_of_training} Training")
+    created_first_name = (
+        created_user.first_name
+        if created_user
+        else "Unknown"
+    )
 
-    y -= line_gap
-    c.drawString(50, y, "Training For:")
-    label_width = c.stringWidth("Training For:", "Helvetica", 10)
-    c.drawString(50 + label_width + 5, y, f"{training.nature_of_training}")
-    c.drawRightString(width - 50, y, "Signed...................................................")
+    user_area = request.user.areas.first()
 
-    y -= line_gap
-    present_days = training.attendances.filter(Q(present=True) | Q(present='Present') | Q(present='present')).count()
-    c.drawString(50, y, f"Period of training: {from_date} to {to_date} (Days Present: {present_days})")
-    y -= line_gap * 2
-    c.drawRightString(width - 50, y, "Training Officer..........................................")
+    area_code = (
+        user_area.area_code
+        if user_area
+        else "UNKNOWN"
+    )
 
-    right_x = width / 2 + 50
-    right_y = y - 20
-    c.drawString(right_x, right_y, f"Mine/Training Center: {created_first_name}")
-    y -= line_gap
-    right_y = y - 20
-    c.drawString(right_x, right_y, "Registration No. of the Training Centre: .......")
+    area_name = (
+        user_area.area_name
+        if user_area
+        else "Unknown"
+    )
 
-    # Photo
-    photo_x = 50
-    photo_y = y - 120
-    if worker.photo and os.path.exists(worker.photo.path):
-        c.drawImage(worker.photo.path, photo_x, photo_y, width=100, height=120)
+    subsidiary_name = (
+        user_area.subsidiary.subsidiary_name
+        if user_area and user_area.subsidiary
+        else "Unknown"
+    )
+
+    subsidiary_code = (
+        user_area.subsidiary.subsidiary_code
+        if user_area and user_area.subsidiary
+        else "NCL"
+    )
+
+    # =========================================================
+    # CERTIFICATE SERIAL NUMBER
+    # =========================================================
+
+    if not training.certificate_serial_number:
+
+        new_serial = generate_unique_serial_number()
+
+        training.certificate_serial_number = new_serial
+
+        training.certificate_serial_number_final = (
+            f"VTC{area_code}{new_serial}"
+        )
+
+        training.certificate_created_date = timezone.now()
+
+        training.save()
+
+    serial_number = (
+        training.certificate_serial_number_final
+    )
+
+    # =========================================================
+    # CERTIFICATE DATE
+    # =========================================================
+
+    date_only = (
+        training.certificate_created_date.strftime("%d/%m/%Y")
+        if training.certificate_created_date
+        else timezone.now().strftime("%d/%m/%Y")
+    )
+
+    # =========================================================
+    # TRAINING TYPE
+    # =========================================================
+
+    training_type = (
+        training.type_of_training or ""
+    ).strip()
+
+    training_type_lower = (
+        training_type.lower()
+    )
+
+    is_special = (
+        training_type_lower == "special"
+    )
+
+    # =========================================================
+    # FORM VARIABLES
+    # =========================================================
+
+    if is_special:
+
+        form_type = "FORM – T(3)"
+
+        form_description = (
+            "The form for the certificate of special training"
+        )
+
+        certificate_description = (
+            "Certificate of Special Training of persons employed "
+            "in coal/metalliferous/oil mine*"
+        )
+
+        rule_number = "Rule 162"
+
     else:
-        c.rect(photo_x, photo_y, 100, 120)
-        c.drawString(photo_x + 20, photo_y + 60, "No Photo")
 
-    # Counter Signature
-    right_x = width / 2 + 50
-    right_y = photo_y + 40
-    c.drawString(right_x, right_y, "Counter Signature of")
-    right_y -= line_gap
-    c.drawString(right_x, right_y, "The Agent or Manager.............")
+        form_type = "FORM – T(2)"
 
-    y -= 200
-    # Footer
-    c.line(50, y, width - 50, y)
+        form_description = (
+            "The form for the certificate of "
+            "initial/refresher* training"
+        )
+
+        certificate_description = (
+            "Certificate of Initial/Refresher* Training for "
+            "employment in a mine on surface and in opencast "
+            "workings/belowground degree I/II/III gassy coal/"
+            "belowground metalliferous/oil mine*"
+        )
+
+        rule_number = (
+            "Rule 158/Rule 159/Rule 161*"
+        )
+
+    # =========================================================
+    # TRAINING DATES
+    # =========================================================
+
+    from_date = (
+        training.from_date.strftime("%d-%m-%Y")
+        if training.from_date
+        else "................"
+    )
+
+    to_date = (
+        training.to_date.strftime("%d-%m-%Y")
+        if training.to_date
+        else "................"
+    )
+
+    # =========================================================
+    # WORKER DETAILS
+    # =========================================================
+
+    worker_name = (
+        worker.name
+        or "........................."
+    )
+
+    father_name = (
+        worker.father_or_spouse_name
+        or "........................."
+    )
+
+    village = (
+        worker.village
+        or "........................."
+    )
+
+    thana = (
+        worker.thana
+        or "........................."
+    )
+
+    po = (
+        worker.po
+        or "........................."
+    )
+
+    district = (
+        worker.district
+        or "........................."
+    )
+
+    state = (
+        worker.state
+        or "........................."
+    )
+
+    # =========================================================
+    # TRAINING FOR
+    # =========================================================
+
+    nature = (
+        training.nature_of_training
+        or "Initial/Refresher Training"
+    )
+
+    # =========================================================
+    # ATTENDANCE
+    # =========================================================
+
+    present_days = training.attendances.filter(
+        Q(present=True)
+        | Q(present="Present")
+        | Q(present="present")
+    ).count()
+
+    # =========================================================
+    # PDF RESPONSE
+    # =========================================================
+
+    response = HttpResponse(
+        content_type="application/pdf"
+    )
+
+    safe_worker_name = (
+        worker.name
+        or "worker"
+    )
+
+    response["Content-Disposition"] = (
+        f'attachment; filename=VTC_certificate_{safe_worker_name}.pdf'
+    )
+
+    c = canvas.Canvas(
+        response,
+        pagesize=A4
+    )
+
+    width, height = A4
+
+    # =========================================================
+    # SPACING SETTINGS
+    # =========================================================
+
+    line_gap = 15
+
+    one_line_gap = 15
+
+    small_gap = 5
+
+    section_gap = 10
+
+    # =========================================================
+    # LOGO
+    # =========================================================
+
+    logo_path = (
+        "E:/VTC training/mysite/static/ncl_logo.jpeg"
+    )
+
+    if os.path.exists(logo_path):
+
+        c.drawImage(
+            ImageReader(logo_path),
+            40,
+            height - 110,
+            width=120,
+            height=100,
+            preserveAspectRatio=True
+        )
+
+    # =========================================================
+    # HEADER
+    # =========================================================
+
+    y = height - 50
+
+    # ---------------------------------------------------------
+    # SUBSIDIARY
+    # ---------------------------------------------------------
+
+    c.setFont(
+        "Helvetica-Bold",
+        15
+    )
+
+    c.drawCentredString(
+        width / 2,
+        y,
+        subsidiary_name
+    )
+
+    y -= 20
+
+    # ---------------------------------------------------------
+    # CREATED USER
+    # ---------------------------------------------------------
+
+    c.setFont(
+        "Helvetica-Bold",
+        12
+    )
+
+    c.drawCentredString(
+        width / 2,
+        y,
+        created_first_name
+    )
+
+    y -= 20
+
+    # ---------------------------------------------------------
+    # TITLE
+    # ---------------------------------------------------------
+
+    c.drawCentredString(
+        width / 2,
+        y,
+        "Certificate of Vocational Training"
+    )
+
+    y -= 18
+
+    # ---------------------------------------------------------
+    # HEADER LINE
+    # ---------------------------------------------------------
+
+    c.line(
+        50,
+        y,
+        width - 50,
+        y
+    )
+
+    y -= section_gap
+
+    # =========================================================
+    # FORM NUMBER
+    # =========================================================
+
+    c.setFont(
+        "Helvetica-Bold",
+        11
+    )
+
+    c.drawCentredString(
+        width / 2,
+        y,
+        form_type
+    )
+
     y -= line_gap
-    c.drawString(50, y, "Personal Details of Trainee")
+
+    # =========================================================
+    # FORM DESCRIPTION
+    # =========================================================
+
+    c.setFont(
+        "Helvetica-Bold",
+        10
+    )
+
+    c.drawCentredString(
+        width / 2,
+        y,
+        form_description
+    )
+
     y -= line_gap
 
-    full_aadhar = worker.aadhar_number or ""
-    masked_aadhar = "XXXX-XXXX-" + full_aadhar[-4:] if len(full_aadhar) >= 4 else "Invalid"
-    c.drawString(50, y, f"* Aadhaar No. - {masked_aadhar}")
+    # =========================================================
+    # RULE REFERENCE
+    # =========================================================
+
+    c.setFont(
+        "Helvetica",
+        9.5
+    )
+
+    rule_text = (
+        "{See Rule 173(1) of the Occupational Safety, "
+        "Health and Working Conditions (Central) Rules, 2026}"
+    )
+
+    c.drawCentredString(
+        width / 2,
+        y,
+        rule_text
+    )
+
+    # =========================================================
+    # NO EXTRA SPACE BETWEEN RULE AND DESCRIPTION
+    # =========================================================
+
+    y -= 14
+
+    # =========================================================
+    # PARAGRAPH STYLES
+    # =========================================================
+
+    styles = getSampleStyleSheet()
+
+    # ---------------------------------------------------------
+    # NORMAL JUSTIFIED STYLE
+    # ---------------------------------------------------------
+
+    justified_style = ParagraphStyle(
+        name="CertificateText",
+        parent=styles["Normal"],
+        alignment=TA_JUSTIFY,
+        fontName="Helvetica",
+        fontSize=9.5,
+        leading=14,
+        spaceBefore=0,
+        spaceAfter=0,
+        leftIndent=0,
+        rightIndent=0,
+        firstLineIndent=0,
+    )
+
+    # ---------------------------------------------------------
+    # DESCRIPTION STYLE
+    # ---------------------------------------------------------
+
+    description_style = ParagraphStyle(
+        name="CertificateDescription",
+        parent=styles["Normal"],
+        alignment=TA_JUSTIFY,
+        fontName="Helvetica-Bold",
+        fontSize=9.5,
+        leading=14,
+        spaceBefore=0,
+        spaceAfter=0,
+        leftIndent=0,
+        rightIndent=0,
+        firstLineIndent=0,
+    )
+
+    # =========================================================
+    # CERTIFICATE DESCRIPTION
+    # =========================================================
+
+    description_paragraph = Paragraph(
+        certificate_description,
+        description_style
+    )
+
+    description_width = (
+        width - 100
+    )
+
+    description_w, description_h = (
+        description_paragraph.wrap(
+            description_width,
+            height
+        )
+    )
+
+    description_paragraph.drawOn(
+        c,
+        50,
+        y - description_h
+    )
+
+    # Move exactly after description
+    y -= description_h
+
+    # =========================================================
+    # ONE LINE GAP BEFORE CERTIFICATE NUMBER
+    # =========================================================
+
+    y -= one_line_gap
+
+    # =========================================================
+    # CERTIFICATE NUMBER / DATE
+    # =========================================================
+
+    c.setFont(
+        "Helvetica",
+        9
+    )
+
+    c.drawString(
+        50,
+        y,
+        f"Certificate No.- {serial_number}"
+    )
+
+    c.drawRightString(
+        width - 50,
+        y,
+        f"Date: {date_only}"
+    )
+
+    # =========================================================
+    # ONE LINE GAP AFTER CERTIFICATE NUMBER
+    # =========================================================
+
+    y -= one_line_gap
+
+    # =========================================================
+    # MAIN CERTIFICATE PARAGRAPH
+    # =========================================================
+
+    if is_special:
+
+        # -----------------------------------------------------
+        # DESIGNATION
+        # -----------------------------------------------------
+
+        designation = (
+            getattr(
+                worker,
+                "designation",
+                None
+            )
+            or "........................."
+        )
+
+        # -----------------------------------------------------
+        # SUBJECT
+        # -----------------------------------------------------
+
+        subject = (
+            training.nature_of_training
+            or "........................."
+        )
+
+        para_text = f"""
+        I, hereby certify that Shri/Smt/Miss
+        <b>{worker_name}</b>, Designation
+        <b>{designation}</b>, S/o/D/o/W/o
+        <b>{father_name}</b>, Village <b>{village}</b>,
+        Thana (Police Station) <b>{thana}</b>,
+        P.O. <b>{po}</b>, District <b>{district}</b>,
+        State <b>{state}</b>, has undergone special training,
+        as per provisions of {rule_number} of the Occupational
+        Safety, Health and Working Conditions (Central)
+        Rules, 2026, during the period from
+        <b>{from_date}</b> to <b>{to_date}</b> on the
+        subject <b>{subject}</b>. After completion of the
+        training the trainee was assessed for his/her
+        performance and found to be satisfactory.
+        """
+
+    else:
+
+        # -----------------------------------------------------
+        # INITIAL / REFRESHER
+        # -----------------------------------------------------
+
+        certificate_wording = (
+            "certificate of refresher training"
+            if training_type_lower == "refresher"
+            else "certificate of initial training"
+        )
+
+        para_text = f"""
+        I, hereby certify that Shri/Smt/Miss
+        <b>{worker_name}</b>, S/o/D/o/W/o
+        <b>{father_name}</b>, Village <b>{village}</b>,
+        Thana (Police Station) <b>{thana}</b>,
+        P.O. <b>{po}</b>, District <b>{district}</b>,
+        State <b>{state}</b>, has duly undergone
+        {certificate_wording} from
+        <b>{from_date}</b> to <b>{to_date}</b> as required
+        under the provisions of {rule_number} of the
+        Occupational Safety, Health and Working Conditions
+        (Central) Rules, 2026, for employment in a mine on
+        surface and in opencast workings/belowground degree
+        I/II/III gassy coal/belowground metalliferous/oil
+        mines*. After completion of training the trainee was
+        assessed for his/her performance and found to be
+        satisfactory.
+        """
+
+    main_paragraph = Paragraph(
+        para_text,
+        justified_style
+    )
+
+    paragraph_width = (
+        width - 100
+    )
+
+    paragraph_w, paragraph_h = (
+        main_paragraph.wrap(
+            paragraph_width,
+            height
+        )
+    )
+
+    main_paragraph.drawOn(
+        c,
+        50,
+        y - paragraph_h
+    )
+
+    # Move exactly below paragraph
+    y -= paragraph_h
+
+    # =========================================================
+    # ONE LINE GAP BEFORE TRAINING INFORMATION
+    # =========================================================
+
+    y -= one_line_gap
+
+    # =========================================================
+    # TRAINING INFORMATION
+    # =========================================================
+
+    c.setFont(
+        "Helvetica",
+        9
+    )
+
+    # ---------------------------------------------------------
+    # TRAINING TYPE
+    # ---------------------------------------------------------
+
+    c.drawString(
+        50,
+        y,
+        f"Training Type: {training_type}"
+    )
+
     y -= line_gap
 
-    dob = worker.dob.strftime("%d-%m-%Y") if worker.dob else "Not Available"
-    c.drawString(50, y, f"* Date of Birth - {dob}")
+    # ---------------------------------------------------------
+    # TRAINING FOR
+    # ---------------------------------------------------------
+
+    c.drawString(
+        50,
+        y,
+        f"Training For: {nature}"
+    )
+
     y -= line_gap
 
-    blood = worker.blood_group if worker.blood_group else "Not Available"
-    c.drawString(50, y, f"* Blood Group - {blood}")
-    y -= line_gap * 2
+    # ---------------------------------------------------------
+    # PERIOD OF TRAINING
+    # ---------------------------------------------------------
 
-    c.setFont("Helvetica-BoldOblique", 10)
-    c.drawString(50, y, f"* This certificate will have no claim for employment in {subsidiary_code}.")
+    c.drawString(
+        50,
+        y,
+        f"Period of Training: {from_date} to {to_date}"
+    )
+
     y -= line_gap
 
-    validity_years = {"Basic": "5", "Refresher": "5"}.get(training.type_of_training, "....")
-    c.drawString(50, y, f"* This certificate is valid for ...... years from date of issue of certificate.")
+    # ---------------------------------------------------------
+    # DAYS PRESENT
+    # ---------------------------------------------------------
+
+    c.drawString(
+        50,
+        y,
+        f"Days Present: {present_days}"
+    )
+
+    y -= section_gap
+
+    # =========================================================
+    # PHOTO + SIGNATURE SECTION
+    # =========================================================
+
+    def draw_photo_signature(current_y):
+
+        # -----------------------------------------------------
+        # PHOTO POSITION
+        # -----------------------------------------------------
+
+        photo_x = 50
+
+        photo_width = 100
+        photo_height = 110
+
+        photo_y = (
+            current_y - photo_height
+        )
+
+        # -----------------------------------------------------
+        # PHOTO BORDER
+        # -----------------------------------------------------
+
+        c.setFont(
+            "Helvetica",
+            8
+        )
+
+        c.rect(
+            photo_x,
+            photo_y,
+            photo_width,
+            photo_height
+        )
+
+        # -----------------------------------------------------
+        # PHOTO
+        # -----------------------------------------------------
+
+        if (
+            worker.photo
+            and os.path.exists(worker.photo.path)
+        ):
+
+            c.drawImage(
+                worker.photo.path,
+                photo_x,
+                photo_y,
+                width=photo_width,
+                height=photo_height,
+                preserveAspectRatio=True,
+                anchor="c"
+            )
+
+        else:
+
+            c.drawCentredString(
+                photo_x + photo_width / 2,
+                photo_y + 62,
+                "Photograph"
+            )
+
+            c.drawCentredString(
+                photo_x + photo_width / 2,
+                photo_y + 50,
+                "of Person"
+            )
+
+            c.drawCentredString(
+                photo_x + photo_width / 2,
+                photo_y + 38,
+                "Trained"
+            )
+
+        # =====================================================
+        # SIGNATURE SECTION
+        # =====================================================
+
+        signature_top = (
+            photo_y - section_gap
+        )
+
+        left_x = 50
+
+        right_x = (
+            width / 2 + 35
+        )
+
+        c.setFont(
+            "Helvetica",
+            9
+        )
+
+        # -----------------------------------------------------
+        # SPECIMEN SIGNATURE
+        # -----------------------------------------------------
+
+        c.drawString(
+            left_x,
+            signature_top,
+            "Specimen Signature or"
+        )
+
+        c.drawString(
+            left_x,
+            signature_top - line_gap,
+            "Left Hand Thumb Impression"
+        )
+
+        c.drawString(
+            left_x,
+            signature_top - (line_gap * 2),
+            "of the Person Trained"
+        )
+
+        # -----------------------------------------------------
+        # TRAINING OFFICER
+        # -----------------------------------------------------
+
+        c.drawString(
+            right_x,
+            signature_top,
+            "Signature of Training Officer"
+        )
+
+        c.drawString(
+            right_x,
+            signature_top - line_gap,
+            "Name of Training Centre"
+        )
+
+        c.drawString(
+            right_x,
+            signature_top - (line_gap * 2),
+            "Training Center Code/ Registration no:"
+        )
+
+        # -----------------------------------------------------
+        # FIRST DATE
+        # -----------------------------------------------------
+
+        c.drawString(
+            left_x,
+            signature_top - (line_gap * 5),
+            "Date..."
+        )
+
+        # -----------------------------------------------------
+        # COUNTER SIGNATURE
+        # -----------------------------------------------------
+
+        c.drawString(
+            right_x + 25,
+            signature_top - (line_gap * 5),
+            "Counter signature of"
+        )
+
+        c.drawString(
+            right_x + 25,
+            signature_top - (line_gap * 6),
+            "The Agent or Manager:"
+        )
+
+        # -----------------------------------------------------
+        # SECOND DATE
+        # -----------------------------------------------------
+
+        c.drawString(
+            left_x,
+            signature_top - (line_gap * 8),
+            "Date..."
+        )
+
+        return (
+            signature_top - (line_gap * 9)
+        )
+
+    y = draw_photo_signature(y)
+
+    # =========================================================
+    # PERSONAL DETAILS
+    # =========================================================
+
+    y -= section_gap
+
+    c.line(
+        50,
+        y,
+        width - 50,
+        y
+    )
+
+    y -= line_gap
+
+    # ---------------------------------------------------------
+    # PERSONAL DETAILS HEADING
+    # ---------------------------------------------------------
+
+    c.setFont(
+        "Helvetica-Bold",
+        9
+    )
+
+    c.drawString(
+        50,
+        y,
+        "Personal Details of Trainee"
+    )
+
+    y -= line_gap
+
+    c.setFont(
+        "Helvetica",
+        9
+    )
+
+    # =========================================================
+    # AADHAAR
+    # =========================================================
+
+    full_aadhar = (
+        worker.aadhar_number or ""
+    )
+
+    masked_aadhar = (
+        "XXXX-XXXX-" + full_aadhar[-4:]
+        if len(full_aadhar) >= 4
+        else "Invalid"
+    )
+
+    c.drawString(
+        50,
+        y,
+        f"* Aadhaar No. - {masked_aadhar}"
+    )
+
+    y -= line_gap
+
+    # =========================================================
+    # DATE OF BIRTH
+    # =========================================================
+
+    dob = (
+        worker.dob.strftime("%d-%m-%Y")
+        if worker.dob
+        else "Not Available"
+    )
+
+    c.drawString(
+        50,
+        y,
+        f"* Date of Birth - {dob}"
+    )
+
+    y -= line_gap
+
+    # =========================================================
+    # BLOOD GROUP
+    # =========================================================
+
+    blood = (
+        worker.blood_group
+        or "Not Available"
+    )
+
+    c.drawString(
+        50,
+        y,
+        f"* Blood Group - {blood}"
+    )
+
+    y -= section_gap
+
+    # =========================================================
+    # EMPLOYMENT DISCLAIMER
+    # =========================================================
+
+    c.setFont(
+        "Helvetica-BoldOblique",
+        10
+    )
+
+    c.drawString(
+        50,
+        y,
+        f"* This certificate will have no claim for employment "
+        f"in {subsidiary_code}."
+    )
+
+    y -= line_gap
+
+    # =========================================================
+    # CERTIFICATE VALIDITY
+    # =========================================================
+
+    validity_years = {
+        "basic": "5",
+        "refresher": "5"
+    }.get(
+        training_type_lower,
+        "...."
+    )
+
+    c.setFont(
+        "Helvetica",
+        9
+    )
+
+    c.drawString(
+        50,
+        y,
+        f"* This certificate is valid for {validity_years} years "
+        "from date of issue of certificate."
+    )
+
+    # =========================================================
+    # SAVE PDF
+    # =========================================================
 
     c.showPage()
+
     c.save()
+
     return response
 
 
