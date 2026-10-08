@@ -1205,8 +1205,8 @@ def generate_form_a_pdf(request, training_id):
     # =========================================================
 
     validity_years = {
-        "basic": "5",
-        "refresher": "5"
+        "basic": "....",
+        "refresher": "...."
     }.get(
         training_type_lower,
         "...."
